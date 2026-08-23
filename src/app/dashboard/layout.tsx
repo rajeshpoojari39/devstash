@@ -1,5 +1,7 @@
+import { SidebarProvider } from "@/components/dashboard/sidebar-context";
+import { Sidebar } from "@/components/dashboard/sidebar";
+import { MobileSidebar } from "@/components/dashboard/mobile-sidebar";
 import { TopBar } from "@/components/dashboard/top-bar";
-import { DevStashLogo } from "@/components/brand/logo";
 
 export default function DashboardLayout({
   children,
@@ -7,28 +9,25 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      {/* Sidebar Placeholder */}
-      <aside className="w-64 border-r border-border min-h-screen flex flex-col shrink-0 bg-background">
-        {/* Logo & Brand Header */}
-        <div className="flex h-14 items-center px-5">
-          <DevStashLogo size="md" />
-        </div>
-
-        {/* Sidebar Body Placeholder */}
-        <div className="flex-1 px-5 py-2">
-          <h2 className="text-xl font-semibold tracking-tight text-muted-foreground">
-            Sidebar
-          </h2>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0">
+    <SidebarProvider>
+      <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground flex flex-col">
+        {/* Full-width TopBar across top */}
         <TopBar />
-        <main className="flex-1 p-6 overflow-auto">{children}</main>
+
+        {/* Layout Area below TopBar */}
+        <div className="flex flex-1 min-h-[calc(100vh-3.5rem)] w-full overflow-x-hidden">
+          {/* Desktop Collapsible Sidebar with border-r */}
+          <Sidebar />
+
+          {/* Mobile Drawer Sidebar */}
+          <MobileSidebar />
+
+          {/* Main Content Area */}
+          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 md:p-6">
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </SidebarProvider>
   );
 }
-

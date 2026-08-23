@@ -34,3 +34,10 @@ Not Started
   - Built TopBar component with sidebar toggle button, full-height vertical separator line, search input with `⌘ K` keyboard shortcut badge, and action buttons (`src/components/dashboard/top-bar.tsx`).
   - Created `/dashboard` route with dashboard layout (`src/app/dashboard/layout.tsx`) and placeholders for sidebar (`<h2>Sidebar</h2>`) and main area (`<h2>Main</h2>`).
 
+- **Dashboard UI Phase 2 (2026-08-23)**
+  - Created `SidebarProvider` and `useSidebar` context to manage desktop collapse and mobile drawer state (`src/components/dashboard/sidebar-context.tsx`).
+  - Built `SidebarContent` component with DevStash logo, collapsible Types section with mock data item types, colors, counts, and active links (`/items/[type]`), collapsible Collections section with starred favorites and all collections with item counts (`/collections/[id]`), and pinned user profile footer with avatar and settings (`src/components/dashboard/sidebar-content.tsx`).
+  - Built collapsible desktop `Sidebar` transitioning between `w-64` (full) and `w-16` (icon-only) with tooltips and high-contrast vertical separation line (`src/components/dashboard/sidebar.tsx`).
+  - Built responsive mobile drawer `MobileSidebar` using ShadCN `Sheet` (`src/components/dashboard/mobile-sidebar.tsx`).
+  - Updated `TopBar` with permanent full logo name, sidebar collapse toggle button, responsive search input with `⌘K` badge, and action buttons (`src/components/dashboard/top-bar.tsx`).
+  - Integrated complete sidebar navigation into `src/app/dashboard/layout.tsx` and tuned border tokens in `src/app/globals.css`.
