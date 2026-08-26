@@ -11,7 +11,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "relative hidden min-h-[calc(100vh-3.5rem)] shrink-0 flex-col border-r border-border bg-background transition-[width] duration-300 ease-in-out md:flex z-10",
+        "relative hidden h-full shrink-0 flex-col border-r border-border bg-background transition-[width] duration-300 ease-in-out md:flex z-10",
         isCollapsed ? "w-16" : "w-64"
       )}
     >

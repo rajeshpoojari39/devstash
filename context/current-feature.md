@@ -41,3 +41,11 @@ Not Started
   - Built responsive mobile drawer `MobileSidebar` using ShadCN `Sheet` (`src/components/dashboard/mobile-sidebar.tsx`).
   - Updated `TopBar` with permanent full logo name, sidebar collapse toggle button, responsive search input with `⌘K` badge, and action buttons (`src/components/dashboard/top-bar.tsx`).
   - Integrated complete sidebar navigation into `src/app/dashboard/layout.tsx` and tuned border tokens in `src/app/globals.css`.
+
+- **Dashboard UI Phase 3 (2026-08-26)**
+  - Built 4 metric summary stats cards for Total Items, Total Collections, Favorite Items, and Favorite Collections (`src/components/dashboard/stats-cards.tsx`).
+  - Built Collections section with 3-column responsive grid, custom colored card borders, favorite stars, descriptions, type category icons, and 3-dots action menus (`src/components/dashboard/collection-card.tsx`, `src/components/dashboard/collections-section.tsx`).
+  - Built Item Card component with category type badges, titles, pin/favorite indicators, tags, formatted timestamps, clipboard copy actions, and action dropdowns (`src/components/dashboard/item-card.tsx`).
+  - Built Pinned Items section for pinned items (`src/components/dashboard/pinned-items-section.tsx`).
+  - Built Recent Items section displaying 10 latest items (`src/components/dashboard/recent-items-section.tsx`).
+  - Assembled main dashboard page (`src/app/dashboard/page.tsx`) and isolated content scrolling to the main section while keeping sidebar and top bar fixed (`src/app/dashboard/layout.tsx`, `src/components/dashboard/sidebar.tsx`).

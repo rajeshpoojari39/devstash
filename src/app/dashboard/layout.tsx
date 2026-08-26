@@ -10,20 +10,20 @@ export default function DashboardLayout({
 }>) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen w-full overflow-x-hidden bg-background text-foreground flex flex-col">
-        {/* Full-width TopBar across top */}
+      <div className="h-screen w-full overflow-hidden bg-background text-foreground flex flex-col">
+        {/* Full-width TopBar fixed across top */}
         <TopBar />
 
         {/* Layout Area below TopBar */}
-        <div className="flex flex-1 min-h-[calc(100vh-3.5rem)] w-full overflow-x-hidden">
-          {/* Desktop Collapsible Sidebar with border-r */}
+        <div className="flex flex-1 h-[calc(100vh-3.5rem)] w-full overflow-hidden">
+          {/* Desktop Collapsible Sidebar (Fixed height) */}
           <Sidebar />
 
           {/* Mobile Drawer Sidebar */}
           <MobileSidebar />
 
-          {/* Main Content Area */}
-          <main className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden p-4 md:p-6">
+          {/* Main Content Area: Only this section scrolls */}
+          <main className="flex-1 h-full min-w-0 overflow-y-auto overflow-x-hidden p-4 md:p-6">
             {children}
           </main>
         </div>
