@@ -49,3 +49,12 @@ Not Started
   - Built Pinned Items section for pinned items (`src/components/dashboard/pinned-items-section.tsx`).
   - Built Recent Items section displaying 10 latest items (`src/components/dashboard/recent-items-section.tsx`).
   - Assembled main dashboard page (`src/app/dashboard/page.tsx`) and isolated content scrolling to the main section while keeping sidebar and top bar fixed (`src/app/dashboard/layout.tsx`, `src/components/dashboard/sidebar.tsx`).
+
+- **Database Setup: Prisma 7 & Neon PostgreSQL (2026-08-28)**
+  - Configured Prisma 7 with Neon PostgreSQL and `@prisma/adapter-pg`.
+  - Created centralized configuration (`prisma.config.ts`) with datasource, migrations path, and seed command.
+  - Implemented initial Prisma schema (`prisma/schema.prisma`) with `User`, `Account`, `Session`, `VerificationToken`, `Item`, `ItemType`, `Collection`, `ItemCollection`, `Tag` models and `ContentType` enum.
+  - Set up singleton Prisma Client (`src/lib/prisma.ts`) importing from generated client `@/generated/prisma/client` with `/src/generated/` added to `.gitignore`.
+  - Created and executed initial database migration (`20260828060736_init`).
+  - Created seed script (`prisma/seed.ts`) populating default 7 system item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`).
+  - Added database verification test script (`scripts/test-db.ts`) and helper commands (`db:generate`, `db:studio`, `test:db`) in `package.json`.
