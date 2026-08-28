@@ -1,20 +1,52 @@
 # Current Feature
 
-<!-- Feature Name -->
+Database Seeding (Sample Data & Demo User)
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+Completed
 
 ## Goals
 
 <!-- Goals & requirements -->
 
+- Overwrite and expand the existing seed script (`prisma/seed.ts`) to populate the database with realistic sample and demo data per `context/features/seed-spec.md`.
+- **Demo User Creation**:
+  - Email: `demo@devstash.io`
+  - Name: `Demo User`
+  - Password: `12345678` (hashed with `bcryptjs`, 12 rounds)
+  - `isPro`: `false`
+  - `emailVerified`: current timestamp
+- **System Item Types**:
+  - Seed/upsert the 7 immutable system item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`) with their respective Lucide icon names and hex colors (`isSystem: true`).
+- **Collections & Items**:
+  - **React Patterns** (Description: _Reusable React patterns and hooks_)
+    - 3 TypeScript snippets: Custom hooks (e.g. `useDebounce`, `useLocalStorage`), Component patterns (e.g. Context providers, compound components), and Utility functions.
+  - **AI Workflows** (Description: _AI prompts and workflow automations_)
+    - 3 prompts: Code review prompt, Documentation generation prompt, and Refactoring assistance prompt.
+  - **DevOps** (Description: _Infrastructure and deployment resources_)
+    - 1 snippet (Docker, CI/CD configuration)
+    - 1 command (Deployment scripts)
+    - 2 links (Real documentation URLs)
+  - **Terminal Commands** (Description: _Useful shell commands for everyday development_)
+    - 4 commands: Git operations, Docker commands, Process management, and Package manager utilities.
+  - **Design Resources** (Description: _UI/UX resources and references_)
+    - 4 links (Real URLs): CSS/Tailwind references, Component libraries, Design systems, and Icon libraries.
+- **Tags & Relations**:
+  - Create and associate relevant tags for all items (e.g. `react`, `typescript`, `hooks`, `ai`, `prompts`, `docker`, `ci-cd`, `git`, `terminal`, `tailwind`, `ui-ux`, etc.).
+  - Ensure items are properly linked to the demo user and their corresponding collections via `ItemCollection`.
+  - Ensure script is idempotent or cleanly resets sample data for the demo user when rerun.
+
 ## Notes
 
 <!-- Any extra notes -->
+
+- Install `bcryptjs` and `@types/bcryptjs` for password hashing in the seed script.
+- Ensure all seed items have complete, high-quality, practical content with proper `ContentType` enum values (`TEXT`, `FILE`, `URL`).
+- Ensure Lucide icon names match those defined in `ITEM_TYPE_ICONS` / spec (`Code`, `Sparkles`, `Terminal`, `StickyNote`, `File`, `Image`, `Link`).
+- Overwrite existing content in `prisma/seed.ts`.
 
 ## History
 
@@ -58,3 +90,11 @@ Not Started
   - Created and executed initial database migration (`20260828060736_init`).
   - Created seed script (`prisma/seed.ts`) populating default 7 system item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`).
   - Added database verification test script (`scripts/test-db.ts`) and helper commands (`db:generate`, `db:studio`, `test:db`) in `package.json`.
+
+- **Database Seeding: Sample Data & Demo User (2026-08-28)**
+  - Installed `bcryptjs` and `@types/bcryptjs` for secure password hashing.
+  - Implemented comprehensive, idempotent database seeding in `prisma/seed.ts`.
+  - Populated Demo User (`demo@devstash.io`, password `12345678`, `isPro: false`, verified).
+  - Seeded 7 system item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`).
+  - Seeded 5 collections (`React Patterns`, `AI Workflows`, `DevOps`, `Terminal Commands`, `Design Resources`) with 18 sample items, custom tags, and relations.
+  - Verified seeding idempotency, database test suite (`npm run test:db`), ESLint, and Next.js production build (`npm run build`).
