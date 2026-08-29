@@ -76,3 +76,12 @@ Not Started
   - Updated `StatsCards` to display live database metrics for Total Items, Total Collections, Favorite Items, and Favorite Collections.
   - Added `test:collections` script in `package.json` and verification test in `scripts/test-collections.ts`.
   - Verified with database test suite, ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
+- **Dashboard Items: Database Integration (2026-08-29)**
+  - Created `src/lib/db/items.ts` with typed database query functions (`getDashboardPinnedItems`, `getDashboardRecentItems`).
+  - Derived item card icon, colors, and badge metadata directly from item type relations.
+  - Converted `PinnedItemsSection` and `RecentItemsSection` to receive live database items as props, removing mock data dependencies.
+  - Configured conditional rendering for `PinnedItemsSection` so it hides when there are zero pinned items.
+  - Integrated parallel data fetching in `src/app/dashboard/page.tsx` React Server Component.
+  - Created standalone test script `scripts/test-items.ts` and added `test:items` to `package.json`.
+  - Verified with database test suite (`npm run test:items`, `npm run test:collections`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).

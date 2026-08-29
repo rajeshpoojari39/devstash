@@ -4,6 +4,8 @@ import {
   getDashboardStats,
 } from "../src/lib/db/collections";
 
+import { prisma } from "../src/lib/prisma";
+
 async function main() {
   console.log("🔍 Testing Dashboard Collections & Stats DB Layer...\n");
 
@@ -25,6 +27,15 @@ async function main() {
         `     - Description: "${c.description}"\n`,
     );
   }
+
+  console.log("✅ Dashboard Collections DB test completed successfully!");
 }
 
-main().catch(console.error);
+main()
+  .catch((err) => {
+    console.error("❌ Test failed:", err);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

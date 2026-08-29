@@ -2,6 +2,10 @@ import {
   getDashboardCollections,
   getDashboardStats,
 } from "@/lib/db/collections";
+import {
+  getDashboardPinnedItems,
+  getDashboardRecentItems,
+} from "@/lib/db/items";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { CollectionsSection } from "@/components/dashboard/collections-section";
 import { PinnedItemsSection } from "@/components/dashboard/pinned-items-section";
@@ -10,9 +14,11 @@ import { RecentItemsSection } from "@/components/dashboard/recent-items-section"
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [collections, stats] = await Promise.all([
+  const [collections, stats, pinnedItems, recentItems] = await Promise.all([
     getDashboardCollections(),
     getDashboardStats(),
+    getDashboardPinnedItems(),
+    getDashboardRecentItems(undefined, 10),
   ]);
 
   return (
@@ -34,10 +40,10 @@ export default async function DashboardPage() {
       <CollectionsSection collections={collections} />
 
       {/* Pinned Items */}
-      <PinnedItemsSection />
+      <PinnedItemsSection items={pinnedItems} />
 
       {/* Recent Items List */}
-      <RecentItemsSection />
+      <RecentItemsSection items={recentItems} />
     </div>
   );
 }

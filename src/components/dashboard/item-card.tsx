@@ -25,33 +25,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { mockItemTypes } from "@/lib/mock-data";
+import { DashboardItem } from "@/lib/db/items";
 
-export interface Item {
-  id: string;
-  title: string;
-  contentType: string;
-  content: string | null;
-  description: string;
-  isFavorite: boolean;
-  isPinned: boolean;
-  language: string | null;
-  itemTypeId: string;
-  tags: string[];
-  url?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
+export type Item = DashboardItem;
 
 interface ItemCardProps {
-  item: Item;
+  item: DashboardItem;
 }
 
 const typeIconMap: Record<string, React.ElementType> = {
   snippet: Code,
+  code: Code,
   prompt: Sparkles,
+  sparkles: Sparkles,
   command: Terminal,
+  terminal: Terminal,
   note: StickyNote,
+  stickynote: StickyNote,
   file: File,
   image: ImageIcon,
   link: LinkIcon,
@@ -67,13 +57,15 @@ function formatDate(date: Date): string {
 export function ItemCard({ item }: ItemCardProps) {
   const [copied, setCopied] = React.useState(false);
 
-  const itemType = mockItemTypes.find((t) => t.id === item.itemTypeId) || {
+  const itemType = item.itemType || {
     name: "snippet",
     icon: "Code",
     color: "#3b82f6",
   };
 
-  const Icon = typeIconMap[itemType.name] || Code;
+  const iconKey = (itemType.icon || itemType.name || "code").toLowerCase();
+  const Icon =
+    typeIconMap[iconKey] || typeIconMap[itemType.name.toLowerCase()] || Code;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -117,9 +109,11 @@ export function ItemCard({ item }: ItemCardProps) {
             )}
           </div>
 
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-            {item.description}
-          </p>
+          {item.description && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+              {item.description}
+            </p>
+          )}
 
           {/* Tags */}
           {item.tags.length > 0 && (

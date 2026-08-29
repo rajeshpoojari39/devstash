@@ -1,16 +1,13 @@
 import Link from "next/link";
 import { Clock } from "lucide-react";
-import { mockItems } from "@/lib/mock-data";
+import { DashboardItem } from "@/lib/db/items";
 import { ItemCard } from "./item-card";
 
-export function RecentItemsSection() {
-  const recentItems = [...mockItems]
-    .sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-    )
-    .slice(0, 10);
+interface RecentItemsSectionProps {
+  items: DashboardItem[];
+}
 
+export function RecentItemsSection({ items }: RecentItemsSectionProps) {
   return (
     <section className="space-y-3">
       <div className="flex items-center justify-between">
@@ -26,11 +23,17 @@ export function RecentItemsSection() {
         </Link>
       </div>
 
-      <div className="space-y-2.5">
-        {recentItems.map((item) => (
-          <ItemCard key={item.id} item={item} />
-        ))}
-      </div>
+      {items.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border/80 p-8 text-center">
+          <p className="text-sm text-muted-foreground">No items created yet.</p>
+        </div>
+      ) : (
+        <div className="space-y-2.5">
+          {items.map((item) => (
+            <ItemCard key={item.id} item={item} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

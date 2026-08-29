@@ -1,11 +1,13 @@
 import { Pin } from "lucide-react";
-import { mockItems } from "@/lib/mock-data";
+import { DashboardItem } from "@/lib/db/items";
 import { ItemCard } from "./item-card";
 
-export function PinnedItemsSection() {
-  const pinnedItems = mockItems.filter((item) => item.isPinned);
+interface PinnedItemsSectionProps {
+  items: DashboardItem[];
+}
 
-  if (pinnedItems.length === 0) return null;
+export function PinnedItemsSection({ items }: PinnedItemsSectionProps) {
+  if (!items || items.length === 0) return null;
 
   return (
     <section className="space-y-3">
@@ -17,7 +19,7 @@ export function PinnedItemsSection() {
       </div>
 
       <div className="space-y-2.5">
-        {pinnedItems.map((item) => (
+        {items.map((item) => (
           <ItemCard key={item.id} item={item} />
         ))}
       </div>

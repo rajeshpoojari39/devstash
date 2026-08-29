@@ -10,7 +10,8 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "test:db": "tsx scripts/test-db.ts",
-    "test:collections": "tsx scripts/test-collections.ts"
+    "test:collections": "tsx scripts/test-collections.ts",
+    "test:items": "tsx scripts/test-items.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
