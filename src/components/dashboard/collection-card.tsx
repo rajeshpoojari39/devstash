@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 export interface CollectionItem {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   isFavorite: boolean;
   itemCount: number;
   createdAt: Date;
@@ -38,31 +38,27 @@ export interface CollectionItem {
 interface CollectionCardProps {
   collection: CollectionItem;
   accentColor?: string;
-  typeIcons?: (
-    | "code"
-    | "folder"
-    | "link"
-    | "sparkles"
-    | "terminal"
-    | "file"
-    | "note"
-  )[];
+  typeIcons?: string[];
 }
 
 // Icon mapping helper
 function renderTypeIcon(type: string, key: number) {
-  switch (type) {
+  switch (type.toLowerCase()) {
+    case "snippet":
     case "code":
       return <Code key={key} className="h-4 w-4 text-blue-500 shrink-0" />;
+    case "prompt":
     case "sparkles":
       return (
         <Sparkles key={key} className="h-4 w-4 text-purple-500 shrink-0" />
       );
+    case "command":
     case "terminal":
       return (
         <Terminal key={key} className="h-4 w-4 text-orange-500 shrink-0" />
       );
     case "note":
+    case "stickynote":
       return (
         <StickyNote key={key} className="h-4 w-4 text-yellow-400 shrink-0" />
       );
@@ -83,13 +79,15 @@ function renderTypeIcon(type: string, key: number) {
 export function CollectionCard({
   collection,
   accentColor,
-  typeIcons = ["code", "folder"],
+  typeIcons = [],
 }: CollectionCardProps) {
   const borderClasses: Record<string, string> = {
     blue: "border-blue-500/60 hover:border-blue-500",
     purple: "border-purple-500/60 hover:border-purple-500",
     yellow: "border-amber-500/60 hover:border-amber-500",
     orange: "border-orange-500/60 hover:border-orange-500",
+    emerald: "border-emerald-500/60 hover:border-emerald-500",
+    pink: "border-pink-500/60 hover:border-pink-500",
     neutral: "border-border hover:border-zinc-500",
   };
 

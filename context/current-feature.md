@@ -66,3 +66,13 @@ Not Started
   - Seeded 7 system item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`).
   - Seeded 5 collections (`React Patterns`, `AI Workflows`, `DevOps`, `Terminal Commands`, `Design Resources`) with 18 sample items, custom tags, and relations.
   - Verified seeding idempotency, database test suite (`npm run test:db`), ESLint, and Next.js production build (`npm run build`).
+
+- **Dashboard Collections: Database Integration (2026-08-29)**
+  - Created `src/lib/db/collections.ts` with data fetching functions (`getDashboardCollections`, `getDashboardStats`, `getDefaultUserId`).
+  - Implemented dynamic calculation of dominant item type per collection to compute accent border color (`blue`, `purple`, `orange`, `yellow`, `emerald`, `pink`, `neutral`).
+  - Extracted distinct item type icons present in collections for bottom preview icons.
+  - Converted `/dashboard` page into an async React Server Component fetching collections and stats concurrently with `Promise.all`.
+  - Updated `CollectionsSection` and `CollectionCard` to render live collections with empty state support.
+  - Updated `StatsCards` to display live database metrics for Total Items, Total Collections, Favorite Items, and Favorite Collections.
+  - Added `test:collections` script in `package.json` and verification test in `scripts/test-collections.ts`.
+  - Verified with database test suite, ESLint (`npm run lint`), and Next.js production build (`npm run build`).

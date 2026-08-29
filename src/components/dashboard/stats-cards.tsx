@@ -1,15 +1,17 @@
 import { Layers, Folder, Star, BookmarkCheck } from "lucide-react";
-import { mockItems, mockCollections } from "@/lib/mock-data";
+import { DashboardStats } from "@/lib/db/collections";
 
-export function StatsCards() {
-  const totalItems = mockItems.length;
-  const totalCollections = mockCollections.length;
-  const favoriteItems = mockItems.filter((i) => i.isFavorite).length;
-  const favoriteCollections = mockCollections.filter(
-    (c) => c.isFavorite,
-  ).length;
+interface StatsCardsProps {
+  stats?: DashboardStats;
+}
 
-  const stats = [
+export function StatsCards({ stats }: StatsCardsProps) {
+  const totalItems = stats?.totalItems ?? 0;
+  const totalCollections = stats?.totalCollections ?? 0;
+  const favoriteItems = stats?.favoriteItems ?? 0;
+  const favoriteCollections = stats?.favoriteCollections ?? 0;
+
+  const statItems = [
     {
       label: "Total Items",
       value: totalItems,
@@ -46,7 +48,7 @@ export function StatsCards() {
 
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => {
+      {statItems.map((stat) => {
         const Icon = stat.icon;
         return (
           <div

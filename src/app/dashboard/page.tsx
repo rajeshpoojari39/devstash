@@ -1,9 +1,20 @@
+import {
+  getDashboardCollections,
+  getDashboardStats,
+} from "@/lib/db/collections";
 import { StatsCards } from "@/components/dashboard/stats-cards";
 import { CollectionsSection } from "@/components/dashboard/collections-section";
 import { PinnedItemsSection } from "@/components/dashboard/pinned-items-section";
 import { RecentItemsSection } from "@/components/dashboard/recent-items-section";
 
-export default function DashboardPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DashboardPage() {
+  const [collections, stats] = await Promise.all([
+    getDashboardCollections(),
+    getDashboardStats(),
+  ]);
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto pb-10">
       {/* Header */}
@@ -17,10 +28,10 @@ export default function DashboardPage() {
       </div>
 
       {/* Summary Stats Cards */}
-      <StatsCards />
+      <StatsCards stats={stats} />
 
       {/* Collections Grid */}
-      <CollectionsSection />
+      <CollectionsSection collections={collections} />
 
       {/* Pinned Items */}
       <PinnedItemsSection />

@@ -1,50 +1,13 @@
 import Link from "next/link";
-import { mockCollections } from "@/lib/mock-data";
+import { Folder } from "lucide-react";
+import { DashboardCollection } from "@/lib/db/collections";
 import { CollectionCard } from "./collection-card";
 
-// Collection metadata customization mapping
-const collectionMetaMap: Record<
-  string,
-  {
-    accentColor: "blue" | "purple" | "yellow" | "orange" | "neutral";
-    typeIcons: (
-      | "code"
-      | "folder"
-      | "link"
-      | "sparkles"
-      | "terminal"
-      | "file"
-      | "note"
-    )[];
-  }
-> = {
-  coll_1: {
-    accentColor: "blue",
-    typeIcons: ["code", "folder", "link"],
-  },
-  coll_2: {
-    accentColor: "blue",
-    typeIcons: ["code", "folder"],
-  },
-  coll_3: {
-    accentColor: "neutral",
-    typeIcons: ["file", "folder"],
-  },
-  coll_4: {
-    accentColor: "yellow",
-    typeIcons: ["folder", "code", "link", "sparkles"],
-  },
-  coll_5: {
-    accentColor: "orange",
-    typeIcons: ["terminal", "folder"],
-  },
-  coll_6: {
-    accentColor: "purple",
-    typeIcons: ["sparkles", "code", "folder"],
-  },
-};
+interface CollectionsSectionProps {
+  collections?: DashboardCollection[];
+}
 
-export function CollectionsSection() {
+export function CollectionsSection({ collections = [] }: CollectionsSectionProps) {
   return (
     <section className="space-y-3.5">
       <div className="flex items-center justify-between">
@@ -59,22 +22,26 @@ export function CollectionsSection() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {mockCollections.map((collection) => {
-          const meta = collectionMetaMap[collection.id] || {
-            accentColor: "neutral",
-            typeIcons: ["folder", "code"],
-          };
-          return (
+      {collections.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12 px-4 text-center">
+          <Folder className="h-10 w-10 text-muted-foreground/50 mb-3" />
+          <h3 className="text-sm font-medium text-foreground">No collections yet</h3>
+          <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+            Create your first collection to organize snippets, prompts, commands, and links.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {collections.map((collection) => (
             <CollectionCard
               key={collection.id}
               collection={collection}
-              accentColor={meta.accentColor}
-              typeIcons={meta.typeIcons}
+              accentColor={collection.accentColor}
+              typeIcons={collection.typeIcons}
             />
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
