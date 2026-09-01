@@ -2,10 +2,25 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils";
+import type {
+  SidebarItemType,
+  SidebarCollection,
+  SidebarUser,
+} from "@/lib/db/items";
 import { useSidebar } from "./sidebar-context";
 import { SidebarContent } from "./sidebar-content";
 
-export function Sidebar() {
+interface SidebarProps {
+  itemTypes?: SidebarItemType[];
+  collections?: SidebarCollection[];
+  user?: SidebarUser | null;
+}
+
+export function Sidebar({
+  itemTypes = [],
+  collections = [],
+  user,
+}: SidebarProps) {
   const { isCollapsed } = useSidebar();
 
   return (
@@ -16,7 +31,11 @@ export function Sidebar() {
       )}
     >
       <div className="h-full w-full flex flex-col overflow-hidden">
-        <SidebarContent />
+        <SidebarContent
+          itemTypes={itemTypes}
+          collections={collections}
+          user={user}
+        />
       </div>
     </aside>
   );

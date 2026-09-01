@@ -28,15 +28,17 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  mockUser,
-  mockItemTypes,
-  mockCollections,
-  mockItemTypeCounts,
-} from "@/lib/mock-data";
+import type {
+  SidebarItemType,
+  SidebarCollection,
+  SidebarUser,
+} from "@/lib/db/items";
 import { useSidebar } from "./sidebar-context";
 
 interface SidebarContentProps {
+  itemTypes?: SidebarItemType[];
+  collections?: SidebarCollection[];
+  user?: SidebarUser | null;
   onNavigate?: () => void;
   isMobileDrawer?: boolean;
 }
@@ -50,19 +52,6 @@ const typeIconMap: Record<string, React.ElementType> = {
   Image: ImageIcon,
   Link: LinkIcon,
 };
-
-function getItemTypeSlug(name: string): string {
-  const map: Record<string, string> = {
-    snippet: "snippets",
-    prompt: "prompts",
-    command: "commands",
-    note: "notes",
-    file: "files",
-    image: "images",
-    link: "links",
-  };
-  return map[name.toLowerCase()] || `${name.toLowerCase()}s`;
-}
 
 function getItemTypeTitle(name: string): string {
   const map: Record<string, string> = {
@@ -80,6 +69,9 @@ function getItemTypeTitle(name: string): string {
 }
 
 export function SidebarContent({
+  itemTypes = [],
+  collections = [],
+  user,
   onNavigate,
   isMobileDrawer = false,
 }: SidebarContentProps) {
@@ -91,14 +83,18 @@ export function SidebarContent({
   // In mobile drawer, always render full expanded view
   const collapsed = isMobileDrawer ? false : isCollapsed;
 
-  const favoriteCollections = mockCollections.filter((c) => c.isFavorite);
-  const otherCollections = mockCollections.filter((c) => !c.isFavorite);
+  const favoriteCollections = collections.filter((c) => c.isFavorite);
+  const recentCollections = collections.filter((c) => !c.isFavorite);
 
-  const initials = mockUser.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase();
+  const userName = user?.name || "Demo User";
+  const userEmail = user?.email || "demo@devstash.io";
+  const initials =
+    userName
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase() || "U";
 
   return (
     <TooltipProvider delay={100}>
@@ -123,15 +119,11 @@ export function SidebarContent({
             <div className="flex flex-col items-center gap-4">
               {/* Types Icons */}
               <div className="flex flex-col items-center gap-1 w-full">
-                {mockItemTypes.map((itemType) => {
-                  const slug = getItemTypeSlug(itemType.name);
-                  const href = `/items/${slug}`;
-                  const isActive = pathname === href;
+                {itemTypes.map((itemType) => {
+                  const href = `/items/${itemType.name.toLowerCase()}`;
+                  const isActive =
+                    pathname === href || pathname.startsWith(`${href}/`);
                   const Icon = typeIconMap[itemType.icon] || Code;
-                  const count =
-                    mockItemTypeCounts[
-                      itemType.name as keyof typeof mockItemTypeCounts
-                    ] ?? 0;
                   const title = getItemTypeTitle(itemType.name);
 
                   return (
@@ -145,20 +137,20 @@ export function SidebarContent({
                               "flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
                               isActive
                                 ? "bg-accent text-foreground font-medium shadow-xs"
-                                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                             )}
-                          />
+                          >
+                            <Icon
+                              className="h-4 w-4 shrink-0"
+                              style={{ color: itemType.color }}
+                            />
+                          </Link>
                         }
-                      >
-                        <Icon
-                          className="h-4 w-4 shrink-0"
-                          style={{ color: itemType.color }}
-                        />
-                      </TooltipTrigger>
+                      />
                       <TooltipContent side="right">
                         <span>{title}</span>
                         <span className="ml-1.5 font-mono text-muted-foreground">
-                          ({count})
+                          ({itemType.count})
                         </span>
                       </TooltipContent>
                     </Tooltip>
@@ -170,7 +162,7 @@ export function SidebarContent({
 
               {/* Collections Icons */}
               <div className="flex flex-col items-center gap-1 w-full">
-                {mockCollections.map((col) => {
+                {collections.map((col) => {
                   const href = `/collections/${col.id}`;
                   const isActive = pathname === href;
 
@@ -185,16 +177,20 @@ export function SidebarContent({
                               "relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors",
                               isActive
                                 ? "bg-accent text-foreground font-medium shadow-xs"
-                                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+                                : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
                             )}
-                          />
+                          >
+                            {col.isFavorite ? (
+                              <Star className="h-4 w-4 shrink-0 fill-amber-400 text-amber-400" />
+                            ) : (
+                              <span
+                                className="h-2.5 w-2.5 rounded-full ring-1 ring-background"
+                                style={{ backgroundColor: col.dominantColor }}
+                              />
+                            )}
+                          </Link>
                         }
-                      >
-                        <Folder className="h-4 w-4 text-muted-foreground" />
-                        {col.isFavorite && (
-                          <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-amber-400 ring-1 ring-background" />
-                        )}
-                      </TooltipTrigger>
+                      />
                       <TooltipContent side="right">
                         <span>{col.name}</span>
                         <span className="ml-1.5 font-mono text-muted-foreground">
@@ -204,6 +200,29 @@ export function SidebarContent({
                     </Tooltip>
                   );
                 })}
+
+                {/* View all collections icon button */}
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Link
+                        href="/collections"
+                        onClick={onNavigate}
+                        className={cn(
+                          "flex h-9 w-9 items-center justify-center rounded-lg transition-colors mt-1",
+                          pathname === "/collections"
+                            ? "bg-accent text-foreground font-medium shadow-xs"
+                            : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+                        )}
+                      >
+                        <Folder className="h-4 w-4 opacity-50" />
+                      </Link>
+                    }
+                  />
+                  <TooltipContent side="right">
+                    <span>View all collections</span>
+                  </TooltipContent>
+                </Tooltip>
               </div>
             </div>
           ) : (
@@ -228,15 +247,12 @@ export function SidebarContent({
 
                 {typesExpanded && (
                   <nav className="space-y-0.5" aria-label="Item types">
-                    {mockItemTypes.map((itemType) => {
-                      const slug = getItemTypeSlug(itemType.name);
-                      const href = `/items/${slug}`;
-                      const isActive = pathname === href;
+                    {itemTypes.map((itemType) => {
+                      const href = `/items/${itemType.name.toLowerCase()}`;
+                      const isActive =
+                        pathname === href || pathname.startsWith(`${href}/`);
                       const Icon = typeIconMap[itemType.icon] || Code;
-                      const count =
-                        mockItemTypeCounts[
-                          itemType.name as keyof typeof mockItemTypeCounts
-                        ] ?? 0;
+                      const title = getItemTypeTitle(itemType.name);
 
                       return (
                         <Link
@@ -247,7 +263,7 @@ export function SidebarContent({
                             "group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-sm font-normal transition-colors",
                             isActive
                               ? "bg-accent text-foreground font-medium"
-                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                              : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                           )}
                         >
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -255,12 +271,10 @@ export function SidebarContent({
                               className="h-4 w-4 shrink-0"
                               style={{ color: itemType.color }}
                             />
-                            <span className="truncate">
-                              {getItemTypeTitle(itemType.name)}
-                            </span>
+                            <span className="truncate">{title}</span>
                           </div>
                           <span className="text-xs text-muted-foreground/70 font-mono">
-                            {count}
+                            {itemType.count}
                           </span>
                         </Link>
                       );
@@ -311,14 +325,16 @@ export function SidebarContent({
                                   "group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-sm font-normal transition-colors",
                                   isActive
                                     ? "bg-accent text-foreground font-medium"
-                                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                                 )}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
                                   <span className="truncate">{col.name}</span>
                                 </div>
-                                <Star className="h-3.5 w-3.5 shrink-0 fill-amber-400 text-amber-400" />
+                                <span className="text-xs text-muted-foreground/70 font-mono">
+                                  {col.itemCount}
+                                </span>
                               </Link>
                             );
                           })}
@@ -326,17 +342,17 @@ export function SidebarContent({
                       </div>
                     )}
 
-                    {/* All Collections Subgroup */}
-                    {otherCollections.length > 0 && (
+                    {/* Recent / Other Collections Subgroup */}
+                    {recentCollections.length > 0 && (
                       <div className="space-y-1">
                         <div className="px-2.5 text-[10px] font-semibold tracking-wider text-muted-foreground/60 uppercase">
-                          All Collections
+                          Recents
                         </div>
                         <nav
                           className="space-y-0.5"
-                          aria-label="All collections"
+                          aria-label="Recent collections"
                         >
-                          {otherCollections.map((col) => {
+                          {recentCollections.map((col) => {
                             const href = `/collections/${col.id}`;
                             const isActive = pathname === href;
 
@@ -349,11 +365,23 @@ export function SidebarContent({
                                   "group flex items-center justify-between rounded-lg px-2.5 py-1.5 text-sm font-normal transition-colors",
                                   isActive
                                     ? "bg-accent text-foreground font-medium"
-                                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
+                                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                                 )}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0">
-                                  <Folder className="h-4 w-4 shrink-0 text-muted-foreground" />
+                                  <div className="flex h-3.5 w-3.5 items-center justify-center shrink-0">
+                                    <span
+                                      className="h-2 w-2 rounded-full ring-1 ring-background"
+                                      style={{
+                                        backgroundColor: col.dominantColor,
+                                      }}
+                                      title={
+                                        col.dominantTypeName
+                                          ? `Most used: ${col.dominantTypeName}`
+                                          : undefined
+                                      }
+                                    />
+                                  </div>
                                   <span className="truncate">{col.name}</span>
                                 </div>
                                 <span className="text-xs text-muted-foreground/70 font-mono">
@@ -365,6 +393,23 @@ export function SidebarContent({
                         </nav>
                       </div>
                     )}
+
+                    {/* View All Collections Link */}
+                    <div className="pt-1">
+                      <Link
+                        href="/collections"
+                        onClick={onNavigate}
+                        className={cn(
+                          "flex items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-medium transition-colors",
+                          pathname === "/collections"
+                            ? "bg-accent text-foreground font-semibold"
+                            : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
+                        )}
+                      >
+                        <span>View all collections</span>
+                        <ChevronRight className="h-3.5 w-3.5 opacity-60" />
+                      </Link>
+                    </div>
                   </div>
                 )}
               </div>
@@ -373,30 +418,28 @@ export function SidebarContent({
         </ScrollArea>
 
         {/* User Profile Footer */}
-        <div className="mt-auto border-t border-border p-2">
+        <div className="mt-auto border-t border-border p-2 shrink-0">
           {collapsed ? (
             <div className="flex flex-col items-center gap-2 py-1">
               <Tooltip>
                 <TooltipTrigger
                   render={
-                    <div className="cursor-pointer">
+                    <div className="flex items-center justify-center cursor-pointer">
                       <Avatar
                         size="sm"
                         className="bg-neutral-100 dark:bg-neutral-800"
-                      />
+                      >
+                        <AvatarImage src={user?.image || ""} alt={userName} />
+                        <AvatarFallback className="bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200 text-[10px] font-semibold">
+                          {initials}
+                        </AvatarFallback>
+                      </Avatar>
                     </div>
                   }
-                >
-                  <AvatarImage src="" alt={mockUser.name} />
-                  <AvatarFallback className="bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200 text-[10px] font-semibold">
-                    {initials}
-                  </AvatarFallback>
-                </TooltipTrigger>
+                />
                 <TooltipContent side="right">
-                  <p className="font-medium">{mockUser.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {mockUser.email}
-                  </p>
+                  <p className="font-medium">{userName}</p>
+                  <p className="text-xs text-muted-foreground">{userEmail}</p>
                 </TooltipContent>
               </Tooltip>
 
@@ -408,11 +451,11 @@ export function SidebarContent({
                       size="icon"
                       className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
                       aria-label="User settings"
-                    />
+                    >
+                      <Settings className="h-4 w-4" />
+                    </Button>
                   }
-                >
-                  <Settings className="h-4 w-4" />
-                </TooltipTrigger>
+                />
                 <TooltipContent side="right">Settings</TooltipContent>
               </Tooltip>
             </div>
@@ -423,17 +466,17 @@ export function SidebarContent({
                   size="default"
                   className="bg-neutral-100 dark:bg-neutral-800"
                 >
-                  <AvatarImage src="" alt={mockUser.name} />
+                  <AvatarImage src={user?.image || ""} alt={userName} />
                   <AvatarFallback className="bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200 text-xs font-semibold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-sm font-medium text-foreground leading-snug">
-                    {mockUser.name}
+                    {userName}
                   </p>
                   <p className="truncate text-xs text-muted-foreground">
-                    {mockUser.email}
+                    {userEmail}
                   </p>
                 </div>
               </div>

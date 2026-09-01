@@ -85,3 +85,13 @@ Not Started
   - Integrated parallel data fetching in `src/app/dashboard/page.tsx` React Server Component.
   - Created standalone test script `scripts/test-items.ts` and added `test:items` to `package.json`.
   - Verified with database test suite (`npm run test:items`, `npm run test:collections`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
+- **Stats & Sidebar: Database Integration (2026-09-01)**
+  - Added typed query functions `getSidebarItemTypes`, `getSidebarCollections`, `getSidebarUser`, and `getSidebarData` in `src/lib/db/items.ts`.
+  - Implemented dynamic item counts per system item type using `prisma.item.groupBy`.
+  - Implemented calculation of dominant item type color indicator for recent collections in sidebar.
+  - Converted `src/app/dashboard/layout.tsx` to an async Server Component fetching live sidebar data in parallel.
+  - Updated `SidebarContent`, `Sidebar`, and `MobileSidebar` to render live item types, counts, collections, indicators, and user profile, eliminating all mock data dependencies.
+  - Added "View all collections" link under the collections list linking to `/collections`.
+  - Added `test:sidebar` script in `package.json` and verification test in `scripts/test-sidebar.ts`.
+  - Verified with test suite (`npm run test:sidebar`, `npm run test:collections`, `npm run test:items`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).

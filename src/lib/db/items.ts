@@ -8,6 +8,38 @@ export interface ItemTypeInfo {
   color: string;
 }
 
+export interface SidebarItemType {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;
+  count: number;
+}
+
+export interface SidebarCollection {
+  id: string;
+  name: string;
+  isFavorite: boolean;
+  itemCount: number;
+  dominantColor: string;
+  dominantTypeName: string | null;
+  updatedAt: Date;
+}
+
+export interface SidebarUser {
+  id: string;
+  name: string | null;
+  email: string;
+  image: string | null;
+  isPro: boolean;
+}
+
+export interface SidebarData {
+  itemTypes: SidebarItemType[];
+  collections: SidebarCollection[];
+  user: SidebarUser | null;
+}
+
 export interface DashboardItem {
   id: string;
   title: string;
@@ -143,4 +175,181 @@ export async function getDashboardRecentItems(
     itemType: item.itemType,
     tags: item.tags.map((tag) => tag.name),
   }));
+}
+
+/**
+ * Fetches all system item types (and custom types) along with the active user's item count per type.
+ */
+export async function getSidebarItemTypes(
+  userId?: string,
+): Promise<SidebarItemType[]> {
+  const targetUserId = userId || (await getDefaultUserId());
+
+  if (!targetUserId) {
+    return [];
+  }
+
+  const [itemTypes, itemCounts] = await Promise.all([
+    prisma.itemType.findMany({
+      where: {
+        OR: [{ isSystem: true }, { userId: targetUserId }],
+      },
+      orderBy: { id: "asc" },
+    }),
+    prisma.item.groupBy({
+      by: ["itemTypeId"],
+      where: { userId: targetUserId },
+      _count: { _all: true },
+    }),
+  ]);
+
+  const countMap = new Map(
+    itemCounts.map((c) => [c.itemTypeId, c._count._all]),
+  );
+
+  return itemTypes.map((type) => ({
+    id: type.id,
+    name: type.name,
+    icon: type.icon,
+    color: type.color,
+    count: countMap.get(type.id) ?? 0,
+  }));
+}
+
+/**
+ * Fetches user collections for the sidebar with dominant item type colors and item counts.
+ */
+export async function getSidebarCollections(
+  userId?: string,
+): Promise<SidebarCollection[]> {
+  const targetUserId = userId || (await getDefaultUserId());
+
+  if (!targetUserId) {
+    return [];
+  }
+
+  const collections = await prisma.collection.findMany({
+    where: {
+      userId: targetUserId,
+    },
+    orderBy: [{ isFavorite: "desc" }, { updatedAt: "desc" }],
+    include: {
+      defaultType: {
+        select: {
+          name: true,
+          color: true,
+        },
+      },
+      items: {
+        select: {
+          item: {
+            select: {
+              itemType: {
+                select: {
+                  name: true,
+                  color: true,
+                },
+              },
+            },
+          },
+        },
+      },
+      _count: {
+        select: {
+          items: true,
+        },
+      },
+    },
+  });
+
+  return collections.map((col) => {
+    const typeCountMap = new Map<string, { count: number; color: string }>();
+
+    for (const itemRel of col.items) {
+      const typeName = itemRel.item.itemType.name.toLowerCase();
+      const color = itemRel.item.itemType.color;
+      const current = typeCountMap.get(typeName) || { count: 0, color };
+      typeCountMap.set(typeName, { count: current.count + 1, color });
+    }
+
+    let dominantTypeName: string | null = null;
+    let dominantColor = "#6b7280"; // neutral default
+    let maxCount = 0;
+
+    for (const [typeName, info] of typeCountMap.entries()) {
+      if (info.count > maxCount) {
+        maxCount = info.count;
+        dominantTypeName = typeName;
+        dominantColor = info.color;
+      }
+    }
+
+    if (!dominantTypeName && col.defaultType) {
+      dominantTypeName = col.defaultType.name.toLowerCase();
+      dominantColor = col.defaultType.color;
+    }
+
+    return {
+      id: col.id,
+      name: col.name,
+      isFavorite: col.isFavorite,
+      itemCount: col._count.items,
+      dominantColor,
+      dominantTypeName,
+      updatedAt: col.updatedAt,
+    };
+  });
+}
+
+/**
+ * Fetches user profile for the sidebar footer.
+ */
+export async function getSidebarUser(
+  userId?: string,
+): Promise<SidebarUser | null> {
+  const targetUserId = userId || (await getDefaultUserId());
+
+  if (!targetUserId) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: targetUserId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      image: true,
+      isPro: true,
+    },
+  });
+
+  return user;
+}
+
+/**
+ * Composite query fetching all sidebar data concurrently in parallel.
+ */
+export async function getSidebarData(userId?: string): Promise<SidebarData> {
+  const targetUserId = userId || (await getDefaultUserId());
+
+  if (!targetUserId) {
+    return {
+      itemTypes: [],
+      collections: [],
+      user: null,
+    };
+  }
+
+  const [itemTypes, collections, user] = await Promise.all([
+    getSidebarItemTypes(targetUserId),
+    getSidebarCollections(targetUserId),
+    getSidebarUser(targetUserId),
+  ]);
+
+  return {
+    itemTypes,
+    collections,
+    user,
+  };
 }

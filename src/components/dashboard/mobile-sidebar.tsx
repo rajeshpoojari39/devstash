@@ -8,10 +8,25 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
+import type {
+  SidebarItemType,
+  SidebarCollection,
+  SidebarUser,
+} from "@/lib/db/items";
 import { useSidebar } from "./sidebar-context";
 import { SidebarContent } from "./sidebar-content";
 
-export function MobileSidebar() {
+interface MobileSidebarProps {
+  itemTypes?: SidebarItemType[];
+  collections?: SidebarCollection[];
+  user?: SidebarUser | null;
+}
+
+export function MobileSidebar({
+  itemTypes = [],
+  collections = [],
+  user,
+}: MobileSidebarProps) {
   const { isMobileOpen, setIsMobileOpen } = useSidebar();
 
   return (
@@ -28,6 +43,9 @@ export function MobileSidebar() {
           </SheetDescription>
         </SheetHeader>
         <SidebarContent
+          itemTypes={itemTypes}
+          collections={collections}
+          user={user}
           isMobileDrawer={true}
           onNavigate={() => setIsMobileOpen(false)}
         />
