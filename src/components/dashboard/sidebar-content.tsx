@@ -20,6 +20,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DevStashLogo } from "@/components/brand/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import {
@@ -65,6 +66,16 @@ function getItemTypeTitle(name: string): string {
   };
   return (
     map[name.toLowerCase()] || name.charAt(0).toUpperCase() + name.slice(1)
+  );
+}
+
+function isProType(name: string): boolean {
+  const lower = name.toLowerCase();
+  return (
+    lower === "file" ||
+    lower === "files" ||
+    lower === "image" ||
+    lower === "images"
   );
 }
 
@@ -148,10 +159,20 @@ export function SidebarContent({
                         }
                       />
                       <TooltipContent side="right">
-                        <span>{title}</span>
-                        <span className="ml-1.5 font-mono text-muted-foreground">
-                          ({itemType.count})
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span>{title}</span>
+                          {isProType(itemType.name) && (
+                            <Badge
+                              variant="secondary"
+                              className="h-3.5 px-1 text-[9px] font-semibold tracking-wider text-muted-foreground uppercase border border-border/40"
+                            >
+                              PRO
+                            </Badge>
+                          )}
+                          <span className="font-mono text-muted-foreground">
+                            ({itemType.count})
+                          </span>
+                        </div>
                       </TooltipContent>
                     </Tooltip>
                   );
@@ -272,6 +293,14 @@ export function SidebarContent({
                               style={{ color: itemType.color }}
                             />
                             <span className="truncate">{title}</span>
+                            {isProType(itemType.name) && (
+                              <Badge
+                                variant="secondary"
+                                className="h-4 px-1.5 text-[10px] font-semibold tracking-wider text-muted-foreground uppercase border border-border/40"
+                              >
+                                PRO
+                              </Badge>
+                            )}
                           </div>
                           <span className="text-xs text-muted-foreground/70 font-mono">
                             {itemType.count}
