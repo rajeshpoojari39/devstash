@@ -1,4 +1,4 @@
-# Current Feature: Add Pro Badge to Sidebar
+# Current Feature
 
 <!-- Feature Name -->
 
@@ -6,23 +6,15 @@
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
 <!-- Goals & requirements -->
 
-- Add a "PRO" badge to the `files` and `images` item types in the sidebar navigation.
-- Use the ShadCN UI `Badge` component (`@/components/ui/badge`).
-- Style the badge to be clean, subtle, and responsive in both full and collapsed/drawer sidebar states.
-- Ensure the text is strictly uppercase (`PRO`).
-
 ## Notes
 
 <!-- Any extra notes -->
-
-- Spec loaded from [context/features/add-pro-badge-sidebar.md](context/features/add-pro-badge-sidebar.md).
-- Affected components: `src/components/dashboard/sidebar-content.tsx` (and related item type rendering in sidebar).
 
 ## History
 
@@ -103,3 +95,9 @@ In Progress
   - Added "View all collections" link under the collections list linking to `/collections`.
   - Added `test:sidebar` script in `package.json` and verification test in `scripts/test-sidebar.ts`.
   - Verified with test suite (`npm run test:sidebar`, `npm run test:collections`, `npm run test:items`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
+- **Add Pro Badge to Sidebar (2026-09-04)**
+  - Added clean, subtle uppercase "PRO" badge to `files` and `images` item types in the sidebar navigation.
+  - Used ShadCN UI `Badge` component (`variant="secondary"` with fine-tuned sizing and borders).
+  - Integrated badge display across desktop expanded sidebar, mobile drawer, and desktop collapsed icon-only tooltips.
+  - Verified with sidebar DB tests (`npm run test:sidebar`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
