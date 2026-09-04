@@ -44,3 +44,9 @@ next-env.d.ts
 
 # prisma
 /src/generated/prisma
+
+# agent / mcp configs
+.agents/mcp_config.json
+!.agents/mcp_config.example.json
+.playwright-mcp/
+

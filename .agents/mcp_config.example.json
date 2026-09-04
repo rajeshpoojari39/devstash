@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "neon": {
+      "serverUrl": "https://mcp.neon.tech/mcp",
+      "headers": {
+        "Authorization": "Bearer YOUR_NEON_API_KEY"
+      }
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp",
+        "--api-key",
+        "YOUR_CONTEXT7_API_KEY"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": ["@playwright/mcp@latest"]
+    }
+  }
+}

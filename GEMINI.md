@@ -63,3 +63,20 @@ devstash/
 1. **Verification**: Always run `npm run build` or `npm run lint` after significant changes to confirm code correctness.
 2. **Preserve Comments & Docs**: Do not remove existing docstrings or structural comments unless requested.
 3. **No Dummy Code**: Always write complete, functional implementations without placeholders or silent exception swallowing.
+
+---
+
+## Database & Neon MCP Guidelines
+
+Whenever using the **Neon MCP** tools to inspect, query, or interact with the database:
+
+- **Organization ID**: `org-tiny-resonance-19531518`
+- **Project Name**: `devstash`
+- **Project ID**: `dawn-wildflower-34666399`
+- **Default Target Branch**: `development` (`br-damp-meadow-a56n40h5`)
+
+### Rules:
+1. **Always use the `development` branch**: All database reads, schema queries, table inspections, and SQL executions must explicitly target `branch_id: "br-damp-meadow-a56n40h5"` (or branch name `development`).
+2. **Never target `production`**: Do not run any queries, schema changes, or actions against the `production` branch (`br-rapid-darkness-a5pkk55f`) unless the user explicitly states "production" in their prompt.
+3. **Always supply IDs**: When invoking Neon MCP tools, always provide `org_id: "org-tiny-resonance-19531518"` and `project_id: "dawn-wildflower-34666399"`.
+
