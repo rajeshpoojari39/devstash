@@ -67,14 +67,23 @@ export function ItemCard({ item }: ItemCardProps) {
   const Icon =
     typeIconMap[iconKey] || typeIconMap[itemType.name.toLowerCase()] || Code;
 
-  const handleCopy = (e: React.MouseEvent) => {
+  const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     const textToCopy = item.content || item.url || item.title;
-    if (textToCopy && typeof navigator !== "undefined") {
-      navigator.clipboard.writeText(textToCopy);
+    if (
+      !textToCopy ||
+      typeof navigator === "undefined" ||
+      !navigator.clipboard
+    ) {
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(textToCopy);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error("Failed to copy text to clipboard:", err);
     }
   };
 

@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { prisma } from "@/lib/prisma";
 
 export type CollectionAccentColor =
@@ -40,9 +41,10 @@ const TYPE_NAME_TO_COLOR_MAP: Record<string, CollectionAccentColor> = {
 
 /**
  * Resolves the active user ID for data fetching.
+ * Wrapped with React.cache() to deduplicate requests within a single render pass.
  * Defaults to demo user until auth sessions are fully active.
  */
-export async function getDefaultUserId(): Promise<string | null> {
+export const getDefaultUserId = cache(async (): Promise<string | null> => {
   const demoUser = await prisma.user.findUnique({
     where: { email: "demo@devstash.io" },
     select: { id: true },
@@ -55,7 +57,7 @@ export async function getDefaultUserId(): Promise<string | null> {
   });
 
   return firstUser?.id ?? null;
-}
+});
 
 /**
  * Fetches recent collections for the dashboard with computed dominant item type colors
@@ -71,11 +73,16 @@ export async function getDashboardCollections(
     return [];
   }
 
+  const safeLimit =
+    typeof limit === "number" && Number.isFinite(limit) && limit > 0
+      ? Math.min(Math.floor(limit), 50)
+      : 6;
+
   const collections = await prisma.collection.findMany({
     where: {
       userId: targetUserId,
     },
-    take: limit,
+    take: safeLimit,
     orderBy: {
       updatedAt: "desc",
     },
@@ -88,6 +95,7 @@ export async function getDashboardCollections(
         },
       },
       items: {
+        take: 20,
         select: {
           item: {
             select: {

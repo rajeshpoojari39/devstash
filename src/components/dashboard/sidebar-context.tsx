@@ -31,17 +31,20 @@ export function SidebarProvider({ children }: { children: React.ReactNode }) {
     setIsMobileOpen((prev) => !prev);
   }, []);
 
+  const contextValue = React.useMemo(
+    () => ({
+      isCollapsed,
+      isMobileOpen,
+      toggleSidebar,
+      toggleMobileOpen,
+      setIsMobileOpen,
+      setIsCollapsed,
+    }),
+    [isCollapsed, isMobileOpen, toggleSidebar, toggleMobileOpen],
+  );
+
   return (
-    <SidebarContext.Provider
-      value={{
-        isCollapsed,
-        isMobileOpen,
-        toggleSidebar,
-        toggleMobileOpen,
-        setIsMobileOpen,
-        setIsCollapsed,
-      }}
-    >
+    <SidebarContext.Provider value={contextValue}>
       {children}
     </SidebarContext.Provider>
   );

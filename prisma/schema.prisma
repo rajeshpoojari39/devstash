@@ -55,6 +55,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
   @@map("accounts")
 }
 
@@ -66,6 +67,7 @@ model Session {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
@@ -116,6 +118,8 @@ model Item {
   @@index([userId])
   @@index([itemTypeId])
   @@index([createdAt])
+  @@index([userId, isPinned, createdAt(sort: Desc)])
+  @@index([userId, isFavorite])
   @@map("items")
 }
 
@@ -162,6 +166,9 @@ model Collection {
   items ItemCollection[]
 
   @@index([userId])
+  @@index([defaultTypeId])
+  @@index([userId, isFavorite, updatedAt(sort: Desc)])
+  @@index([userId, updatedAt(sort: Desc)])
   @@map("collections")
 }
 
@@ -177,6 +184,7 @@ model ItemCollection {
   collection Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
 
   @@id([itemId, collectionId])
+  @@index([collectionId])
   @@map("item_collections")
 }
 

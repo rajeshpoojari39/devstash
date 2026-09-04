@@ -63,6 +63,7 @@ export function TopBar() {
             <Input
               type="search"
               placeholder="Search items..."
+              aria-label="Search items"
               className="h-8 sm:h-9 w-full rounded-md border border-border/80 bg-muted/30 pl-8 sm:pl-9 pr-8 sm:pr-12 text-xs sm:text-sm placeholder:text-muted-foreground/60 focus-visible:bg-background/80 focus-visible:border-ring focus-visible:ring-1"
               readOnly
             />

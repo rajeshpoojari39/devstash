@@ -131,11 +131,16 @@ export async function getDashboardRecentItems(
     return [];
   }
 
+  const safeLimit =
+    typeof limit === "number" && Number.isFinite(limit) && limit > 0
+      ? Math.min(Math.floor(limit), 100)
+      : 10;
+
   const items = await prisma.item.findMany({
     where: {
       userId: targetUserId,
     },
-    take: limit,
+    take: safeLimit,
     orderBy: {
       createdAt: "desc",
     },
@@ -241,6 +246,7 @@ export async function getSidebarCollections(
         },
       },
       items: {
+        take: 20,
         select: {
           item: {
             select: {
