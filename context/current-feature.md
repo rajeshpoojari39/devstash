@@ -1,59 +1,20 @@
 # Current Feature
 
-Performance & Code Quality Quick Wins
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-Resolve low-risk, high-impact performance and code hygiene quick-wins identified during the codebase audit:
-
-1. **Deduplicate Server-Side User Lookups (`React.cache`)**:
-   - Wrap `getDefaultUserId()` with React's per-request `cache()` from `'react'` in [`src/lib/db/collections.ts`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/lib/db/collections.ts) to deduplicate repeated database queries within the same request lifecycle across `DashboardPage` and `DashboardLayout`.
-
-2. **Optimize Collection Relations / N+1 Query Over-Fetching (Prisma Conventions)**:
-   - Optimize and bound relation loading in `getSidebarCollections` ([`src/lib/db/items.ts`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/lib/db/items.ts)) and `getDashboardCollections` ([`src/lib/db/collections.ts`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/lib/db/collections.ts)) using standard Prisma nested query conventions (e.g. `take` limits on related items and optimized field selection), avoiding raw SQL.
-
-3. **Memoize `SidebarProvider` Context Value**:
-   - Wrap the context value object in `useMemo` in [`src/components/dashboard/sidebar-context.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/components/dashboard/sidebar-context.tsx) to eliminate unnecessary cascading re-renders of navigation components.
-
-4. **Enhance Clipboard Copy Handler**:
-   - Add `async/await` and `try/catch` error handling to `handleCopy` in [`src/components/dashboard/item-card.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/components/dashboard/item-card.tsx) to handle clipboard permission rejections cleanly.
-
-5. **Clean Up Redundant Tooltip Provider**:
-   - Remove duplicate `<TooltipProvider>` from [`src/components/dashboard/sidebar-content.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/components/dashboard/sidebar-content.tsx) since `RootLayout` already mounts it globally.
-   - Retain [`src/lib/mock-data.ts`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/lib/mock-data.ts) for reference.
-
-6. **Accessibility Attributes**:
-   - Add `aria-label="Search items"` to the search input in [`src/components/dashboard/top-bar.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/components/dashboard/top-bar.tsx).
-   - Add `aria-expanded` attributes to collapsible section trigger buttons in [`src/components/dashboard/sidebar-content.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/components/dashboard/sidebar-content.tsx).
-
-7. **Database Indexing & Prisma Migration**:
-   - Add targeted composite and foreign key indexes in [`prisma/schema.prisma`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/prisma/schema.prisma) for `isPinned`, `isFavorite`, `updatedAt`, and join table lookups:
-     - `Item`: `@@index([userId, isPinned, createdAt(sort: Desc)])`, `@@index([userId, isFavorite])`
-     - `Collection`: `@@index([userId, isFavorite, updatedAt(sort: Desc)])`, `@@index([userId, updatedAt(sort: Desc)])`, `@@index([defaultTypeId])`
-     - `ItemCollection`: `@@index([collectionId])` (essential for collection -> items relation queries)
-     - `Account` & `Session`: `@@index([userId])`
-   - Generate and apply a Prisma migration (`npx prisma migrate dev --name add_performance_indexes`) to produce version-controlled migration SQL for syncing local and production databases.
-
-8. **Loading Skeletons & Error Boundaries**:
-   - Create reusable [`src/components/ui/skeleton.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/components/ui/skeleton.tsx) component.
-   - Implement Suspense streaming skeleton in [`src/app/dashboard/loading.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/app/dashboard/loading.tsx) for stats cards, collections grid, and recent items.
-   - Implement client-side error boundary in [`src/app/dashboard/error.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/app/dashboard/error.tsx) with retry and reset handlers.
-   - Implement global fallback error boundary in [`src/app/error.tsx`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/app/error.tsx).
-
-9. **Database Query Parameter & Limit Validation**:
-   - Add bounds and integer validation for query limit parameters in [`src/lib/db/collections.ts`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/lib/db/collections.ts) (`getDashboardCollections`, clamped to max 50) and [`src/lib/db/items.ts`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/lib/db/items.ts) (`getDashboardRecentItems`, clamped to max 100).
+<!-- Goals & requirements -->
 
 ## Notes
 
-- Authentication has not been implemented yet; continue relying on `getDefaultUserId` for the demo user context.
-- Use standard Prisma API conventions only (no raw SQL queries).
-- Preserve [`src/lib/mock-data.ts`](file:///c:/Rajesh%20Files/Personal%20Project/devstash/src/lib/mock-data.ts).
-- Include Prisma migration files for schema index additions to keep database branches in sync.
-- Zero breaking API changes; verify with existing DB test scripts (`npm run test:sidebar`, `npm run test:collections`, `npm run test:items`), ESLint (`npm run lint`), and Next.js build (`npm run build`).
+<!-- Any extra notes -->
 
 ## History
 
@@ -140,3 +101,15 @@ Resolve low-risk, high-impact performance and code hygiene quick-wins identified
   - Used ShadCN UI `Badge` component (`variant="secondary"` with fine-tuned sizing and borders).
   - Integrated badge display across desktop expanded sidebar, mobile drawer, and desktop collapsed icon-only tooltips.
   - Verified with sidebar DB tests (`npm run test:sidebar`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
+- **Performance Quick Wins, DB Indexes & Error Boundaries (2026-09-04)**
+  - Wrapped `getDefaultUserId()` with `React.cache()` in `src/lib/db/collections.ts` to eliminate duplicate per-request user queries.
+  - Bounded collection items relation queries (`take: 20`) in `src/lib/db/items.ts` and `src/lib/db/collections.ts` using Prisma nested query conventions.
+  - Memoized `SidebarProvider` context value in `src/components/dashboard/sidebar-context.tsx` with `React.useMemo`.
+  - Upgraded clipboard copy handler in `src/components/dashboard/item-card.tsx` with async `try/catch` error handling.
+  - Removed duplicate `<TooltipProvider>` from `src/components/dashboard/sidebar-content.tsx` while retaining `src/lib/mock-data.ts`.
+  - Added accessibility attributes (`aria-label="Search items"` in `top-bar.tsx` and `aria-expanded` on sidebar accordion headers).
+  - Added composite & foreign key indexes to Prisma schema for `isPinned`, `isFavorite`, `updatedAt`, and join table lookups; generated and applied migration `20260904080106_add_performance_indexes`.
+  - Created reusable `Skeleton` UI component (`src/components/ui/skeleton.tsx`), Suspense streaming fallback (`src/app/dashboard/loading.tsx`), route error boundary (`src/app/dashboard/error.tsx`), and global error boundary (`src/app/error.tsx`).
+  - Added integer and bounds validation (`safeLimit`) for items and collections database queries.
+  - Verified with database test suite (`npm run test:sidebar`, `npm run test:collections`, `npm run test:items`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
