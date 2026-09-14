@@ -1,20 +1,36 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Auth Credentials - Email/Password Provider
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Add Credentials provider for email/password authentication alongside GitHub OAuth.
+- Verify password field on `User` model in Prisma schema (or add migration if necessary).
+- Update `src/auth.config.ts` with Credentials provider placeholder (`authorize: () => null`).
+- Update `src/auth.ts` to override Credentials provider with `bcryptjs` password validation against database user.
+- Create user registration API endpoint at `POST /api/auth/register`:
+  - Validate request payload (`name`, `email`, `password`, `confirmPassword`).
+  - Validate password confirmation match and basic constraints.
+  - Check for existing user with the same email.
+  - Hash password securely using `bcryptjs`.
+  - Create user record in PostgreSQL database via Prisma Client.
+  - Return appropriate HTTP status codes and structured JSON response.
+- Verify credential login, registration flow, and existing GitHub OAuth compatibility.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Credentials Provider Split Pattern**: NextAuth v5 requires `src/auth.config.ts` (Edge-compatible) to have the Credentials provider stubbed with `authorize: () => null`, while `src/auth.ts` (Node runtime with Prisma & bcrypt) overrides it with actual database lookup and password verification.
+- **Dependencies**: `bcryptjs` and `@types/bcryptjs` are already installed and configured in the project.
+- **Testing Plan**:
+  - Test registration via `POST /api/auth/register` (curl/script).
+  - Verify credential sign-in via `/api/auth/signin` and session creation.
+  - Verify redirect to `/dashboard` upon successful login.
+  - Confirm GitHub OAuth remains functional.
+- **References**:
+  - Spec file: `context/features/auth-phase-2-spec.md`
+  - Auth.js Credentials Provider: https://authjs.dev/getting-started/authentication/credentials
 
 ## History
 

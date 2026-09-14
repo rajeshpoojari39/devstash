@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { authConfig } from "../src/auth.config";
 import { auth, handlers, signIn, signOut } from "../src/auth";
 import { proxy, config as proxyConfig } from "../src/proxy";
