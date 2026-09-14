@@ -1,36 +1,20 @@
-# Current Feature: Auth Credentials - Email/Password Provider
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Add Credentials provider for email/password authentication alongside GitHub OAuth.
-- Verify password field on `User` model in Prisma schema (or add migration if necessary).
-- Update `src/auth.config.ts` with Credentials provider placeholder (`authorize: () => null`).
-- Update `src/auth.ts` to override Credentials provider with `bcryptjs` password validation against database user.
-- Create user registration API endpoint at `POST /api/auth/register`:
-  - Validate request payload (`name`, `email`, `password`, `confirmPassword`).
-  - Validate password confirmation match and basic constraints.
-  - Check for existing user with the same email.
-  - Hash password securely using `bcryptjs`.
-  - Create user record in PostgreSQL database via Prisma Client.
-  - Return appropriate HTTP status codes and structured JSON response.
-- Verify credential login, registration flow, and existing GitHub OAuth compatibility.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Credentials Provider Split Pattern**: NextAuth v5 requires `src/auth.config.ts` (Edge-compatible) to have the Credentials provider stubbed with `authorize: () => null`, while `src/auth.ts` (Node runtime with Prisma & bcrypt) overrides it with actual database lookup and password verification.
-- **Dependencies**: `bcryptjs` and `@types/bcryptjs` are already installed and configured in the project.
-- **Testing Plan**:
-  - Test registration via `POST /api/auth/register` (curl/script).
-  - Verify credential sign-in via `/api/auth/signin` and session creation.
-  - Verify redirect to `/dashboard` upon successful login.
-  - Confirm GitHub OAuth remains functional.
-- **References**:
-  - Spec file: `context/features/auth-phase-2-spec.md`
-  - Auth.js Credentials Provider: https://authjs.dev/getting-started/authentication/credentials
+<!-- Any extra notes -->
 
 ## History
 
@@ -139,3 +123,11 @@ In Progress
   - Extended NextAuth `Session` and `JWT` types with `user.id` (`src/types/next-auth.d.ts`).
   - Added test script `scripts/test-auth.ts` (`npm run test:auth`).
   - Verified with auth test suite, ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
+- **Auth Credentials & User Registration (Phase 2) (2026-09-14)**
+  - Added NextAuth v5 Credentials provider with Edge placeholder in `src/auth.config.ts`.
+  - Implemented database user lookup and `bcryptjs` password validation in `src/auth.ts`.
+  - Created user registration API route at `src/app/api/auth/register/route.ts` with payload validation, duplicate email prevention, password hashing, and user creation.
+  - Added test suite `scripts/test-auth-credentials.ts` and updated `npm run test:auth`.
+  - Verified with database test suite (`npm run test:auth`, `npm run test:db`, `npm run test:collections`, `npm run test:items`, `npm run test:sidebar`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
