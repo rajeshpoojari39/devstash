@@ -1,31 +1,20 @@
-# Current Feature: Auth Setup - NextAuth + GitHub Provider
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Install NextAuth v5 (`next-auth@beta`) and `@auth/prisma-adapter`.
-- Set up split auth config pattern for edge compatibility (`src/auth.config.ts` and `src/auth.ts`).
-- Add GitHub OAuth provider with required environment variables (`AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`).
-- Set up API route handler for auth requests (`src/app/api/auth/[...nextauth]/route.ts`).
-- Protect `/dashboard/*` routes using Next.js 16 proxy (`src/proxy.ts`) with redirect to sign-in for unauthenticated users.
-- Extend NextAuth session types (`src/types/next-auth.d.ts`) to include `user.id`.
-- Test and verify complete auth flow with GitHub OAuth, default sign-in page, and protected route redirection.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Spec Reference**: [context/features/auth-phase-1-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/auth-phase-1-spec.md)
-- **Key Gotchas & Constraints**:
-  - Use `next-auth@beta` (v5), avoiding `@latest` which installs v4.
-  - Proxy file must be located at `src/proxy.ts` (same level as `app/`) using named export: `export const proxy = auth(...)`.
-  - Use `session: { strategy: 'jwt' }` with the split config pattern.
-  - Do not set custom `pages.signIn` — use NextAuth's default page for Phase 1.
-  - Environment variables required in `.env`: `AUTH_SECRET`, `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`.
-- **References**:
-  - Edge compatibility: https://authjs.dev/getting-started/installation#edge-compatibility
-  - Prisma adapter: https://authjs.dev/getting-started/adapters/prisma
+<!-- Any extra notes -->
 
 ## History
 
@@ -124,3 +113,13 @@ In Progress
   - Created reusable `Skeleton` UI component (`src/components/ui/skeleton.tsx`), Suspense streaming fallback (`src/app/dashboard/loading.tsx`), route error boundary (`src/app/dashboard/error.tsx`), and global error boundary (`src/app/error.tsx`).
   - Added integer and bounds validation (`safeLimit`) for items and collections database queries.
   - Verified with database test suite (`npm run test:sidebar`, `npm run test:collections`, `npm run test:items`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
+- **Auth Setup: NextAuth v5 + GitHub Provider (Phase 1) (2026-09-14)**
+  - Installed NextAuth v5 (`next-auth@beta`) and `@auth/prisma-adapter`.
+  - Implemented Edge-compatible split configuration pattern (`src/auth.config.ts` and `src/auth.ts`).
+  - Configured GitHub OAuth provider with `AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET`.
+  - Exported auth route handlers in `src/app/api/auth/[...nextauth]/route.ts`.
+  - Implemented route protection using Next.js 16 Proxy in `src/proxy.ts` guarding `/dashboard/*` with redirect to `/api/auth/signin`.
+  - Extended NextAuth `Session` and `JWT` types with `user.id` (`src/types/next-auth.d.ts`).
+  - Added test script `scripts/test-auth.ts` (`npm run test:auth`).
+  - Verified with auth test suite, ESLint (`npm run lint`), and Next.js production build (`npm run build`).
