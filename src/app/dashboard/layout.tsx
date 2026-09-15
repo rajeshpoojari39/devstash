@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import { getSidebarData } from "@/lib/db/items";
 import { SidebarProvider } from "@/components/dashboard/sidebar-context";
 import { Sidebar } from "@/components/dashboard/sidebar";
@@ -11,7 +12,8 @@ export default async function DashboardLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const sidebarData = await getSidebarData();
+  const session = await auth();
+  const sidebarData = await getSidebarData(session?.user?.id);
 
   return (
     <SidebarProvider>

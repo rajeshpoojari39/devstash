@@ -3,6 +3,9 @@ import GitHub from "next-auth/providers/github";
 import Credentials from "next-auth/providers/credentials";
 
 export const authConfig = {
+  pages: {
+    signIn: "/sign-in",
+  },
   providers: [
     GitHub({
       clientId: process.env.AUTH_GITHUB_ID,

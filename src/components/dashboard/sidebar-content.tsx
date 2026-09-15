@@ -16,13 +16,24 @@ import {
   ChevronDown,
   ChevronRight,
   Settings,
+  User as UserIcon,
+  LogOut,
+  MoreVertical,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { cn } from "@/lib/utils";
 import { DevStashLogo } from "@/components/brand/logo";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -98,13 +109,6 @@ export function SidebarContent({
 
   const userName = user?.name || "Demo User";
   const userEmail = user?.email || "demo@devstash.io";
-  const initials =
-    userName
-      .split(" ")
-      .filter(Boolean)
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase() || "U";
 
   return (
     <div className="flex h-full w-full flex-col text-foreground select-none overflow-hidden">
@@ -450,74 +454,150 @@ export function SidebarContent({
       <div className="mt-auto border-t border-border p-2 shrink-0">
         {collapsed ? (
           <div className="flex flex-col items-center gap-2 py-1">
-            <Tooltip>
-              <TooltipTrigger
+            <DropdownMenu>
+              <DropdownMenuTrigger
                 render={
-                  <div className="flex items-center justify-center cursor-pointer">
-                    <Avatar
+                  <button
+                    type="button"
+                    className="flex items-center justify-center cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring transition-transform hover:scale-105"
+                    aria-label="User profile menu"
+                  >
+                    <UserAvatar
+                      name={userName}
+                      email={userEmail}
+                      image={user?.image}
                       size="sm"
-                      className="bg-neutral-100 dark:bg-neutral-800"
-                    >
-                      <AvatarImage src={user?.image || ""} alt={userName} />
-                      <AvatarFallback className="bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200 text-[10px] font-semibold">
-                        {initials}
-                      </AvatarFallback>
-                    </Avatar>
-                  </div>
+                    />
+                  </button>
                 }
               />
-              <TooltipContent side="right">
-                <p className="font-medium">{userName}</p>
-                <p className="text-xs text-muted-foreground">{userEmail}</p>
-              </TooltipContent>
-            </Tooltip>
+              <DropdownMenuContent
+                side="right"
+                align="end"
+                className="w-56 p-1.5 shadow-xl"
+              >
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-semibold text-foreground truncate leading-tight">
+                    {userName}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate font-mono mt-0.5">
+                    {userEmail}
+                  </p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  render={
+                    <Link
+                      href="/profile"
+                      onClick={onNavigate}
+                      className="flex items-center gap-2 w-full cursor-pointer"
+                    >
+                      <UserIcon className="h-4 w-4 text-muted-foreground" />
+                      <span>Profile</span>
+                    </Link>
+                  }
+                />
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  variant="destructive"
+                  onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                  className="flex items-center gap-2 w-full cursor-pointer text-destructive focus:text-destructive"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             <Tooltip>
               <TooltipTrigger
                 render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
+                  <Link
+                    href="/profile"
+                    onClick={onNavigate}
+                    className="flex h-8 w-8 items-center justify-center text-muted-foreground hover:text-foreground rounded-md transition-colors cursor-pointer"
                     aria-label="User settings"
                   >
                     <Settings className="h-4 w-4" />
-                  </Button>
+                  </Link>
                 }
               />
               <TooltipContent side="right">Settings</TooltipContent>
             </Tooltip>
           </div>
         ) : (
-          <div className="flex items-center justify-between gap-2 rounded-lg p-1.5">
-            <div className="flex items-center gap-3 min-w-0">
-              <Avatar
-                size="default"
-                className="bg-neutral-100 dark:bg-neutral-800"
+          <DropdownMenu>
+            <div className="flex items-center justify-between gap-2 rounded-lg p-1.5 hover:bg-accent/40 transition-colors">
+              <Link
+                href="/profile"
+                onClick={onNavigate}
+                className="flex items-center gap-3 min-w-0 flex-1 group cursor-pointer"
               >
-                <AvatarImage src={user?.image || ""} alt={userName} />
-                <AvatarFallback className="bg-neutral-200 text-neutral-800 dark:bg-neutral-700 dark:text-neutral-200 text-xs font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-medium text-foreground leading-snug">
+                <UserAvatar
+                  name={userName}
+                  email={userEmail}
+                  image={user?.image}
+                  size="default"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-medium text-foreground leading-snug group-hover:text-primary transition-colors">
+                    {userName}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground font-mono">
+                    {userEmail}
+                  </p>
+                </div>
+              </Link>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
+                    aria-label="Open user menu"
+                  >
+                    <MoreVertical className="h-4 w-4" />
+                  </Button>
+                }
+              />
+            </div>
+            <DropdownMenuContent
+              side="top"
+              align="end"
+              className="w-56 p-1.5 shadow-xl"
+            >
+              <div className="px-2 py-1.5">
+                <p className="text-sm font-semibold text-foreground truncate leading-tight">
                   {userName}
                 </p>
-                <p className="truncate text-xs text-muted-foreground">
+                <p className="text-xs text-muted-foreground truncate font-mono mt-0.5">
                   {userEmail}
                 </p>
               </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-foreground cursor-pointer"
-              aria-label="User settings"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-          </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                render={
+                  <Link
+                    href="/profile"
+                    onClick={onNavigate}
+                    className="flex items-center gap-2 w-full cursor-pointer"
+                  >
+                    <UserIcon className="h-4 w-4 text-muted-foreground" />
+                    <span>Profile</span>
+                  </Link>
+                }
+              />
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => signOut({ callbackUrl: "/sign-in" })}
+                className="flex items-center gap-2 w-full cursor-pointer text-destructive focus:text-destructive"
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Sign Out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
     </div>

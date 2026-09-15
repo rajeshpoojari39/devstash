@@ -1,3 +1,4 @@
+import { auth } from "@/auth";
 import {
   getDashboardCollections,
   getDashboardStats,
@@ -14,11 +15,14 @@ import { RecentItemsSection } from "@/components/dashboard/recent-items-section"
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
+  const session = await auth();
+  const userId = session?.user?.id;
+
   const [collections, stats, pinnedItems, recentItems] = await Promise.all([
-    getDashboardCollections(),
-    getDashboardStats(),
-    getDashboardPinnedItems(),
-    getDashboardRecentItems(undefined, 10),
+    getDashboardCollections(userId),
+    getDashboardStats(userId),
+    getDashboardPinnedItems(userId),
+    getDashboardRecentItems(userId, 10),
   ]);
 
   return (

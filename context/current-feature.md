@@ -1,20 +1,39 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Auth UI - Sign In, Register & Sign Out (Phase 3)
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- **Custom Sign In Page (`/sign-in`)**:
+  - Email and password input fields.
+  - "Sign in with GitHub" OAuth button.
+  - Link to register page (`/register`).
+  - Client-side and server-side form validation and error display.
+  - Configure NextAuth `pages.signIn` to route to `/sign-in`.
+- **Custom Register Page (`/register`)**:
+  - Name, email, password, and confirm password fields.
+  - Validation rules (password match, minimum length, valid email format).
+  - Submit registration payload to `/api/auth/register`.
+  - Display error banners/messages and redirect to `/sign-in` upon success.
+- **Reusable User Avatar Component**:
+  - Render user profile image if available (`user.image`).
+  - Fallback to generated initials from user name (e.g., "Rajesh Poojari" → "RP").
+- **Sidebar User Profile Footer**:
+  - Display dynamic user avatar and user name at the bottom of the sidebar.
+  - Implement dropdown/popover menu with "Sign out" action and `/profile` link.
+  - Clicking on the avatar or profile area navigates or opens profile / user menu.
+- **Top Bar Integration**:
+  - Display user avatar / profile dropdown in top bar where applicable.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Spec File**: [context/features/auth-phase-3-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/auth-phase-3-spec.md)
+- **Auth System**: NextAuth v5 (`next-auth@beta`) with Credentials and GitHub providers.
+- **Component Stack**: ShadCN UI (`Avatar`, `DropdownMenu`, `Button`, `Input`, `Card`, etc.) with Tailwind CSS v4.
+- **Avatar Initials Logic**: Extract first letters of first and last name; fallback to first letter of email if name is missing.
+- **Session Handling**: Ensure seamless integration with server-side `auth()` calls and client-side `useSession` / server actions.
 
 ## History
 
@@ -130,4 +149,3 @@ Not Started
   - Created user registration API route at `src/app/api/auth/register/route.ts` with payload validation, duplicate email prevention, password hashing, and user creation.
   - Added test suite `scripts/test-auth-credentials.ts` and updated `npm run test:auth`.
   - Verified with database test suite (`npm run test:auth`, `npm run test:db`, `npm run test:collections`, `npm run test:items`, `npm run test:sidebar`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
-
