@@ -1,26 +1,20 @@
-# Current Feature: Email Verification on Register (via Resend)
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- **Resend SDK Integration**: Install and configure `resend` client library utilizing `RESEND_API_KEY` from environment variables.
-- **Verification Token Generation & Storage**: Generate secure time-limited tokens and store them in the PostgreSQL `VerificationToken` table linked to user emails with expiration timestamps.
-- **Verification Email Delivery**: Create an HTML/styled transactional email template and dispatch verification emails upon user registration.
-- **Email Verification Endpoint & Flow**: Build a verification route (`/verify-email` or `/api/auth/verify-email`) that validates incoming tokens, marks `emailVerified` on the `User` model, and cleans up consumed tokens.
-- **Registration Flow Integration**: Update `POST /api/auth/register` and registration UI to notify users to check their email for confirmation.
-- **Auth Guard on Credentials Login**: Require email verification prior to granting session authentication in `src/auth.ts`, showing friendly guidance and a "Resend Verification" link for unverified users.
-- **Resend Verification Endpoint**: Provide a `POST /api/auth/resend-verification` endpoint for users who lost or expired their verification link.
-- **Testing & Verification**: Create automated test script `scripts/test-email-verification.ts` and verify with database tests, ESLint, and Next.js production build.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Resend Setup**: Resend API key is stored in `.env` as `RESEND_API_KEY`. Default sender email will be configured with a fallback to `onboarding@resend.dev` for test environments.
-- **Schema**: Prisma `User` schema already includes `emailVerified DateTime?` and `VerificationToken` model with `identifier`, `token`, and `expires`.
-- **Auth Flow**: NextAuth credentials provider in `src/auth.ts` will verify that `user.emailVerified !== null` before returning user payload.
-- **Spec Reference**: [context/features/email-verification-spec.md](./features/email-verification-spec.md)
+<!-- Any extra notes -->
 
 ## History
 
@@ -146,3 +140,15 @@ In Progress
   - Configured NextAuth custom pages (`pages.signIn: "/sign-in"`) in `src/auth.config.ts` and route protection in `src/proxy.ts`.
   - Added automated test suite `scripts/test-auth-ui.ts` and updated `npm run test:auth`.
   - Verified with test suites (`npm run test:auth`, `npm run test:sidebar`, `npm run test:collections`, `npm run test:items`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
+- **Email Verification on Register (via Resend) (2026-09-24)**
+  - Integrated Resend email API SDK and initialized singleton client in `src/lib/email/resend.ts`.
+  - Created branded, responsive HTML & plaintext email templates in `src/lib/email/templates/verification-email.ts` and dispatch utility in `src/lib/email/index.ts`.
+  - Implemented secure token generation (`generateVerificationToken`), token verification (`verifyEmailToken`), and database management in `src/lib/tokens.ts` using PostgreSQL `VerificationToken` table.
+  - Updated registration endpoint (`POST /api/auth/register`) to create unverified accounts, generate tokens, and send verification emails.
+  - Created resend verification endpoint (`POST /api/auth/resend-verification`) and verification API (`GET`/`POST` `/api/auth/verify-email`).
+  - Created dedicated email verification page (`src/app/verify-email/page.tsx`, `src/components/auth/verify-email-card.tsx`) with auto-verification and error handling.
+  - Added NextAuth Credentials auth guard throwing `EmailNotVerifiedError` in `src/auth.ts` to block unverified sign-in.
+  - Updated `RegisterForm` with "Check your inbox" screen and `SignInForm` with verification success alert and unverified notice with resend button.
+  - Added test suite `scripts/test-email-verification.ts` (`npm run test:email`) and database user cleanup utility `scripts/cleanup-non-demo-users.ts` (`npm run db:clean-users`).
+  - Verified with full test suite (`npm run test:auth`), database explorer (`npm run test:db`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
