@@ -1,20 +1,26 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Email Verification on Register (via Resend)
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- **Resend SDK Integration**: Install and configure `resend` client library utilizing `RESEND_API_KEY` from environment variables.
+- **Verification Token Generation & Storage**: Generate secure time-limited tokens and store them in the PostgreSQL `VerificationToken` table linked to user emails with expiration timestamps.
+- **Verification Email Delivery**: Create an HTML/styled transactional email template and dispatch verification emails upon user registration.
+- **Email Verification Endpoint & Flow**: Build a verification route (`/verify-email` or `/api/auth/verify-email`) that validates incoming tokens, marks `emailVerified` on the `User` model, and cleans up consumed tokens.
+- **Registration Flow Integration**: Update `POST /api/auth/register` and registration UI to notify users to check their email for confirmation.
+- **Auth Guard on Credentials Login**: Require email verification prior to granting session authentication in `src/auth.ts`, showing friendly guidance and a "Resend Verification" link for unverified users.
+- **Resend Verification Endpoint**: Provide a `POST /api/auth/resend-verification` endpoint for users who lost or expired their verification link.
+- **Testing & Verification**: Create automated test script `scripts/test-email-verification.ts` and verify with database tests, ESLint, and Next.js production build.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Resend Setup**: Resend API key is stored in `.env` as `RESEND_API_KEY`. Default sender email will be configured with a fallback to `onboarding@resend.dev` for test environments.
+- **Schema**: Prisma `User` schema already includes `emailVerified DateTime?` and `VerificationToken` model with `identifier`, `token`, and `expires`.
+- **Auth Flow**: NextAuth credentials provider in `src/auth.ts` will verify that `user.emailVerified !== null` before returning user payload.
+- **Spec Reference**: [context/features/email-verification-spec.md](./features/email-verification-spec.md)
 
 ## History
 
@@ -140,4 +146,3 @@ Not Started
   - Configured NextAuth custom pages (`pages.signIn: "/sign-in"`) in `src/auth.config.ts` and route protection in `src/proxy.ts`.
   - Added automated test suite `scripts/test-auth-ui.ts` and updated `npm run test:auth`.
   - Verified with test suites (`npm run test:auth`, `npm run test:sidebar`, `npm run test:collections`, `npm run test:items`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
-

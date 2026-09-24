@@ -4,7 +4,14 @@ import * as React from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
-import { Mail, Lock, AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,23 +49,32 @@ export function SignInForm() {
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const isRegistered = searchParams.get("registered") === "true";
+  const isVerified = searchParams.get("verified") === "true";
   const urlError = searchParams.get("error");
 
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [isGitHubLoading, setIsGitHubLoading] = React.useState(false);
+  const [isResending, setIsResending] = React.useState(false);
+  const [resendNotification, setResendNotification] = React.useState<
+    string | null
+  >(null);
+
   const [errorMessage, setErrorMessage] = React.useState<string | null>(
     urlError === "OAuthAccountNotLinked"
       ? "An account with this email already exists with another provider."
-      : urlError
-        ? "Authentication failed. Please check your credentials."
-        : null,
+      : urlError === "email_not_verified"
+        ? "Please verify your email address before signing in."
+        : urlError
+          ? "Authentication failed. Please check your credentials."
+          : null,
   );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setErrorMessage(null);
+    setResendNotification(null);
 
     if (!email || !password) {
       setErrorMessage("Please fill in both email and password.");
@@ -76,7 +92,16 @@ export function SignInForm() {
       });
 
       if (res?.error) {
-        setErrorMessage("Invalid email or password.");
+        if (
+          res.code === "email_not_verified" ||
+          res.error.includes("email_not_verified")
+        ) {
+          setErrorMessage(
+            "Your email is not verified yet. Please check your inbox or resend the verification link below.",
+          );
+        } else {
+          setErrorMessage("Invalid email or password.");
+        }
         setIsLoading(false);
         return;
       }
@@ -86,6 +111,43 @@ export function SignInForm() {
     } catch {
       setErrorMessage("An unexpected error occurred. Please try again.");
       setIsLoading(false);
+    }
+  }
+
+  async function handleResendVerification() {
+    if (!email.trim()) {
+      setErrorMessage(
+        "Please enter your email address to resend the verification link.",
+      );
+      return;
+    }
+
+    setIsResending(true);
+    setResendNotification(null);
+    setErrorMessage(null);
+
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success) {
+        setResendNotification(
+          data.message || "Verification email sent! Please check your inbox.",
+        );
+      } else {
+        setErrorMessage(
+          data.error || "Failed to send verification email. Please try again.",
+        );
+      }
+    } catch {
+      setErrorMessage("Network error. Could not resend verification email.");
+    } finally {
+      setIsResending(false);
     }
   }
 
@@ -122,22 +184,63 @@ export function SignInForm() {
       </CardHeader>
 
       <CardContent className="space-y-4">
-        {/* Success Banner from Registration */}
-        {isRegistered && !errorMessage && (
+        {/* Success Banner from Email Verification */}
+        {isVerified && !errorMessage && (
           <div className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
             <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
             <p>
-              Account created successfully! Please sign in with your
+              Email verified successfully! You can now sign in with your
               credentials.
             </p>
           </div>
         )}
 
+        {/* Success Banner from Registration */}
+        {isRegistered && !isVerified && !errorMessage && (
+          <div className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
+            <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>
+              Account created! Please check your email to verify your account
+              before signing in.
+            </p>
+          </div>
+        )}
+
+        {/* Resend notification success banner */}
+        {resendNotification && (
+          <div className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
+            <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>{resendNotification}</p>
+          </div>
+        )}
+
         {/* Error Banner */}
         {errorMessage && (
-          <div className="flex items-start gap-2.5 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
-            <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
-            <p>{errorMessage}</p>
+          <div className="flex flex-col gap-2 rounded-lg border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive">
+            <div className="flex items-start gap-2.5">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <p>{errorMessage}</p>
+            </div>
+            {errorMessage.toLowerCase().includes("not verified") && (
+              <button
+                type="button"
+                onClick={handleResendVerification}
+                disabled={isResending}
+                className="self-start text-xs font-medium text-destructive underline underline-offset-4 hover:opacity-80 transition-opacity cursor-pointer inline-flex items-center gap-1.5 mt-1"
+              >
+                {isResending ? (
+                  <>
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    <span>Resending...</span>
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-3 w-3" />
+                    <span>Resend verification email</span>
+                  </>
+                )}
+              </button>
+            )}
           </div>
         )}
 
