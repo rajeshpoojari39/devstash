@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { generateVerificationToken } from "@/lib/tokens";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendVerificationEmail, isEmailVerificationEnabled } from "@/lib/email";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -70,12 +70,16 @@ export async function POST(request: Request) {
     // 6. Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // 7. Create user in database (emailVerified is null by default)
+    // 7. Check if email verification is enabled
+    const verificationEnabled = isEmailVerificationEnabled();
+
+    // 8. Create user in database (auto-verified if verification is disabled)
     const user = await prisma.user.create({
       data: {
         name: typeof name === "string" && name.trim() ? name.trim() : null,
         email: normalizedEmail,
         password: hashedPassword,
+        emailVerified: verificationEnabled ? null : new Date(),
       },
       select: {
         id: true,
@@ -85,21 +89,35 @@ export async function POST(request: Request) {
       },
     });
 
-    // 8. Generate verification token
-    const verificationToken = await generateVerificationToken(normalizedEmail);
+    // 9. If verification is enabled, generate token and dispatch email via Resend
+    if (verificationEnabled) {
+      const verificationToken =
+        await generateVerificationToken(normalizedEmail);
 
-    // 9. Send verification email via Resend
-    await sendVerificationEmail({
-      email: normalizedEmail,
-      name: user.name,
-      token: verificationToken.token,
-    });
+      await sendVerificationEmail({
+        email: normalizedEmail,
+        name: user.name,
+        token: verificationToken.token,
+      });
+
+      return NextResponse.json(
+        {
+          success: true,
+          requiresVerification: true,
+          message:
+            "User registered successfully! Please check your email to verify your account.",
+          user,
+          email: normalizedEmail,
+        },
+        { status: 201 },
+      );
+    }
 
     return NextResponse.json(
       {
         success: true,
-        message:
-          "User registered successfully! Please check your email to verify your account.",
+        requiresVerification: false,
+        message: "User registered successfully! You can now sign in.",
         user,
         email: normalizedEmail,
       },

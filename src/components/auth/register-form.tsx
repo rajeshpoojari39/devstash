@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   User,
   Mail,
@@ -26,6 +27,7 @@ import {
 import { DevStashLogo } from "@/components/brand/logo";
 
 export function RegisterForm() {
+  const router = useRouter();
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -95,8 +97,13 @@ export function RegisterForm() {
         return;
       }
 
-      // Successful registration -> Transition to verification pending view
-      setRegisteredEmail(email.trim().toLowerCase());
+      // If verification is required, transition to "Check your inbox" screen
+      // Otherwise, redirect directly to sign-in page
+      if (data.requiresVerification) {
+        setRegisteredEmail(email.trim().toLowerCase());
+      } else {
+        router.push("/sign-in?registered=true");
+      }
     } catch {
       setErrorMessage(
         "An unexpected network error occurred. Please try again.",

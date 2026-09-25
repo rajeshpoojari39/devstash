@@ -10,6 +10,18 @@ export interface SendVerificationEmailParams {
   token: string;
 }
 
+/**
+ * Checks whether email verification is enabled.
+ * Returns true if ENABLE_EMAIL_VERIFICATION or NEXT_PUBLIC_ENABLE_EMAIL_VERIFICATION is "true".
+ * Defaults to false (disabled) to allow arbitrary email registrations when a custom domain is not linked to Resend.
+ */
+export function isEmailVerificationEnabled(): boolean {
+  return (
+    process.env.ENABLE_EMAIL_VERIFICATION === "true" ||
+    process.env.NEXT_PUBLIC_ENABLE_EMAIL_VERIFICATION === "true"
+  );
+}
+
 export function getAppBaseUrl(): string {
   if (process.env.NEXT_PUBLIC_APP_URL) {
     return process.env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");

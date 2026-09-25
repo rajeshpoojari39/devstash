@@ -1,12 +1,23 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateVerificationToken } from "@/lib/tokens";
-import { sendVerificationEmail } from "@/lib/email";
+import { sendVerificationEmail, isEmailVerificationEnabled } from "@/lib/email";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   try {
+    if (!isEmailVerificationEnabled()) {
+      return NextResponse.json(
+        {
+          error:
+            "Email verification is currently disabled. You can sign in directly.",
+          verificationDisabled: true,
+        },
+        { status: 400 },
+      );
+    }
+
     const body = await request.json();
     const { email } = body;
 

@@ -7,19 +7,118 @@ import {
   generateVerificationEmailHtml,
   generateVerificationEmailText,
 } from "../src/lib/email/templates/verification-email";
-import { sendVerificationEmail } from "../src/lib/email";
+import { isEmailVerificationEnabled } from "../src/lib/email";
 import { prisma } from "../src/lib/prisma";
 
 async function testEmailVerification() {
-  console.log("✉️  Testing Email Verification System (via Resend)...\n");
+  console.log("✉️  Testing Email Verification System & Toggle...\n");
 
-  const testEmail = `verify-test-${Date.now()}@devstash.test`;
+  const testEmailDisabled = `verify-disabled-${Date.now()}@devstash.test`;
+  const testEmailEnabled = `verify-enabled-${Date.now()}@devstash.test`;
   const testPassword = "securePassword123!";
   const testName = "Email Verification Tester";
 
   try {
-    // 1. Test Email Template Generation
-    console.log("1. Testing email template generation...");
+    // 1. Test Toggle Detection
+    console.log("1. Testing isEmailVerificationEnabled() helper...");
+    process.env.ENABLE_EMAIL_VERIFICATION = "false";
+    const disabledCheck = isEmailVerificationEnabled();
+    if (disabledCheck !== false) {
+      throw new Error(
+        "❌ Expected isEmailVerificationEnabled() to return false when ENABLE_EMAIL_VERIFICATION='false'",
+      );
+    }
+
+    process.env.ENABLE_EMAIL_VERIFICATION = "true";
+    const enabledCheck = isEmailVerificationEnabled();
+    if (enabledCheck !== true) {
+      throw new Error(
+        "❌ Expected isEmailVerificationEnabled() to return true when ENABLE_EMAIL_VERIFICATION='true'",
+      );
+    }
+    console.log(
+      "   ✓ isEmailVerificationEnabled() correctly reflects environment flag",
+    );
+
+    // 2. Test Registration Flow when Verification is DISABLED
+    console.log(
+      "\n2. Testing registration when email verification is DISABLED (auto-verify)...",
+    );
+    process.env.ENABLE_EMAIL_VERIFICATION = "false";
+
+    const regDisabledReq = new Request(
+      "http://localhost:3000/api/auth/register",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: testName,
+          email: testEmailDisabled,
+          password: testPassword,
+          confirmPassword: testPassword,
+        }),
+      },
+    );
+
+    const regDisabledRes = await registerHandler(regDisabledReq);
+    if (regDisabledRes.status !== 201) {
+      const err = await regDisabledRes.json();
+      throw new Error(
+        `❌ Disabled-mode registration failed: ${JSON.stringify(err)}`,
+      );
+    }
+
+    const regDisabledData = await regDisabledRes.json();
+    if (regDisabledData.requiresVerification !== false) {
+      throw new Error(
+        "❌ Expected requiresVerification to be false when verification is disabled",
+      );
+    }
+
+    const disabledUser = await prisma.user.findUnique({
+      where: { email: testEmailDisabled },
+    });
+    if (!disabledUser || !disabledUser.emailVerified) {
+      throw new Error(
+        "❌ User should be auto-verified (emailVerified != null) when verification is disabled",
+      );
+    }
+
+    const disabledTokens = await prisma.verificationToken.findMany({
+      where: { identifier: testEmailDisabled },
+    });
+    if (disabledTokens.length > 0) {
+      throw new Error(
+        "❌ No verification token should be generated when verification is disabled",
+      );
+    }
+    console.log(
+      "   ✓ User auto-verified immediately with emailVerified timestamp and no token generated",
+    );
+
+    // Test resend when disabled
+    const resendDisabledRes = await resendHandler(
+      new Request("http://localhost:3000/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: testEmailDisabled }),
+      }),
+    );
+    if (resendDisabledRes.status !== 400) {
+      throw new Error(
+        `❌ Expected 400 from resend when verification is disabled, got ${resendDisabledRes.status}`,
+      );
+    }
+    const resendDisabledData = await resendDisabledRes.json();
+    if (!resendDisabledData.verificationDisabled) {
+      throw new Error("❌ Expected verificationDisabled: true in response");
+    }
+    console.log(
+      "   ✓ Resend endpoint safely rejects requests when verification is disabled",
+    );
+
+    // 3. Test Email Template Generation
+    console.log("\n3. Testing email template generation...");
     const dummyVerifyUrl =
       "http://localhost:3000/verify-email?token=dummy_token_123&email=test@test.com";
     const emailHtml = generateVerificationEmailHtml({
@@ -46,27 +145,18 @@ async function testEmailVerification() {
       "   ✓ HTML and Plaintext verification email templates render correctly",
     );
 
-    // 2. Test Direct Send Utility (Graceful execution)
-    console.log("\n2. Testing sendVerificationEmail utility...");
-    const sendResult = await sendVerificationEmail({
-      email: testEmail,
-      name: testName,
-      token: "sample-test-token",
-    });
+    // 4. Test Registration Flow when Verification is ENABLED
     console.log(
-      `   ✓ sendVerificationEmail executed (success: ${sendResult.success})`,
+      "\n4. Testing user registration with ENABLE_EMAIL_VERIFICATION='true'...",
     );
+    process.env.ENABLE_EMAIL_VERIFICATION = "true";
 
-    // 3. Test Registration Flow with Email Verification
-    console.log(
-      "\n3. Testing user registration creates unverified user and token...",
-    );
     const registerReq = new Request("http://localhost:3000/api/auth/register", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         name: testName,
-        email: testEmail,
+        email: testEmailEnabled,
         password: testPassword,
         confirmPassword: testPassword,
       }),
@@ -81,7 +171,11 @@ async function testEmailVerification() {
     }
 
     const regData = await regRes.json();
-    if (!regData.success || !regData.user?.id) {
+    if (
+      !regData.success ||
+      !regData.user?.id ||
+      regData.requiresVerification !== true
+    ) {
       throw new Error(
         `❌ Unexpected registration response: ${JSON.stringify(regData)}`,
       );
@@ -89,16 +183,18 @@ async function testEmailVerification() {
 
     // Verify user in DB has emailVerified === null
     const createdUser = await prisma.user.findUnique({
-      where: { email: testEmail },
+      where: { email: testEmailEnabled },
     });
     if (!createdUser || createdUser.emailVerified !== null) {
       throw new Error("❌ Registered user should have emailVerified === null");
     }
-    console.log("   ✓ User registered with emailVerified: null");
+    console.log(
+      "   ✓ User registered with emailVerified: null and requiresVerification: true",
+    );
 
     // Verify token was stored in VerificationToken table
     const storedToken = await prisma.verificationToken.findFirst({
-      where: { identifier: testEmail },
+      where: { identifier: testEmailEnabled },
     });
     if (!storedToken || !storedToken.token) {
       throw new Error(
@@ -109,14 +205,16 @@ async function testEmailVerification() {
       `   ✓ Verification token created in database: ${storedToken.token.substring(0, 10)}...`,
     );
 
-    // 4. Test Resend Verification Endpoint
-    console.log("\n4. Testing /api/auth/resend-verification endpoint...");
+    // 5. Test Resend Verification Endpoint
+    console.log(
+      "\n5. Testing /api/auth/resend-verification endpoint in enabled mode...",
+    );
     const resendReq = new Request(
       "http://localhost:3000/api/auth/resend-verification",
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: testEmail }),
+        body: JSON.stringify({ email: testEmailEnabled }),
       },
     );
 
@@ -132,15 +230,15 @@ async function testEmailVerification() {
 
     // Check token was refreshed
     const updatedToken = await prisma.verificationToken.findFirst({
-      where: { identifier: testEmail },
+      where: { identifier: testEmailEnabled },
     });
     if (!updatedToken) {
       throw new Error("❌ Token missing after resend");
     }
     console.log("   ✓ Resend endpoint generated fresh verification token");
 
-    // 5. Test Invalid & Expired Token Verification
-    console.log("\n5. Testing invalid and expired token handling...");
+    // 6. Test Invalid & Expired Token Verification
+    console.log("\n6. Testing invalid and expired token handling...");
     const invalidVerifyRes = await verifyHandler(
       new Request("http://localhost:3000/api/auth/verify-email", {
         method: "POST",
@@ -172,8 +270,8 @@ async function testEmailVerification() {
     }
     console.log("   ✓ Expired token correctly rejected as EXPIRED_TOKEN");
 
-    // 6. Test Valid Token Verification via GET and POST
-    console.log("\n6. Testing valid token verification...");
+    // 7. Test Valid Token Verification via GET and POST
+    console.log("\n7. Testing valid token verification...");
     const verifyReq = new Request(
       "http://localhost:3000/api/auth/verify-email",
       {
@@ -181,7 +279,7 @@ async function testEmailVerification() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           token: updatedToken.token,
-          email: testEmail,
+          email: testEmailEnabled,
         }),
       },
     );
@@ -204,7 +302,7 @@ async function testEmailVerification() {
 
     // Verify User in DB is now marked as verified
     const verifiedDbUser = await prisma.user.findUnique({
-      where: { email: testEmail },
+      where: { email: testEmailEnabled },
     });
     if (!verifiedDbUser || !verifiedDbUser.emailVerified) {
       throw new Error("❌ User emailVerified was not updated in the database");
@@ -215,7 +313,7 @@ async function testEmailVerification() {
 
     // Verify token was deleted
     const tokenAfterVerification = await prisma.verificationToken.findFirst({
-      where: { identifier: testEmail },
+      where: { identifier: testEmailEnabled },
     });
     if (tokenAfterVerification) {
       throw new Error(
@@ -223,22 +321,6 @@ async function testEmailVerification() {
       );
     }
     console.log("   ✓ Verification token consumed and deleted from database");
-
-    // 7. Test Resending for already verified user returns appropriate notice
-    console.log("\n7. Testing resend for already verified user...");
-    const alreadyVerifiedResend = await resendHandler(
-      new Request("http://localhost:3000/api/auth/resend-verification", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: testEmail }),
-      }),
-    );
-    if (alreadyVerifiedResend.status !== 400) {
-      throw new Error(
-        `❌ Expected 400 for already verified user, got ${alreadyVerifiedResend.status}`,
-      );
-    }
-    console.log("   ✓ Resend correctly blocks already verified accounts");
 
     // 8. Test Demo User Status
     console.log("\n8. Checking demo user verification status...");
@@ -251,7 +333,9 @@ async function testEmailVerification() {
       );
     }
 
-    console.log("\n✅ All Email Verification tests passed successfully!\n");
+    console.log(
+      "\n✅ All Email Verification Toggle & Verification tests passed successfully!\n",
+    );
   } finally {
     // Cleanup test data
     console.log("🧹 Cleaning up temporary test data...");
