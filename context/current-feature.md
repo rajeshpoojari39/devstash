@@ -1,42 +1,20 @@
-# Current Feature: Email Verification Toggle Feature Flag
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- **Configuration Helper (`src/lib/auth-config.ts` or `src/lib/email/index.ts`)**:
-  - Implement a centralized utility `isEmailVerificationEnabled()` that checks environment flags (e.g. `ENABLE_EMAIL_VERIFICATION` / `NEXT_PUBLIC_ENABLE_EMAIL_VERIFICATION`).
-  - Provide safe fallback default (e.g. `false` or toggleable) so environments without verified Resend domains can register any email smoothly.
-
-- **Registration Flow Adaptability (`POST /api/auth/register`)**:
-  - When disabled (`ENABLE_EMAIL_VERIFICATION="false"`):
-    - Automatically set `emailVerified: new Date()` upon registration.
-    - Skip verification token generation and Resend email dispatch.
-    - Return `requiresVerification: false` and success status to the client.
-  - When enabled (`ENABLE_EMAIL_VERIFICATION="true"`):
-    - Retain full verification flow (`emailVerified: null`, token generation, Resend email dispatch, `requiresVerification: true`).
-
-- **Authentication Guard Adaptability (`src/auth.ts`)**:
-  - When email verification is disabled, allow credential sign-ins even if `emailVerified` is null or bypassed.
-  - When email verification is enabled, enforce `EmailNotVerifiedError` if `user.emailVerified` is null.
-
-- **UI & Flow Adjustments (`RegisterForm` & `SignInForm`)**:
-  - Update `RegisterForm` to redirect directly to sign-in (or auto sign-in) when `requiresVerification: false`, avoiding the "Check your inbox" screen.
-  - Update `SignInForm` alerts to show appropriate messages when registering without verification vs with verification.
-  - Guard `POST /api/auth/resend-verification` to inform users when verification is turned off.
-
-- **Documentation & Environment Updates**:
-  - Update `.env.example` with `ENABLE_EMAIL_VERIFICATION` and explanation of Resend domain limits.
-  - Verify and update test scripts (`scripts/test-email-verification.ts` and `scripts/test-auth-credentials.ts`) to handle toggled states cleanly.
-  - Verify type safety, linting (`npm run lint`), and production build (`npm run build`).
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Resend Free Tier & Domain Limitation**: Without a verified custom domain, Resend only permits sending emails to the account owner's registered email address. This flag allows developing, demoing, and testing registrations with arbitrary emails without hitting Resend delivery restrictions.
-- **Config Flexibility**: Checking both `ENABLE_EMAIL_VERIFICATION` (server) and `NEXT_PUBLIC_ENABLE_EMAIL_VERIFICATION` (client if needed, or derived from server response) ensures seamless switching.
-- **Backwards Compatibility**: Existing users and OAuth users remain unaffected.
+<!-- Any extra notes -->
 
 ## History
 
@@ -174,3 +152,14 @@ In Progress
   - Updated `RegisterForm` with "Check your inbox" screen and `SignInForm` with verification success alert and unverified notice with resend button.
   - Added test suite `scripts/test-email-verification.ts` (`npm run test:email`) and database user cleanup utility `scripts/cleanup-non-demo-users.ts` (`npm run db:clean-users`).
   - Verified with full test suite (`npm run test:auth`), database explorer (`npm run test:db`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+
+- **Email Verification Toggle Feature Flag (2026-09-25)**
+  - Added centralized `isEmailVerificationEnabled()` configuration helper in `src/lib/email/index.ts` checking `ENABLE_EMAIL_VERIFICATION` / `NEXT_PUBLIC_ENABLE_EMAIL_VERIFICATION` (defaulting to disabled `false`).
+  - Updated registration endpoint (`POST /api/auth/register`) to automatically mark users verified (`emailVerified: new Date()`) and skip tokens/Resend emails when verification is disabled.
+  - Updated NextAuth Credentials `authorize` guard in `src/auth.ts` to only require verification when `isEmailVerificationEnabled()` is true.
+  - Updated `RegisterForm` to redirect directly to sign-in on unverified flow and `SignInForm` with clean account creation confirmation.
+  - Guarded `POST /api/auth/resend-verification` endpoint when verification is disabled.
+  - Documented `ENABLE_EMAIL_VERIFICATION` in `.env.example` with Resend domain guidance.
+  - Updated `scripts/test-email-verification.ts` to verify both disabled and enabled states.
+  - Verified with full authentication test suite (`npm run test:auth`), ESLint (`npm run lint`), and Turbopack production build (`npm run build`).
+
