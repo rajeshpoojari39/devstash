@@ -14,10 +14,11 @@
     "test:collections": "tsx scripts/test-collections.ts",
     "test:items": "tsx scripts/test-items.ts",
     "test:sidebar": "tsx scripts/test-sidebar.ts",
-    "test:auth": "tsx scripts/test-auth.ts && tsx scripts/test-auth-credentials.ts && tsx scripts/test-auth-ui.ts && tsx scripts/test-email-verification.ts",
+    "test:auth": "tsx scripts/test-auth.ts && tsx scripts/test-auth-credentials.ts && tsx scripts/test-auth-ui.ts && tsx scripts/test-email-verification.ts && tsx scripts/test-forgot-password.ts",
     "test:auth:credentials": "tsx scripts/test-auth-credentials.ts",
     "test:auth:ui": "tsx scripts/test-auth-ui.ts",
-    "test:email": "tsx scripts/test-email-verification.ts"
+    "test:email": "tsx scripts/test-email-verification.ts",
+    "test:forgot-password": "tsx scripts/test-forgot-password.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

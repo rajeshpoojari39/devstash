@@ -1,20 +1,31 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Forgot Password & Reset Functionality
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- **Sign In Link**: Add a clean, accessible "Forgot password?" link next to the password field label in `src/components/auth/sign-in-form.tsx` navigating to `/forgot-password`.
+- **Forgot Password UI**: Create `/forgot-password` route (`src/app/forgot-password/page.tsx`) and `ForgotPasswordForm` component (`src/components/auth/forgot-password-form.tsx`) with dark mode UI, email validation, loading states, and success/error alert banners.
+- **Token Utility**: Implement `generatePasswordResetToken` and `verifyPasswordResetToken` in `src/lib/tokens.ts` reusing the existing `VerificationToken` Prisma model with a 1-hour expiration window.
+- **Email Template & Dispatch**: Create responsive, branded HTML & plaintext reset password email templates in `src/lib/email/templates/reset-password-email.ts` and dispatch helper `sendPasswordResetEmail` in `src/lib/email/index.ts`.
+- **Forgot Password API**: Implement `POST /api/auth/forgot-password` route handler to validate email, generate reset token, send reset email via Resend (or dev console fallback), and return generic success response to prevent user enumeration.
+- **Reset Password UI**: Create `/reset-password` route (`src/app/reset-password/page.tsx`) and `ResetPasswordForm` component (`src/components/auth/reset-password-form.tsx`) reading `token` and `email` from query params, offering password and confirm password inputs with visibility toggle and validation.
+- **Reset Password API**: Implement `POST /api/auth/reset-password` route handler to validate token, hash new password using `bcryptjs`, update the user's password in the database, and invalidate/delete the consumed token.
+- **Testing & Verification**: Create standalone test script `scripts/test-forgot-password.ts`, integrate into `npm run test:auth` / `package.json`, and verify with ESLint (`npm run lint`) and production build (`npm run build`).
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Prisma Model**: Uses the existing `VerificationToken` model in `prisma/schema.prisma` (`identifier`, `token`, `expires`). Password reset tokens can use a scoped identifier (e.g. `reset:${email}`) to isolate them from registration verification tokens while maintaining unique index integrity.
+- **Security Best Practices**:
+  - `POST /api/auth/forgot-password` returns a 200 OK generic success message regardless of whether the email is registered to prevent email enumeration.
+  - Password reset tokens expire after 1 hour (shorter window than 24-hour registration verification tokens).
+  - Tokens are single-use; the token record is removed immediately upon successful password reset.
+  - Password hashing uses `bcryptjs` with salt round 10, identical to `src/app/api/auth/register/route.ts`.
+  - Passwords require minimum length validation (8 characters).
+- **Email Fallback**: Follows the existing pattern in `src/lib/email/index.ts` where reset links are logged to the console in development/testing mode when `RESEND_API_KEY` is not present.
+- **UI & UX Consistency**: Styled with Tailwind CSS v4, `@base-ui/react`, Lucide icons, and DevStash dark theme brand tokens matching `SignInForm`, `RegisterForm`, and `VerifyEmailCard`.
 
 ## History
 
@@ -162,4 +173,3 @@ Not Started
   - Documented `ENABLE_EMAIL_VERIFICATION` in `.env.example` with Resend domain guidance.
   - Updated `scripts/test-email-verification.ts` to verify both disabled and enabled states.
   - Verified with full authentication test suite (`npm run test:auth`), ESLint (`npm run lint`), and Turbopack production build (`npm run build`).
-

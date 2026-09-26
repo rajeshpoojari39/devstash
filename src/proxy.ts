@@ -11,7 +11,9 @@ export const proxy = auth((req) => {
     req.nextUrl.pathname.startsWith("/profile");
   const isOnAuthPage =
     req.nextUrl.pathname.startsWith("/sign-in") ||
-    req.nextUrl.pathname.startsWith("/register");
+    req.nextUrl.pathname.startsWith("/register") ||
+    req.nextUrl.pathname.startsWith("/forgot-password") ||
+    req.nextUrl.pathname.startsWith("/reset-password");
 
   if (isOnDashboard && !isLoggedIn) {
     const signInUrl = new URL("/sign-in", req.nextUrl.origin);

@@ -170,3 +170,167 @@ export async function verifyEmailToken(
     };
   }
 }
+
+export const RESET_PASSWORD_TOKEN_EXPIRY_HOURS = 1;
+export const RESET_PASSWORD_IDENTIFIER_PREFIX = "reset:";
+
+export function formatResetPasswordIdentifier(email: string): string {
+  return `${RESET_PASSWORD_IDENTIFIER_PREFIX}${email.toLowerCase().trim()}`;
+}
+
+export function extractEmailFromResetIdentifier(identifier: string): string {
+  if (identifier.startsWith(RESET_PASSWORD_IDENTIFIER_PREFIX)) {
+    return identifier.slice(RESET_PASSWORD_IDENTIFIER_PREFIX.length);
+  }
+  return identifier;
+}
+
+/**
+ * Generate and store a new password reset token for the given email address.
+ * Reuses the existing VerificationToken model with a 'reset:<email>' identifier.
+ * Replaces any existing password reset tokens for this email.
+ */
+export async function generatePasswordResetToken(email: string) {
+  const normalizedEmail = email.toLowerCase().trim();
+  const identifier = formatResetPasswordIdentifier(normalizedEmail);
+  const token = crypto.randomBytes(32).toString("hex");
+  const expires = new Date(
+    Date.now() + RESET_PASSWORD_TOKEN_EXPIRY_HOURS * 60 * 60 * 1000,
+  );
+
+  // Delete any existing reset tokens for this email
+  await prisma.verificationToken.deleteMany({
+    where: {
+      identifier,
+    },
+  });
+
+  // Create new reset token
+  const resetToken = await prisma.verificationToken.create({
+    data: {
+      identifier,
+      token,
+      expires,
+    },
+  });
+
+  return resetToken;
+}
+
+/**
+ * Look up a password reset token by its unique token string.
+ */
+export async function getPasswordResetTokenByToken(token: string) {
+  try {
+    const verificationToken = await prisma.verificationToken.findUnique({
+      where: { token },
+    });
+
+    if (
+      !verificationToken ||
+      !verificationToken.identifier.startsWith(RESET_PASSWORD_IDENTIFIER_PREFIX)
+    ) {
+      return null;
+    }
+
+    return verificationToken;
+  } catch {
+    return null;
+  }
+}
+
+export type VerifyPasswordResetResult =
+  | { success: true; email: string; token: string }
+  | {
+      success: false;
+      error:
+        | "TOKEN_NOT_FOUND"
+        | "EXPIRED_TOKEN"
+        | "USER_NOT_FOUND"
+        | "UNKNOWN_ERROR";
+      message: string;
+    };
+
+/**
+ * Validates a password reset token and returns the associated email.
+ * Checks token validity and target user existence.
+ */
+export async function verifyPasswordResetToken(
+  token: string,
+): Promise<VerifyPasswordResetResult> {
+  try {
+    if (!token || typeof token !== "string") {
+      return {
+        success: false,
+        error: "TOKEN_NOT_FOUND",
+        message: "Password reset token is missing or invalid.",
+      };
+    }
+
+    const resetToken = await getPasswordResetTokenByToken(token);
+
+    if (!resetToken) {
+      return {
+        success: false,
+        error: "TOKEN_NOT_FOUND",
+        message:
+          "Invalid or expired password reset link. Please request a new one.",
+      };
+    }
+
+    const hasExpired = new Date(resetToken.expires) < new Date();
+
+    if (hasExpired) {
+      await prisma.verificationToken.deleteMany({
+        where: { token },
+      });
+
+      return {
+        success: false,
+        error: "EXPIRED_TOKEN",
+        message: "Password reset link has expired. Please request a new one.",
+      };
+    }
+
+    const email = extractEmailFromResetIdentifier(resetToken.identifier);
+
+    const user = await prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      return {
+        success: false,
+        error: "USER_NOT_FOUND",
+        message: "Account associated with this reset link could not be found.",
+      };
+    }
+
+    return {
+      success: true,
+      email: user.email,
+      token: resetToken.token,
+    };
+  } catch (error) {
+    console.error("Error verifying password reset token:", error);
+    return {
+      success: false,
+      error: "UNKNOWN_ERROR",
+      message:
+        "An unexpected error occurred while verifying the reset link. Please try again.",
+    };
+  }
+}
+
+/**
+ * Invalidate and delete a consumed password reset token.
+ */
+export async function deletePasswordResetToken(token: string) {
+  try {
+    await prisma.verificationToken.deleteMany({
+      where: { token },
+    });
+  } catch (error) {
+    console.error("Error deleting password reset token:", error);
+  }
+}

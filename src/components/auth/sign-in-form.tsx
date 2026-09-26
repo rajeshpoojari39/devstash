@@ -50,6 +50,7 @@ export function SignInForm() {
   const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
   const isRegistered = searchParams.get("registered") === "true";
   const isVerified = searchParams.get("verified") === "true";
+  const isReset = searchParams.get("reset") === "true";
   const urlError = searchParams.get("error");
 
   const [email, setEmail] = React.useState("");
@@ -195,8 +196,19 @@ export function SignInForm() {
           </div>
         )}
 
+        {/* Success Banner from Password Reset */}
+        {isReset && !errorMessage && (
+          <div className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
+            <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
+            <p>
+              Password reset successfully! You can now sign in with your new
+              password.
+            </p>
+          </div>
+        )}
+
         {/* Success Banner from Registration */}
-        {isRegistered && !isVerified && !errorMessage && (
+        {isRegistered && !isVerified && !isReset && !errorMessage && (
           <div className="flex items-start gap-2.5 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-400">
             <CheckCircle2 className="h-4 w-4 shrink-0 mt-0.5" />
             <p>
@@ -295,6 +307,12 @@ export function SignInForm() {
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label htmlFor="password">Password</Label>
+              <Link
+                href="/forgot-password"
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+              >
+                Forgot password?
+              </Link>
             </div>
             <div className="relative">
               <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

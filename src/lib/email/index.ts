@@ -3,8 +3,18 @@ import {
   generateVerificationEmailHtml,
   generateVerificationEmailText,
 } from "./templates/verification-email";
+import {
+  generateResetPasswordEmailHtml,
+  generateResetPasswordEmailText,
+} from "./templates/reset-password-email";
 
 export interface SendVerificationEmailParams {
+  email: string;
+  name?: string | null;
+  token: string;
+}
+
+export interface SendPasswordResetEmailParams {
   email: string;
   name?: string | null;
   token: string;
@@ -84,6 +94,61 @@ export async function sendVerificationEmail({
       err instanceof Error ? err.message : "Failed to send email";
     console.error(
       "[DevStash Email] Unexpected error while sending verification email:",
+      err,
+    );
+    return { success: false, error: errorMsg };
+  }
+}
+
+export async function sendPasswordResetEmail({
+  email,
+  name,
+  token,
+}: SendPasswordResetEmailParams): Promise<{
+  success: boolean;
+  data?: unknown;
+  error?: string;
+}> {
+  try {
+    const baseUrl = getAppBaseUrl();
+    const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(token)}&email=${encodeURIComponent(email)}`;
+
+    const html = generateResetPasswordEmailHtml({ name, resetUrl });
+    const text = generateResetPasswordEmailText({ name, resetUrl });
+
+    // Always log reset link in development / test mode for rapid local testing
+    if (process.env.NODE_ENV !== "production") {
+      console.log(
+        `[DevStash Email] Password reset link generated for ${email}: ${resetUrl}`,
+      );
+    }
+
+    if (!process.env.RESEND_API_KEY) {
+      console.warn(
+        "[DevStash Email] RESEND_API_KEY is not set. Skipped actual email dispatch.",
+      );
+      return { success: true, data: { simulated: true, resetUrl } };
+    }
+
+    const { data, error } = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: email,
+      subject: "Reset your password - DevStash",
+      html,
+      text,
+    });
+
+    if (error) {
+      console.error("[DevStash Email] Resend error:", error);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true, data };
+  } catch (err) {
+    const errorMsg =
+      err instanceof Error ? err.message : "Failed to send email";
+    console.error(
+      "[DevStash Email] Unexpected error while sending password reset email:",
       err,
     );
     return { success: false, error: errorMsg };
