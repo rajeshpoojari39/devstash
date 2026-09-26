@@ -1,25 +1,20 @@
-# Current Feature: Profile Page
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Audit the existing `/profile` page (`src/app/profile/page.tsx`, `src/components/profile/profile-card.tsx`) against specification requirements.
-- Display comprehensive user information: email, name, avatar (GitHub avatar or generated initials), account creation date, and auth provider badge.
-- Show detailed usage stats: total items, total collections, and a breakdown by all 7 item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`).
-- Implement change password functionality (modal or card section) available only for credentials (email/password) users with proper validation and error handling.
-- Implement account deletion workflow with a confirmation dialog to prevent accidental deletion, ensuring proper cleanup of user data.
-- Ensure `/profile` route protection, strict TypeScript typing, responsive dark-themed Tailwind CSS v4 design, and test coverage.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Avatar Handling**: Reuse `UserAvatar` (`src/components/ui/user-avatar.tsx`) supporting GitHub OAuth avatar image with initials fallback.
-- **Provider Detection**: Check user accounts in database / session to conditionally render "Change Password" for email/password accounts and hide/disable for OAuth-only users.
-- **Account Deletion**: Confirm cascade rules for user relations (items, collections, tags, accounts, sessions) or implement complete database cleanup.
-- **Usage Stats**: Aggregate item counts per `ItemType` and total collections using existing Prisma query patterns.
-- **Specification Source**: [context/features/profile-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/profile-spec.md)
+<!-- Any extra notes -->
 
 ## History
 
@@ -176,3 +171,14 @@ In Progress
   - Updated route proxy middleware in `src/proxy.ts` to redirect authenticated users accessing forgot/reset password pages to `/dashboard`.
   - Added comprehensive automated test suite `scripts/test-forgot-password.ts` and registered `test:forgot-password` in `package.json` integrated with `npm run test:auth`.
   - Verified with full authentication test suite (`npm run test:auth`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
+- **Profile Page & Account Management (2026-09-26)**
+  - Integrated persistent dashboard navigation shell (`TopBar`, collapsible `Sidebar`, and `MobileSidebar`) into `/profile` route (`src/app/profile/layout.tsx`).
+  - Built responsive 2-column full-width profile view displaying user details, avatar, join date, tier, and auth provider (`src/app/profile/page.tsx`, `src/components/profile/profile-card.tsx`).
+  - Implemented usage statistics overview and 7-type breakdown grid (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`) with icons, counts, PRO badges, and direct filtering links (`src/components/profile/profile-stats.tsx`, `src/lib/db/profile.ts`).
+  - Implemented Change Password functionality for credentials users with validation and backend API endpoint (`src/components/profile/change-password-dialog.tsx`, `src/app/api/user/change-password/route.ts`).
+  - Implemented Delete Account workflow with safety confirmation ("DELETE"), demo user protection, and cascading database cleanup (`src/components/profile/delete-account-dialog.tsx`, `src/app/api/user/account/route.ts`).
+  - Created reusable Base UI dialog component (`src/components/ui/dialog.tsx`).
+  - Added automated test suite `scripts/test-profile.ts` (`npm run test:profile`).
+  - Verified with test suite, ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
