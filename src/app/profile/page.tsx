@@ -2,59 +2,58 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getProfilePageData } from "@/lib/db/profile";
 import { ProfileCard } from "@/components/profile/profile-card";
 
 export const metadata: Metadata = {
   title: "Profile - DevStash",
-  description: "User account profile and settings",
+  description: "User account profile, usage statistics, and settings",
 };
+
+export const dynamic = "force-dynamic";
 
 export default async function ProfilePage() {
   const session = await auth();
 
-  if (!session?.user?.id && !session?.user?.email) {
+  if (!session?.user) {
     redirect("/sign-in?callbackUrl=/profile");
   }
 
-  let dbUser = null;
-  if (session?.user?.id) {
-    dbUser = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        isPro: true,
-      },
-    });
-  } else if (session?.user?.email) {
-    dbUser = await prisma.user.findUnique({
+  let targetUserId: string | undefined = session.user.id;
+
+  if (!targetUserId && session.user.email) {
+    const user = await prisma.user.findUnique({
       where: { email: session.user.email },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        image: true,
-        isPro: true,
-      },
+      select: { id: true },
     });
+    targetUserId = user?.id;
   }
 
-  const user = {
-    id: dbUser?.id || session.user.id || "",
-    name: dbUser?.name || session.user.name || "Developer",
-    email: dbUser?.email || session.user.email || "",
-    image: dbUser?.image || session.user.image || null,
-    isPro: dbUser?.isPro ?? false,
-  };
+  if (!targetUserId) {
+    redirect("/sign-in?callbackUrl=/profile");
+  }
+
+  const profileData = await getProfilePageData(targetUserId);
+
+  if (!profileData) {
+    redirect("/sign-in?callbackUrl=/profile");
+  }
 
   return (
-    <main className="relative flex min-h-screen w-full items-center justify-center p-4 bg-radial-[circle_at_top,_var(--tw-gradient-stops)] from-neutral-900/50 via-background to-background">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293715_1px,transparent_1px),linear-gradient(to_bottom,#1f293715_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] pointer-events-none" />
-      <div className="relative z-10 w-full max-w-lg">
-        <ProfileCard user={user} />
+    <div className="space-y-8 max-w-7xl mx-auto pb-10">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
+          User Profile
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage your personal details, developer statistics, and security
+          settings
+        </p>
       </div>
-    </main>
+
+      {/* Main Profile Grid View */}
+      <ProfileCard user={profileData.user} stats={profileData.stats} />
+    </div>
   );
 }

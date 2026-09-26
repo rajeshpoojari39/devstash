@@ -18,7 +18,8 @@
     "test:auth:credentials": "tsx scripts/test-auth-credentials.ts",
     "test:auth:ui": "tsx scripts/test-auth-ui.ts",
     "test:email": "tsx scripts/test-email-verification.ts",
-    "test:forgot-password": "tsx scripts/test-forgot-password.ts"
+    "test:forgot-password": "tsx scripts/test-forgot-password.ts",
+    "test:profile": "tsx scripts/test-profile.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.3",

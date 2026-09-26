@@ -1,20 +1,25 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Profile Page
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Audit the existing `/profile` page (`src/app/profile/page.tsx`, `src/components/profile/profile-card.tsx`) against specification requirements.
+- Display comprehensive user information: email, name, avatar (GitHub avatar or generated initials), account creation date, and auth provider badge.
+- Show detailed usage stats: total items, total collections, and a breakdown by all 7 item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`).
+- Implement change password functionality (modal or card section) available only for credentials (email/password) users with proper validation and error handling.
+- Implement account deletion workflow with a confirmation dialog to prevent accidental deletion, ensuring proper cleanup of user data.
+- Ensure `/profile` route protection, strict TypeScript typing, responsive dark-themed Tailwind CSS v4 design, and test coverage.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Avatar Handling**: Reuse `UserAvatar` (`src/components/ui/user-avatar.tsx`) supporting GitHub OAuth avatar image with initials fallback.
+- **Provider Detection**: Check user accounts in database / session to conditionally render "Change Password" for email/password accounts and hide/disable for OAuth-only users.
+- **Account Deletion**: Confirm cascade rules for user relations (items, collections, tags, accounts, sessions) or implement complete database cleanup.
+- **Usage Stats**: Aggregate item counts per `ItemType` and total collections using existing Prisma query patterns.
+- **Specification Source**: [context/features/profile-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/profile-spec.md)
 
 ## History
 
@@ -171,4 +176,3 @@ Not Started
   - Updated route proxy middleware in `src/proxy.ts` to redirect authenticated users accessing forgot/reset password pages to `/dashboard`.
   - Added comprehensive automated test suite `scripts/test-forgot-password.ts` and registered `test:forgot-password` in `package.json` integrated with `npm run test:auth`.
   - Verified with full authentication test suite (`npm run test:auth`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
-
