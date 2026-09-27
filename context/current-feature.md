@@ -1,35 +1,20 @@
-# Current Feature: Rate Limiting for Auth
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Implement serverless-compatible rate limiting on auth endpoints using Upstash Redis (`@upstash/ratelimit` and `@upstash/redis`).
-- Create a reusable rate limiting utility in `src/lib/rate-limit.ts` using the sliding window algorithm.
-- Extract client IP from `x-forwarded-for` / proxy headers with support for combined identifiers (e.g., IP + email).
-- Protect key authentication and recovery endpoints with dedicated rate limits:
-  - Sign-in / Credentials login (`/api/auth/callback/credentials`): 5 attempts / 15 min (keyed by IP + email).
-  - User Registration (`POST /api/auth/register`): 3 attempts / 1 hour (keyed by IP).
-  - Forgot Password (`POST /api/auth/forgot-password`): 3 attempts / 1 hour (keyed by IP).
-  - Reset Password (`POST /api/auth/reset-password`): 5 attempts / 15 min (keyed by IP).
-  - Resend Verification (`POST /api/auth/resend-verification`): 3 attempts / 15 min (keyed by IP + email).
-- Return standardized `429 Too Many Requests` responses with `Retry-After` headers and clear JSON error messages.
-- Provide user-friendly error messages / alerts on the frontend forms and toast notifications.
-- Ensure fail-open behavior so authentication remains functional if Upstash is unconfigured or unreachable.
-- Create automated test verification scripts to validate rate limiters and error responses.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Specification**: [context/features/rate-limiting-spec.md](context/features/rate-limiting-spec.md)
-- **Dependencies**: `@upstash/ratelimit`, `@upstash/redis`
-- **Environment Variables**:
-  - `UPSTASH_REDIS_REST_URL`
-  - `UPSTASH_REDIS_REST_TOKEN`
-- **Fail-Open Strategy**: Rate limiting should log a warning and allow the request to proceed if Redis credentials are missing or network calls fail, ensuring local development and production availability are not blocked by Redis downtime.
-- **NextAuth Integration**: Evaluate rate limiting in NextAuth v5 credentials `authorize` callback or custom sign-in flow.
-- Document environment variables in `.env.example`.
+<!-- Any extra notes -->
 
 ## History
 
@@ -204,3 +189,14 @@ In Progress
   - Added server-side RSC authentication redirect guard in `src/app/dashboard/page.tsx` to prevent unauthenticated fallback queries.
   - Synchronized NextAuth v5 environment variables in `.env.example` (`AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`) and updated `context/project-overview.md`.
   - Verified with full test suite (`npm run test:auth`), ESLint (`npm run lint`), and Next.js Turbopack build.
+
+- **Rate Limiting for Auth (2026-09-27)**
+  - Installed `@upstash/ratelimit` and `@upstash/redis` for serverless-compatible rate limiting.
+  - Implemented reusable rate limiting utility in `src/lib/rate-limit.ts` using sliding window algorithm, robust client IP extraction, compound identifier keys (`IP:email`), and resilient fail-open error handling.
+  - Protected critical authentication endpoints with dedicated limits: Credentials login (5 attempts / 15 min by IP + email via `RateLimitError` in `src/auth.ts`), Registration (3 attempts / 1 hour by IP), Forgot Password (3 attempts / 1 hour by IP), Reset Password (5 attempts / 15 min by IP), and Resend Verification (3 attempts / 15 min by IP + email).
+  - Standardized 429 Too Many Requests responses with `Retry-After`, `X-RateLimit-*` headers, and human-readable remaining wait times.
+  - Enhanced frontend `SignInForm` to display user-friendly rate limit notices and retry guidance.
+  - Documented `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN` in `.env.example`.
+  - Added automated test suite `scripts/test-rate-limit.ts` and registered `test:rate-limit` integrated with `npm run test:auth`.
+  - Verified with full test suite (`npm run test:auth`, `npm run test:profile`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
