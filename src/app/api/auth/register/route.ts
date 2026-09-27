@@ -3,11 +3,23 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import { generateVerificationToken } from "@/lib/tokens";
 import { sendVerificationEmail, isEmailVerificationEnabled } from "@/lib/email";
+import {
+  getClientIp,
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export async function POST(request: Request) {
   try {
+    // 0. Rate limiting check (3 attempts per 1 hour by IP)
+    const clientIp = getClientIp(request);
+    const rateLimit = await checkRateLimit("register", clientIp);
+    if (!rateLimit.success) {
+      return createRateLimitResponse(rateLimit);
+    }
+
     const body = await request.json();
     const { name, email, password, confirmPassword } = body;
 

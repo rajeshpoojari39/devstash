@@ -147,7 +147,10 @@ async function testForgotPasswordFlow() {
       "http://localhost:3000/api/auth/forgot-password",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.3.1",
+        },
         body: JSON.stringify({ email: "not-an-email" }),
       },
     );
@@ -163,7 +166,10 @@ async function testForgotPasswordFlow() {
       "http://localhost:3000/api/auth/forgot-password",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.3.2",
+        },
         body: JSON.stringify({
           email: "non-existent-user-12345@devstash.test",
         }),
@@ -190,7 +196,10 @@ async function testForgotPasswordFlow() {
       "http://localhost:3000/api/auth/forgot-password",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.3.3",
+        },
         body: JSON.stringify({ email: testEmail }),
       },
     );
@@ -223,7 +232,10 @@ async function testForgotPasswordFlow() {
       "http://localhost:3000/api/auth/reset-password",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.3.4",
+        },
         body: JSON.stringify({
           token: latestTokenRecord.token,
           password: "short",
@@ -243,7 +255,10 @@ async function testForgotPasswordFlow() {
       "http://localhost:3000/api/auth/reset-password",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.3.5",
+        },
         body: JSON.stringify({
           token: latestTokenRecord.token,
           password: newPassword,
@@ -263,7 +278,10 @@ async function testForgotPasswordFlow() {
       "http://localhost:3000/api/auth/reset-password",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.3.6",
+        },
         body: JSON.stringify({
           token: latestTokenRecord.token,
           password: newPassword,
@@ -332,7 +350,10 @@ async function testForgotPasswordFlow() {
       "http://localhost:3000/api/auth/reset-password",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.3.7",
+        },
         body: JSON.stringify({
           token: latestTokenRecord.token,
           password: "anotherPassword123!",

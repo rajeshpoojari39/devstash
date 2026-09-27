@@ -1,20 +1,35 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Rate Limiting for Auth
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Implement serverless-compatible rate limiting on auth endpoints using Upstash Redis (`@upstash/ratelimit` and `@upstash/redis`).
+- Create a reusable rate limiting utility in `src/lib/rate-limit.ts` using the sliding window algorithm.
+- Extract client IP from `x-forwarded-for` / proxy headers with support for combined identifiers (e.g., IP + email).
+- Protect key authentication and recovery endpoints with dedicated rate limits:
+  - Sign-in / Credentials login (`/api/auth/callback/credentials`): 5 attempts / 15 min (keyed by IP + email).
+  - User Registration (`POST /api/auth/register`): 3 attempts / 1 hour (keyed by IP).
+  - Forgot Password (`POST /api/auth/forgot-password`): 3 attempts / 1 hour (keyed by IP).
+  - Reset Password (`POST /api/auth/reset-password`): 5 attempts / 15 min (keyed by IP).
+  - Resend Verification (`POST /api/auth/resend-verification`): 3 attempts / 15 min (keyed by IP + email).
+- Return standardized `429 Too Many Requests` responses with `Retry-After` headers and clear JSON error messages.
+- Provide user-friendly error messages / alerts on the frontend forms and toast notifications.
+- Ensure fail-open behavior so authentication remains functional if Upstash is unconfigured or unreachable.
+- Create automated test verification scripts to validate rate limiters and error responses.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Specification**: [context/features/rate-limiting-spec.md](context/features/rate-limiting-spec.md)
+- **Dependencies**: `@upstash/ratelimit`, `@upstash/redis`
+- **Environment Variables**:
+  - `UPSTASH_REDIS_REST_URL`
+  - `UPSTASH_REDIS_REST_TOKEN`
+- **Fail-Open Strategy**: Rate limiting should log a warning and allow the request to proceed if Redis credentials are missing or network calls fail, ensuring local development and production availability are not blocked by Redis downtime.
+- **NextAuth Integration**: Evaluate rate limiting in NextAuth v5 credentials `authorize` callback or custom sign-in flow.
+- Document environment variables in `.env.example`.
 
 ## History
 
@@ -189,4 +204,3 @@ Not Started
   - Added server-side RSC authentication redirect guard in `src/app/dashboard/page.tsx` to prevent unauthenticated fallback queries.
   - Synchronized NextAuth v5 environment variables in `.env.example` (`AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`) and updated `context/project-overview.md`.
   - Verified with full test suite (`npm run test:auth`), ESLint (`npm run lint`), and Next.js Turbopack build.
-

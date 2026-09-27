@@ -67,9 +67,11 @@ export function SignInForm() {
       ? "An account with this email already exists with another provider."
       : urlError === "email_not_verified"
         ? "Please verify your email address before signing in."
-        : urlError
-          ? "Authentication failed. Please check your credentials."
-          : null,
+        : urlError === "rate_limit_exceeded" || urlError === "RateLimitError"
+          ? "Too many login attempts. Please try again in 15 minutes."
+          : urlError
+            ? "Authentication failed. Please check your credentials."
+            : null,
   );
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -99,6 +101,13 @@ export function SignInForm() {
         ) {
           setErrorMessage(
             "Your email is not verified yet. Please check your inbox or resend the verification link below.",
+          );
+        } else if (
+          res.code === "rate_limit_exceeded" ||
+          res.error.includes("rate_limit_exceeded")
+        ) {
+          setErrorMessage(
+            "Too many login attempts. Please try again in 15 minutes.",
           );
         } else {
           setErrorMessage("Invalid email or password.");

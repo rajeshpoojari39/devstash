@@ -50,7 +50,10 @@ async function testEmailVerification() {
       "http://localhost:3000/api/auth/register",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.2.1",
+        },
         body: JSON.stringify({
           name: testName,
           email: testEmailDisabled,
@@ -100,7 +103,10 @@ async function testEmailVerification() {
     const resendDisabledRes = await resendHandler(
       new Request("http://localhost:3000/api/auth/resend-verification", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.2.2",
+        },
         body: JSON.stringify({ email: testEmailDisabled }),
       }),
     );
@@ -153,7 +159,10 @@ async function testEmailVerification() {
 
     const registerReq = new Request("http://localhost:3000/api/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "10.0.2.3",
+      },
       body: JSON.stringify({
         name: testName,
         email: testEmailEnabled,
@@ -213,7 +222,10 @@ async function testEmailVerification() {
       "http://localhost:3000/api/auth/resend-verification",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "x-forwarded-for": "10.0.2.4",
+        },
         body: JSON.stringify({ email: testEmailEnabled }),
       },
     );

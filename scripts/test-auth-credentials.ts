@@ -37,7 +37,10 @@ async function testCredentialsAuth() {
   const resMissingEmail = await registerHandler(
     new Request("http://localhost:3000/api/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "10.0.1.1",
+      },
       body: JSON.stringify({
         password: "password123",
         confirmPassword: "password123",
@@ -55,7 +58,10 @@ async function testCredentialsAuth() {
   const resMismatch = await registerHandler(
     new Request("http://localhost:3000/api/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "10.0.1.2",
+      },
       body: JSON.stringify({
         name: "Test User",
         email: "test@example.com",
@@ -75,7 +81,10 @@ async function testCredentialsAuth() {
   const resShortPass = await registerHandler(
     new Request("http://localhost:3000/api/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "10.0.1.3",
+      },
       body: JSON.stringify({
         name: "Test User",
         email: "test@example.com",
@@ -100,7 +109,10 @@ async function testCredentialsAuth() {
   const resRegister = await registerHandler(
     new Request("http://localhost:3000/api/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "10.0.1.4",
+      },
       body: JSON.stringify({
         name: testName,
         email: testEmail,
@@ -129,7 +141,10 @@ async function testCredentialsAuth() {
   const resDuplicate = await registerHandler(
     new Request("http://localhost:3000/api/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "10.0.1.5",
+      },
       body: JSON.stringify({
         name: "Duplicate User",
         email: testEmail,

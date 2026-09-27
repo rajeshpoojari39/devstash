@@ -49,7 +49,10 @@ async function testAuthUI() {
   const res = await registerHandler(
     new Request("http://localhost:3000/api/auth/register", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        "x-forwarded-for": "10.0.4.1",
+      },
       body: JSON.stringify({
         name: testName,
         email: testEmail,

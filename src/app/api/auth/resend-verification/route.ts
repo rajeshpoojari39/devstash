@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { generateVerificationToken } from "@/lib/tokens";
 import { sendVerificationEmail, isEmailVerificationEnabled } from "@/lib/email";
+import {
+  getClientIp,
+  buildRateLimitIdentifier,
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/rate-limit";
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -34,6 +40,18 @@ export async function POST(request: Request) {
         { error: "Please provide a valid email address" },
         { status: 400 },
       );
+    }
+
+    // Rate limiting check (3 attempts per 15 min by IP + email)
+    const clientIp = getClientIp(request);
+    const identifier = buildRateLimitIdentifier(
+      "resend-verification",
+      clientIp,
+      normalizedEmail,
+    );
+    const rateLimit = await checkRateLimit("resend-verification", identifier);
+    if (!rateLimit.success) {
+      return createRateLimitResponse(rateLimit);
     }
 
     // Look up user silently

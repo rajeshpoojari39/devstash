@@ -1,9 +1,21 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { consumePasswordResetTokenAndSetPassword } from "@/lib/tokens";
+import {
+  getClientIp,
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/rate-limit";
 
 export async function POST(request: Request) {
   try {
+    // 0. Rate limiting check (5 attempts per 15 min by IP)
+    const clientIp = getClientIp(request);
+    const rateLimit = await checkRateLimit("reset-password", clientIp);
+    if (!rateLimit.success) {
+      return createRateLimitResponse(rateLimit);
+    }
+
     const body = await request.json();
     const { token, password, confirmPassword } = body;
 
