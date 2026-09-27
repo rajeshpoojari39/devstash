@@ -334,3 +334,114 @@ export async function deletePasswordResetToken(token: string) {
     console.error("Error deleting password reset token:", error);
   }
 }
+
+export type ConsumePasswordResetTokenResult =
+  | { success: true; email: string }
+  | {
+      success: false;
+      error:
+        | "TOKEN_NOT_FOUND"
+        | "EXPIRED_TOKEN"
+        | "USER_NOT_FOUND"
+        | "UNKNOWN_ERROR";
+      message: string;
+    };
+
+/**
+ * Atomically validates a password reset token, updates the user's password,
+ * and deletes the consumed token within a single database transaction.
+ */
+export async function consumePasswordResetTokenAndSetPassword(
+  token: string,
+  newHashedPassword: string,
+): Promise<ConsumePasswordResetTokenResult> {
+  try {
+    if (!token || typeof token !== "string") {
+      return {
+        success: false,
+        error: "TOKEN_NOT_FOUND",
+        message: "Password reset token is missing or invalid.",
+      };
+    }
+
+    return await prisma.$transaction(async (tx) => {
+      const verificationToken = await tx.verificationToken.findUnique({
+        where: { token },
+      });
+
+      if (
+        !verificationToken ||
+        !verificationToken.identifier.startsWith(
+          RESET_PASSWORD_IDENTIFIER_PREFIX,
+        )
+      ) {
+        return {
+          success: false,
+          error: "TOKEN_NOT_FOUND",
+          message:
+            "Invalid or expired password reset link. Please request a new one.",
+        };
+      }
+
+      const hasExpired = new Date(verificationToken.expires) < new Date();
+
+      if (hasExpired) {
+        await tx.verificationToken.deleteMany({
+          where: { token },
+        });
+
+        return {
+          success: false,
+          error: "EXPIRED_TOKEN",
+          message: "Password reset link has expired. Please request a new one.",
+        };
+      }
+
+      const email = extractEmailFromResetIdentifier(
+        verificationToken.identifier,
+      );
+
+      const user = await tx.user.findUnique({
+        where: { email },
+      });
+
+      if (!user) {
+        return {
+          success: false,
+          error: "USER_NOT_FOUND",
+          message:
+            "Account associated with this reset link could not be found.",
+        };
+      }
+
+      // 1. Update password
+      await tx.user.update({
+        where: { email },
+        data: {
+          password: newHashedPassword,
+        },
+      });
+
+      // 2. Atomically delete token
+      await tx.verificationToken.deleteMany({
+        where: { token },
+      });
+
+      return {
+        success: true,
+        email: user.email,
+      };
+    });
+  } catch (error) {
+    console.error(
+      "Error during atomic password reset token consumption:",
+      error,
+    );
+    return {
+      success: false,
+      error: "UNKNOWN_ERROR",
+      message:
+        "An unexpected error occurred while resetting your password. Please try again.",
+    };
+  }
+}

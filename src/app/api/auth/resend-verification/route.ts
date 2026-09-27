@@ -36,44 +36,29 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check user existence
+    // Look up user silently
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
     });
 
-    if (!user) {
-      // Return 404 with helpful error
-      return NextResponse.json(
-        { error: "No account found with this email address" },
-        { status: 404 },
-      );
+    // Only generate token and dispatch email if user exists and is not yet verified
+    if (user && !user.emailVerified) {
+      const verificationToken =
+        await generateVerificationToken(normalizedEmail);
+
+      await sendVerificationEmail({
+        email: normalizedEmail,
+        name: user.name,
+        token: verificationToken.token,
+      });
     }
 
-    if (user.emailVerified) {
-      return NextResponse.json(
-        {
-          error:
-            "This email address is already verified. You can sign in directly.",
-          alreadyVerified: true,
-        },
-        { status: 400 },
-      );
-    }
-
-    // Generate new token & dispatch email
-    const verificationToken = await generateVerificationToken(normalizedEmail);
-
-    await sendVerificationEmail({
-      email: normalizedEmail,
-      name: user.name,
-      token: verificationToken.token,
-    });
-
+    // Always return a generic success message to prevent user enumeration
     return NextResponse.json(
       {
         success: true,
         message:
-          "A new verification email has been sent. Please check your inbox.",
+          "If an unverified account exists with this email address, a verification link has been sent.",
       },
       { status: 200 },
     );

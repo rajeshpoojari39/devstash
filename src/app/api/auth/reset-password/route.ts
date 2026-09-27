@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
-import {
-  verifyPasswordResetToken,
-  deletePasswordResetToken,
-} from "@/lib/tokens";
+import { consumePasswordResetTokenAndSetPassword } from "@/lib/tokens";
 
 export async function POST(request: Request) {
   try {
@@ -50,29 +46,18 @@ export async function POST(request: Request) {
       );
     }
 
-    // 5. Verify the reset token and check associated user
-    const verificationResult = await verifyPasswordResetToken(token);
+    // 5. Hash new password
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    if (!verificationResult.success) {
-      return NextResponse.json(
-        { error: verificationResult.message },
-        { status: 400 },
-      );
+    // 6. Atomically verify token, update user password, and delete token within a transaction
+    const resetResult = await consumePasswordResetTokenAndSetPassword(
+      token,
+      hashedPassword,
+    );
+
+    if (!resetResult.success) {
+      return NextResponse.json({ error: resetResult.message }, { status: 400 });
     }
-
-    // 6. Hash new password
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    // 7. Update user's password in database
-    await prisma.user.update({
-      where: { email: verificationResult.email },
-      data: {
-        password: hashedPassword,
-      },
-    });
-
-    // 8. Delete/invalidate the consumed token
-    await deletePasswordResetToken(token);
 
     return NextResponse.json(
       {

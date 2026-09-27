@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
 import {
   getDashboardCollections,
   getDashboardStats,
@@ -16,13 +18,30 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const session = await auth();
-  const userId = session?.user?.id;
+
+  if (!session?.user) {
+    redirect("/sign-in?callbackUrl=/dashboard");
+  }
+
+  let targetUserId: string | undefined = session.user.id;
+
+  if (!targetUserId && session.user.email) {
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true },
+    });
+    targetUserId = user?.id;
+  }
+
+  if (!targetUserId) {
+    redirect("/sign-in?callbackUrl=/dashboard");
+  }
 
   const [collections, stats, pinnedItems, recentItems] = await Promise.all([
-    getDashboardCollections(userId),
-    getDashboardStats(userId),
-    getDashboardPinnedItems(userId),
-    getDashboardRecentItems(userId, 10),
+    getDashboardCollections(targetUserId),
+    getDashboardStats(targetUserId),
+    getDashboardPinnedItems(targetUserId),
+    getDashboardRecentItems(targetUserId, 10),
   ]);
 
   return (

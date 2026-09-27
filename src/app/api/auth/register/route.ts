@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     }
 
     // 6. Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // 7. Check if email verification is enabled
     const verificationEnabled = isEmailVerificationEnabled();

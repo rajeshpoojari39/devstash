@@ -182,3 +182,11 @@ Not Started
   - Added automated test suite `scripts/test-profile.ts` (`npm run test:profile`).
   - Verified with test suite, ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
 
+- **Auth Security Review & Hardening (2026-09-27)**
+  - Performed comprehensive security review of authentication and authorization flows using `.agents/agents/auth-auditor` and generated `docs/audit-results/AUTH_SECURITY_REVIEW.md`.
+  - Fixed email enumeration on resend verification endpoint (`src/app/api/auth/resend-verification/route.ts`) by returning uniform generic 200 responses.
+  - Implemented atomic password reset transaction helper `consumePasswordResetTokenAndSetPassword` in `src/lib/tokens.ts` and updated `src/app/api/auth/reset-password/route.ts` with `prisma.$transaction`.
+  - Added server-side RSC authentication redirect guard in `src/app/dashboard/page.tsx` to prevent unauthenticated fallback queries.
+  - Synchronized NextAuth v5 environment variables in `.env.example` (`AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`) and updated `context/project-overview.md`.
+  - Verified with full test suite (`npm run test:auth`), ESLint (`npm run lint`), and Next.js Turbopack build.
+
