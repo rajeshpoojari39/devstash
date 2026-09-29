@@ -1,25 +1,20 @@
-# Current Feature: Items List View
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Create dynamic route at `/items/[type]` (e.g., `/items/snippets`, `/items/notes`, `/items/commands`, etc.) to display items filtered by item type.
-- Implement server-side data fetching for type-filtered items and validate item type parameters.
-- Build responsive grid layout for items (two columns on `md` breakpoint and up, single column on mobile).
-- Render `ItemCard` components with category-colored left accent borders reflecting the item type.
-- Support empty state when no items exist for the selected type.
-- Maintain consistent dashboard shell layout (TopBar, Sidebar, MobileSidebar) and follow existing codebase patterns.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Route & Next.js 16**: `/items/[type]` App Router page. Note that in Next.js 16 `params` is a `Promise<{ type: string }>` and must be awaited.
-- **Database Query**: Query items filtered by `type.name` (or slug) and authenticated `userId`, ensuring proper joins with tags and collections.
-- **Component Reusability**: Reutilize or align with existing `ItemCard` (`src/components/dashboard/item-card.tsx`) and layout patterns.
-- **Color Coding**: Ensure left border color matches `itemType.color` across all item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`).
-- **Specification Source**: [context/features/item-list-view-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/item-list-view-spec.md).
+<!-- Any extra notes -->
 
 ## History
 
@@ -209,3 +204,15 @@ In Progress
   - Added 2px left accent border (`border-l-2`) to dashboard `ItemCard` component (`src/components/dashboard/item-card.tsx`).
   - Styled `borderLeftColor` dynamically using the item type color (`itemType.color`), ensuring snippets, prompts, commands, notes, links, files, and images display category-coded left borders.
   - Verified with test suite (`npm run test:items`) and Next.js Turbopack build (`npm run build`).
+
+- **Items List View (2026-09-29)**
+  - Created dynamic route at `/items/[type]` (`src/app/items/[type]/page.tsx`) with dynamic metadata and Next.js 16 async route `params` resolution.
+  - Implemented typed database queries `getItemTypeBySlug` and `getItemsByType` in `src/lib/db/items.ts` supporting both singular and plural item type slugs (e.g., `/items/snippets` & `/items/snippet`).
+  - Created client-safe utility module `src/lib/item-utils.ts` for title formatting, description generation, PRO badge checks, and icon mapping.
+  - Built responsive 2-column item grid (`grid grid-cols-1 md:grid-cols-2 gap-4`) rendering `ItemCard` components with category-colored left accent borders.
+  - Built `ItemsListHeader` with breadcrumbs, icon, item count badge, PRO badge, and description, and `ItemsEmptyState` for categories with 0 items.
+  - Built `ItemsLayout` (`src/app/items/layout.tsx`), Suspense skeleton (`src/app/items/[type]/loading.tsx`), and error boundary (`src/app/items/[type]/not-found.tsx`).
+  - Updated `src/proxy.ts` to protect `/items` routes and updated `SidebarContent` active link highlighting for singular and plural slugs.
+  - Added automated test suite `scripts/test-items-by-type.ts` and registered `test:items-by-type` in `package.json`.
+  - Verified with test suite (`npm run test:items-by-type`, `npm run test:items`, `npm run test:sidebar`, `npm run test:profile`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
