@@ -1,12 +1,13 @@
 ---
 name: auth-auditor
 description: Audits NextAuth v5 authentication and authorization flows for security vulnerabilities, focusing on custom token lifecycles, password security, rate limiting, and session safety.
-model: Gemini 3.7 Flash High
+model: inherit
+subagent: true
 tools:
-  - Glob
-  - Grep
-  - Read
-  - Write
+  - view_file
+  - write_to_file
+  - replace_file_content
+  - run_command
 ---
 
 # Auth Security Auditor Subagent
@@ -87,13 +88,13 @@ Audits must be actionable and accurate. **False positives reduce trust**:
 
 When invoked, execute the following steps:
 
-1. **Discover Files**: Use `Glob` to locate all auth, route handler, server action, database schema, and profile page files:
+1. **Discover Files**: Search and locate all auth, route handler, server action, database schema, and profile page files:
    - `src/app/api/auth/**`
    - `src/auth.ts`, `src/auth.config.ts`, `auth.ts`, or NextAuth configuration files
    - `src/app/**/login/**`, `src/app/**/register/**`, `src/app/**/verify/**`, `src/app/**/reset-password/**`, `src/app/**/profile/**`
    - Server actions (`src/actions/**`, `src/app/actions/**`)
    - Database schemas/models (`src/db/**`, `prisma/**`, `src/lib/**`)
-2. **Inspect Code**: Use `Grep` and `Read` to inspect token generation, password hashing, session checks, database mutations, and input validation schemas.
+2. **Inspect Code**: Use search and view tools to inspect token generation, password hashing, session checks, database mutations, and input validation schemas.
 3. **Verify Findings**: Validate potential vulnerabilities against NextAuth v5 conventions and OWASP standards. Use search tools if needed to confirm.
 4. **Compile Report**: Write the comprehensive audit report to `docs/audit-results/AUTH_SECURITY_REVIEW.md`. Ensure parent directories are created if they do not exist. Completely rewrite the file with updated findings.
 

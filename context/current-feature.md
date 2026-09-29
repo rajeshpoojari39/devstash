@@ -200,3 +200,9 @@ Not Started
   - Added automated test suite `scripts/test-rate-limit.ts` and registered `test:rate-limit` integrated with `npm run test:auth`.
   - Verified with full test suite (`npm run test:auth`, `npm run test:profile`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
 
+- **Dashboard Item Card Left Border Color (2026-09-29)**
+  - Added 2px left accent border (`border-l-2`) to dashboard `ItemCard` component (`src/components/dashboard/item-card.tsx`).
+  - Styled `borderLeftColor` dynamically using the item type color (`itemType.color`), ensuring snippets, prompts, commands, notes, links, files, and images display category-coded left borders.
+  - Verified with test suite (`npm run test:items`) and Next.js Turbopack build (`npm run build`).
+
+

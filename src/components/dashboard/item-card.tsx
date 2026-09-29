@@ -88,7 +88,10 @@ export function ItemCard({ item }: ItemCardProps) {
   };
 
   return (
-    <div className="group relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-border/80 bg-card/60 p-4 backdrop-blur transition-all duration-200 hover:border-border hover:bg-card/90">
+    <div
+      className="group relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-border/80 border-l-2 bg-card/60 p-4 backdrop-blur transition-all duration-200 hover:border-border hover:bg-card/90"
+      style={{ borderLeftColor: itemType.color || "#3b82f6" }}
+    >
       {/* Left side: Type Icon + Title, Description, Tags */}
       <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
         {/* Type Icon Container */}
