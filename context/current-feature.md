@@ -1,20 +1,25 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Items List View
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Create dynamic route at `/items/[type]` (e.g., `/items/snippets`, `/items/notes`, `/items/commands`, etc.) to display items filtered by item type.
+- Implement server-side data fetching for type-filtered items and validate item type parameters.
+- Build responsive grid layout for items (two columns on `md` breakpoint and up, single column on mobile).
+- Render `ItemCard` components with category-colored left accent borders reflecting the item type.
+- Support empty state when no items exist for the selected type.
+- Maintain consistent dashboard shell layout (TopBar, Sidebar, MobileSidebar) and follow existing codebase patterns.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Route & Next.js 16**: `/items/[type]` App Router page. Note that in Next.js 16 `params` is a `Promise<{ type: string }>` and must be awaited.
+- **Database Query**: Query items filtered by `type.name` (or slug) and authenticated `userId`, ensuring proper joins with tags and collections.
+- **Component Reusability**: Reutilize or align with existing `ItemCard` (`src/components/dashboard/item-card.tsx`) and layout patterns.
+- **Color Coding**: Ensure left border color matches `itemType.color` across all item types (`snippet`, `prompt`, `command`, `note`, `file`, `image`, `link`).
+- **Specification Source**: [context/features/item-list-view-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/item-list-view-spec.md).
 
 ## History
 
@@ -204,5 +209,3 @@ Not Started
   - Added 2px left accent border (`border-l-2`) to dashboard `ItemCard` component (`src/components/dashboard/item-card.tsx`).
   - Styled `borderLeftColor` dynamically using the item type color (`itemType.color`), ensuring snippets, prompts, commands, notes, links, files, and images display category-coded left borders.
   - Verified with test suite (`npm run test:items`) and Next.js Turbopack build (`npm run build`).
-
-

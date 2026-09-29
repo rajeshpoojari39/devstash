@@ -1,12 +1,14 @@
 import { prisma } from "@/lib/prisma";
 import { getDefaultUserId } from "@/lib/db/collections";
+import {
+  ItemTypeInfo,
+  normalizeItemTypeSlug,
+  formatItemTypeTitle,
+  getItemTypeDescription,
+} from "@/lib/item-utils";
 
-export interface ItemTypeInfo {
-  id: string;
-  name: string;
-  icon: string;
-  color: string;
-}
+export type { ItemTypeInfo };
+export { normalizeItemTypeSlug, formatItemTypeTitle, getItemTypeDescription };
 
 export interface SidebarItemType {
   id: string;
@@ -358,4 +360,100 @@ export async function getSidebarData(userId?: string): Promise<SidebarData> {
     collections,
     user,
   };
+}
+
+/**
+ * Fetches an item type definition by slug or name (supports both singular and plural forms).
+ */
+export async function getItemTypeBySlug(
+  slug: string,
+  userId?: string | null,
+): Promise<ItemTypeInfo | null> {
+  const targetUserId = userId || (await getDefaultUserId());
+  const normalized = normalizeItemTypeSlug(slug);
+  const raw = slug.trim().toLowerCase();
+
+  const itemType = await prisma.itemType.findFirst({
+    where: {
+      OR: [
+        { name: { equals: normalized, mode: "insensitive" } },
+        { name: { equals: raw, mode: "insensitive" } },
+      ],
+      AND: [
+        {
+          OR: [
+            { isSystem: true },
+            ...(targetUserId ? [{ userId: targetUserId }] : []),
+          ],
+        },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      icon: true,
+      color: true,
+    },
+  });
+
+  return itemType;
+}
+
+/**
+ * Fetches all items belonging to a specific item type for a user, ordered newest first.
+ */
+export async function getItemsByType(
+  itemTypeId: string,
+  userId?: string | null,
+): Promise<DashboardItem[]> {
+  const targetUserId = userId || (await getDefaultUserId());
+
+  if (!targetUserId) {
+    return [];
+  }
+
+  const items = await prisma.item.findMany({
+    where: {
+      userId: targetUserId,
+      itemTypeId: itemTypeId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      itemType: {
+        select: {
+          id: true,
+          name: true,
+          icon: true,
+          color: true,
+        },
+      },
+      tags: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
+
+  return items.map((item) => ({
+    id: item.id,
+    title: item.title,
+    contentType: item.contentType,
+    content: item.content,
+    description: item.description,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    language: item.language,
+    url: item.url,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    itemTypeId: item.itemTypeId,
+    itemType: item.itemType,
+    tags: item.tags.map((tag) => tag.name),
+  }));
 }

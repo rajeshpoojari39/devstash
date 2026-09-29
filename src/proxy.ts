@@ -8,7 +8,9 @@ export const proxy = auth((req) => {
   const isLoggedIn = !!req.auth;
   const isOnDashboard =
     req.nextUrl.pathname.startsWith("/dashboard") ||
-    req.nextUrl.pathname.startsWith("/profile");
+    req.nextUrl.pathname.startsWith("/profile") ||
+    req.nextUrl.pathname.startsWith("/items") ||
+    req.nextUrl.pathname.startsWith("/collections");
   const isOnAuthPage =
     req.nextUrl.pathname.startsWith("/sign-in") ||
     req.nextUrl.pathname.startsWith("/register") ||

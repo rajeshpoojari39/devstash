@@ -2,60 +2,19 @@
 
 import * as React from "react";
 import Link from "next/link";
-import {
-  Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
-  File,
-  Image as ImageIcon,
-  Link as LinkIcon,
-  Folder,
-  Layers,
-  ArrowUpRight,
-} from "lucide-react";
+import { Folder, Layers, ArrowUpRight, Code } from "lucide-react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { ProfileStats as ProfileStatsType } from "@/lib/db/profile";
+import {
+  formatItemTypeTitle,
+  isProType,
+  itemTypeIconMap,
+} from "@/lib/item-utils";
 import { cn } from "@/lib/utils";
 
 interface ProfileStatsProps {
   stats: ProfileStatsType;
-}
-
-const typeIconMap: Record<string, React.ElementType> = {
-  Code: Code,
-  Sparkles: Sparkles,
-  Terminal: Terminal,
-  StickyNote: StickyNote,
-  File: File,
-  Image: ImageIcon,
-  Link: LinkIcon,
-};
-
-function getItemTypeTitle(name: string): string {
-  const map: Record<string, string> = {
-    snippet: "Snippets",
-    prompt: "Prompts",
-    command: "Commands",
-    note: "Notes",
-    file: "Files",
-    image: "Images",
-    link: "Links",
-  };
-  return (
-    map[name.toLowerCase()] || name.charAt(0).toUpperCase() + name.slice(1)
-  );
-}
-
-function isProType(name: string): boolean {
-  const lower = name.toLowerCase();
-  return (
-    lower === "file" ||
-    lower === "files" ||
-    lower === "image" ||
-    lower === "images"
-  );
 }
 
 export function ProfileStatsSection({ stats }: ProfileStatsProps) {
@@ -127,8 +86,11 @@ export function ProfileStatsSection({ stats }: ProfileStatsProps) {
         <CardContent className="p-4 pt-4">
           <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
             {stats.itemTypeBreakdown.map((itemType) => {
-              const Icon = typeIconMap[itemType.icon] || Code;
-              const title = getItemTypeTitle(itemType.name);
+              const Icon =
+                itemTypeIconMap[itemType.icon] ||
+                itemTypeIconMap[itemType.name.toLowerCase()] ||
+                Code;
+              const title = formatItemTypeTitle(itemType.name);
               const href = `/items/${itemType.name.toLowerCase()}`;
 
               return (

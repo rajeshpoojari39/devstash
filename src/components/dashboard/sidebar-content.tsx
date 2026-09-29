@@ -89,6 +89,18 @@ function isProType(name: string): boolean {
   );
 }
 
+function isItemTypeActive(pathname: string, typeName: string): boolean {
+  const lower = typeName.toLowerCase();
+  const singularHref = `/items/${lower}`;
+  const pluralHref = `/items/${lower}s`;
+  return (
+    pathname === singularHref ||
+    pathname.startsWith(`${singularHref}/`) ||
+    pathname === pluralHref ||
+    pathname.startsWith(`${pluralHref}/`)
+  );
+}
+
 export function SidebarContent({
   itemTypes = [],
   collections = [],
@@ -134,8 +146,7 @@ export function SidebarContent({
             <div className="flex flex-col items-center gap-1 w-full">
               {itemTypes.map((itemType) => {
                 const href = `/items/${itemType.name.toLowerCase()}`;
-                const isActive =
-                  pathname === href || pathname.startsWith(`${href}/`);
+                const isActive = isItemTypeActive(pathname, itemType.name);
                 const Icon = typeIconMap[itemType.icon] || Code;
                 const title = getItemTypeTitle(itemType.name);
 
@@ -273,8 +284,7 @@ export function SidebarContent({
                 <nav className="space-y-0.5" aria-label="Item types">
                   {itemTypes.map((itemType) => {
                     const href = `/items/${itemType.name.toLowerCase()}`;
-                    const isActive =
-                      pathname === href || pathname.startsWith(`${href}/`);
+                    const isActive = isItemTypeActive(pathname, itemType.name);
                     const Icon = typeIconMap[itemType.icon] || Code;
                     const title = getItemTypeTitle(itemType.name);
 
