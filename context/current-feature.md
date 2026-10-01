@@ -1,23 +1,20 @@
-# Current Feature: Setup Vitest for Unit Testing
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-Completed
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- [x] Install and configure Vitest for fast, headless unit testing
-- [x] Target only server actions (`src/actions/**/*.ts`) and utilities (`src/lib/**/*.ts`), explicitly omitting React components
-- [x] Configure path aliases (`@/*` -> `./src/*`) and Node test environment (`vitest.config.mts`)
-- [x] Add NPM scripts (`npm test`, `npm run test:watch`, `npm run test:coverage`)
-- [x] Implement unit test suites for existing utilities (`src/lib/utils.test.ts`, `src/lib/item-utils.test.ts`, `src/lib/email/index.test.ts`, `src/lib/rate-limit.test.ts`)
-- [x] Update project workflow, AI interaction guidelines, coding standards, and GEMINI rules
+<!-- Goals & requirements -->
 
 ## Notes
 
-- Uses Node test environment since UI component testing is out of scope.
-- Coverage reports use `@vitest/coverage-v8` scoped to `src/lib/**` and `src/actions/**`.
-- `coverage/**` added to `.gitignore` and `eslint.config.mjs` global ignores.
+<!-- Any extra notes -->
 
 ## History
 
