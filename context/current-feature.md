@@ -1,24 +1,20 @@
-# Current Feature: Responsive 3-Column Item Listing View
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- [x] Update item listing grid in `src/app/items/[type]/page.tsx` from 2 columns to responsive 3 columns on larger screens (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`).
-- [x] Update skeleton loading grid in `src/app/items/[type]/loading.tsx` to mirror the responsive 3-column grid structure.
-- [x] Ensure card layouts (`ItemCard`) flex cleanly and preserve readability, left accent borders, badges, tags, and action menus in 3-column layouts.
-- [x] Verify responsiveness across mobile (1 column), tablet (2 columns), and desktop (3 columns).
-- [x] Verify with unit test suite (`npm test`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+<!-- Goals & requirements -->
 
 ## Notes
 
-- Feature spec: `context/features/item-grid-3-col-spec.md`
-- Mobile: `grid-cols-1` (< 768px)
-- Tablet: `md:grid-cols-2` (≥ 768px)
-- Desktop: `lg:grid-cols-3` (≥ 1024px)
-- Grid gap remains `gap-4` with `max-w-7xl mx-auto` container constraint.
+<!-- Any extra notes -->
 
 ## History
 
@@ -228,3 +224,9 @@ In Progress
   - Created initial unit test suites: `src/lib/utils.test.ts` (Tailwind class merger), `src/lib/item-utils.test.ts` (slug normalization, titles, descriptions, PRO badges, icon mappings), `src/lib/email/index.test.ts` (email flags, base URL derivation, templates), and `src/lib/rate-limit.test.ts` (IP extraction, composite key identifiers, fail-open behavior, 429 response builders).
   - Updated project documentation: `context/ai-interaction.md` (testing step 4 & guidelines), `context/coding-standards.md` (unit testing standards), and `GEMINI.md` (test commands & agent verification rules).
   - Verified full test suite (`npm test`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
+- **Responsive 3-Column Item Listing & Vertical Card Layout (2026-10-01)**
+  - Converted item listing view (`/items/[type]`) and skeleton loader (`src/app/items/[type]/loading.tsx`) to a responsive 3-column grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`).
+  - Refactored `ItemCard` (`src/components/dashboard/item-card.tsx`) to use a consistent vertical card layout across all screen sizes, providing full width for title, description, and tags, with bottom-right quick actions.
+  - Verified with unit test suite (`npm test`), database test scripts (`npm run test:items-by-type`, `npm run test:items`), ESLint (`npm run lint`), and Next.js Turbopack build (`npm run build`).
+
