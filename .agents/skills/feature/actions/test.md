@@ -10,21 +10,22 @@ Executes verification test suites, validates type safety and linting, and crafts
 
 1.  Read [context/current-feature.md](../../../../context/current-feature.md) using `view_file` to review feature scope and goals.
 2.  Identify newly added or modified logic:
+    - Server actions (`src/actions/*.ts`)
     - Database queries and mutations (`src/lib/db/*.ts`)
-    - Server actions and API utilities (`src/lib/actions/*.ts`, `src/lib/utils.ts`)
-    - Core helper algorithms and validation logic
-3.  Check if tests or test scripts already exist for these modules in `scripts/` or `__tests__/`.
+    - API and shared utilities (`src/lib/*.ts`, `src/lib/utils.ts`)
+    - Core helper algorithms, parsers, and validation logic
+3.  Check if tests already exist for these modules as `src/**/*.test.ts` or standalone verification scripts in `scripts/`.
 
 ---
 
 ### 2. Write or Update Unit/Integration Tests
 
-For business logic lacking test coverage:
+For server actions and utilities lacking test coverage:
 
-- Use Vitest or standalone TypeScript test runners (e.g., in `scripts/test-<feature>.ts`).
-- Focus on data integrity, boundary values, error handling, and server actions.
-- Avoid testing purely static React presentational markup.
-- Write realistic test assertions without mocking unnecessarily.
+- Use Vitest unit tests colocated or formatted as `*.test.ts` (executed via `npm test`).
+- Focus strictly on server actions, business logic, error handling, boundary values, and utilities.
+- **Do NOT write tests for React UI components.**
+- Mock external network/database dependencies (Resend, Redis, Prisma, NextAuth) using `vi.mock()` or `vi.fn()`.
 
 ---
 

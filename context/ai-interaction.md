@@ -15,15 +15,15 @@ This is the common workflow that we will use for every single feature/fix:
 1. **Document** - Document the feature in @context/current-feature.md.
 2. **Branch** - Create new branch for feature, fix, etc
 3. **Implement** - Implement the feature/fix that I create in @context/current-feature.md
-4. **Test** - Verify it works in the browser. Implement unit testing later. Run `npm run build` and fix any errors
+4. **Test** - Run unit tests (`npm test`) for server actions and utilities. Verify UI in the browser if applicable. Run `npm run lint` and `npm run build` to confirm zero errors.
 5. **Iterate** - Iterate and change things if needed
-6. **Commit** - Only after build passes and everything works
+6. **Commit** - Only after build and tests pass and everything works
 7. **Merge** - Merge to main
 8. **Delete Branch** - Delete branch after merge
 9. **Review** - Review AI-generated code periodically and on demand.
 10. Mark as completed in @context/current-feature.md and add to history
 
-Do NOT commit without permission and until the build passes. If build fails, fix the issues first.
+Do NOT commit without permission and until all tests, linting, and build pass. If any check fails, fix the issues first.
 
 ## Branching
 
@@ -48,6 +48,13 @@ We will create a new branch for every feature/fix. Name branch **feature/[featur
 - Don't refactor unrelated code unless asked
 - Don't add "nice to have" features
 - Preserve existing patterns in the codebase
+
+## Testing
+
+- Write unit tests using **Vitest** for all server actions (`src/actions/**/*.ts`) and utility functions (`src/lib/**/*.ts`)
+- **Do NOT test React UI components** (focus testing effort strictly on business logic, helpers, parsers, and server mutations)
+- Keep test files colocated or suffixed with `*.test.ts` (e.g. `src/lib/item-utils.test.ts`)
+- Use mocked external dependencies (Resend, Redis, Prisma, NextAuth) when testing units in isolation
 
 ## Code Review
 

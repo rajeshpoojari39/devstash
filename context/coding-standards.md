@@ -90,6 +90,19 @@ Example v4 configuration:
 - Return `{ success, data, error }` pattern from actions
 - Display user-friendly error messages via toast
 
+## Unit Testing
+
+- **Framework**: Vitest (`vitest.config.mts`)
+- **Scope**: Server actions (`src/actions/**/*.ts`) and utilities (`src/lib/**/*.ts`) **ONLY**
+- **No Component Testing**: Do NOT write unit tests for React components or UI JSX/TSX
+- **Test Environment**: Node.js (`environment: "node"`)
+- **File Naming**: Place tests next to their implementation files as `[name].test.ts` (e.g. `src/lib/item-utils.test.ts`)
+- **Mocking**: Mock Prisma queries, Redis/rate-limiting, NextAuth, and Resend email dispatches using `vi.mock()` or `vi.fn()`
+- **Running Tests**:
+  - `npm test` - Run full unit test suite
+  - `npm run test:watch` - Interactive watch mode during development
+  - `npm run test:coverage` - Generate v8 test coverage report
+
 ## Code Quality
 
 - No commented-out code unless specified

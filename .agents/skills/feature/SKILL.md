@@ -40,8 +40,8 @@ Execute the requested action passed in `$ARGUMENTS`:
 | :--------- | :------------------------------------------- | :-------------------------------------------------------------------------------- |
 | `load`     | [actions/load.md](./actions/load.md)         | Load a feature/fix spec from file or inline description into `current-feature.md` |
 | `start`    | [actions/start.md](./actions/start.md)       | Create/checkout the feature branch, set status to `In Progress`, and begin work   |
-| `test`     | [actions/test.md](./actions/test.md)         | Run test suites, verify build/lint, and write unit/integration tests for new code |
 | `review`   | [actions/review.md](./actions/review.md)     | Inspect code changes against goals, coding standards, and security requirements   |
+| `test`     | [actions/test.md](./actions/test.md)         | Check for testable logic for server actions and utilities                         |
 | `explain`  | [actions/explain.md](./actions/explain.md)   | Document modified files, architectural decisions, and system connectivity         |
 | `complete` | [actions/complete.md](./actions/complete.md) | Verify build, commit changes, merge to `main`, archive in `History`, and clean up |
 

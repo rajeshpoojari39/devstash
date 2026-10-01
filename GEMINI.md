@@ -12,6 +12,7 @@
 - **UI Library**: [React 19](https://react.dev/)
 - **Language**: [TypeScript 5](https://www.typescriptlang.org/)
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/)
+- **Testing**: [Vitest](https://vitest.dev/) (Server actions & utilities only)
 
 ---
 
@@ -26,12 +27,15 @@ Read the following to get the full context of the project:
 
 ## Commands & Scripts
 
-| Command         | Action                                           |
-| --------------- | ------------------------------------------------ |
-| `npm run dev`   | Starts the Next.js development server            |
-| `npm run build` | Builds the application for production            |
-| `npm run start` | Runs the production server                       |
-| `npm run lint`  | Runs ESLint to check for code quality and errors |
+| Command                 | Action                                                   |
+| ----------------------- | -------------------------------------------------------- |
+| `npm run dev`           | Starts the Next.js development server                    |
+| `npm test`              | Runs Vitest unit tests (server actions & utilities only) |
+| `npm run test:watch`    | Runs Vitest in interactive watch mode                    |
+| `npm run test:coverage` | Runs Vitest with v8 code coverage analysis               |
+| `npm run build`         | Builds the application for production                    |
+| `npm run start`         | Runs the production server                               |
+| `npm run lint`          | Runs ESLint to check for code quality and errors         |
 
 ---
 
@@ -42,10 +46,14 @@ Read the following to get the full context of the project:
 ```
 devstash/
 ├── src/
-│   └── app/            # Next.js App Router pages and layouts
+│   ├── actions/        # Server actions (unit tested with Vitest)
+│   ├── app/            # Next.js App Router pages and layouts
+│   ├── components/     # React UI components (no unit tests)
+│   └── lib/            # Shared utilities & database clients (unit tested)
 ├── public/             # Static assets
 ├── package.json        # Project metadata & dependencies
 ├── tsconfig.json       # TypeScript configuration
+├── vitest.config.mts   # Vitest unit test configuration (Node environment)
 └── GEMINI.md           # Agent rules & instructions
 ```
 
@@ -60,9 +68,10 @@ devstash/
 
 ## Agent Rules & Workflow Requirements
 
-1. **Verification**: Always run `npm run build` or `npm run lint` after significant changes to confirm code correctness.
+1. **Verification**: Always run `npm test`, `npm run lint`, and `npm run build` after significant changes to confirm test and code correctness.
 2. **Preserve Comments & Docs**: Do not remove existing docstrings or structural comments unless requested.
 3. **No Dummy Code**: Always write complete, functional implementations without placeholders or silent exception swallowing.
+4. **Unit Testing**: Only write unit tests for server actions (`src/actions/**/*.ts`) and utilities (`src/lib/**/*.ts`). Do NOT write tests for React UI components.
 
 ---
 
@@ -76,7 +85,7 @@ Whenever using the **Neon MCP** tools to inspect, query, or interact with the da
 - **Default Target Branch**: `development` (`br-damp-meadow-a56n40h5`)
 
 ### Rules:
+
 1. **Always use the `development` branch**: All database reads, schema queries, table inspections, and SQL executions must explicitly target `branch_id: "br-damp-meadow-a56n40h5"` (or branch name `development`).
 2. **Never target `production`**: Do not run any queries, schema changes, or actions against the `production` branch (`br-rapid-darkness-a5pkk55f`) unless the user explicitly states "production" in their prompt.
 3. **Always supply IDs**: When invoking Neon MCP tools, always provide `org_id: "org-tiny-resonance-19531518"` and `project_id: "dawn-wildflower-34666399"`.
-
