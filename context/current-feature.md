@@ -1,20 +1,24 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Responsive 3-Column Item Listing View
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- [x] Update item listing grid in `src/app/items/[type]/page.tsx` from 2 columns to responsive 3 columns on larger screens (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`).
+- [x] Update skeleton loading grid in `src/app/items/[type]/loading.tsx` to mirror the responsive 3-column grid structure.
+- [x] Ensure card layouts (`ItemCard`) flex cleanly and preserve readability, left accent borders, badges, tags, and action menus in 3-column layouts.
+- [x] Verify responsiveness across mobile (1 column), tablet (2 columns), and desktop (3 columns).
+- [x] Verify with unit test suite (`npm test`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
 
 ## Notes
 
-<!-- Any extra notes -->
+- Feature spec: `context/features/item-grid-3-col-spec.md`
+- Mobile: `grid-cols-1` (< 768px)
+- Tablet: `md:grid-cols-2` (≥ 768px)
+- Desktop: `lg:grid-cols-3` (≥ 1024px)
+- Grid gap remains `gap-4` with `max-w-7xl mx-auto` container constraint.
 
 ## History
 

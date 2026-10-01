@@ -24,14 +24,14 @@ export default function ItemsLoading() {
         </div>
       </div>
 
-      {/* Responsive 2-column Grid Skeleton */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Responsive 3-column Grid Skeleton */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <div
             key={i}
-            className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3.5 rounded-xl border border-border/80 border-l-2 border-l-border/60 bg-card/60 p-4"
+            className="flex flex-col justify-between gap-3.5 rounded-xl border border-border/80 border-l-2 border-l-border/60 bg-card/60 p-4"
           >
-            <div className="flex items-start sm:items-center gap-3.5 flex-1 min-w-0">
+            <div className="flex items-start gap-3.5 flex-1 min-w-0 w-full">
               <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
               <div className="space-y-2 flex-1 min-w-0">
                 <div className="flex items-center gap-2">
@@ -46,7 +46,7 @@ export default function ItemsLoading() {
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+            <div className="flex items-center gap-2 self-end shrink-0">
               <Skeleton className="h-4 w-12" />
               <Skeleton className="h-8 w-8 rounded-md" />
               <Skeleton className="h-8 w-8 rounded-md" />

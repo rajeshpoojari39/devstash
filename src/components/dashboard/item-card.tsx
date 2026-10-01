@@ -89,11 +89,11 @@ export function ItemCard({ item }: ItemCardProps) {
 
   return (
     <div
-      className="group relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-border/80 border-l-2 bg-card/60 p-4 backdrop-blur transition-all duration-200 hover:border-border hover:bg-card/90"
+      className="group relative flex flex-col justify-between gap-3 rounded-xl border border-border/80 border-l-2 bg-card/60 p-4 backdrop-blur transition-all duration-200 hover:border-border hover:bg-card/90"
       style={{ borderLeftColor: itemType.color || "#3b82f6" }}
     >
-      {/* Left side: Type Icon + Title, Description, Tags */}
-      <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
+      {/* Main info area: Type Icon + Title, Description, Tags */}
+      <div className="flex items-start gap-3.5 min-w-0 w-full">
         {/* Type Icon Container */}
         <div
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-muted/40"
@@ -148,8 +148,8 @@ export function ItemCard({ item }: ItemCardProps) {
         </div>
       </div>
 
-      {/* Right side: Date and Quick Actions */}
-      <div className="flex items-center gap-2.5 self-end sm:self-center shrink-0">
+      {/* Bottom action row: Date and Quick Actions */}
+      <div className="flex items-center gap-2.5 self-end shrink-0">
         <span className="text-xs text-muted-foreground font-mono">
           {formatDate(item.createdAt)}
         </span>
