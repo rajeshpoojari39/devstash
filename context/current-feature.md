@@ -1,25 +1,20 @@
-# Current Feature: Item Drawer
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Implement right-side slide-in drawer using shadcn/ui `Sheet` component that opens when clicking an `ItemCard`.
-- Make the drawer act as the primary item detail view across both the dashboard (`/dashboard`) and items list pages (`/items/[type]`) without full page navigation.
-- Build the action bar with Favorite (star icon, yellow when active), Pin, Copy, Edit (pencil icon), and Delete (trash icon, right-aligned).
-- Create a client wrapper/provider component to manage item drawer open/close state and selected item ID since pages are React Server Components.
-- Implement full item detail database query function in `src/lib/db/items.ts` returning complete item payload (content, collections, language, tags, timestamps).
-- Implement authenticated API route (`GET /api/items/[id]`) calling the query function with NextAuth session validation.
-- Display a skeleton/loading placeholder state inside the drawer during async item fetching.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Spec File**: `context/features/item-drawer-spec.md`
-- **Visual Reference**: `context/screenshots/dashboard-ui-drawer.png`
-- **Scope**: Focus on the drawer details display, action bar, metadata, and loading state. Advanced type-specific editors (such as an embedded code editor) will be handled in subsequent tasks.
-- **Architecture**: Parent pages remain Server Components providing card previews; full item details are fetched dynamically via client trigger without triggering full page reloads.
+<!-- Any extra notes -->
 
 ## History
 
@@ -234,4 +229,16 @@ In Progress
   - Converted item listing view (`/items/[type]`) and skeleton loader (`src/app/items/[type]/loading.tsx`) to a responsive 3-column grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`).
   - Refactored `ItemCard` (`src/components/dashboard/item-card.tsx`) to use a consistent vertical card layout across all screen sizes, providing full width for title, description, and tags, with bottom-right quick actions.
   - Verified with unit test suite (`npm test`), database test scripts (`npm run test:items-by-type`, `npm run test:items`), ESLint (`npm run lint`), and Next.js Turbopack build (`npm run build`).
+
+- **Item Drawer (2026-10-03)**
+  - Built right-side slide-in detail drawer using shadcn/ui `Sheet` (`src/components/items/item-drawer.tsx`) acting as the primary item detail view across the dashboard and items listing pages.
+  - Built interactive action bar with Favorite (star icon with active gold fill), Pin (rotated accent state), Copy (with clipboard feedback), Edit, and right-aligned Delete.
+  - Implemented responsive viewport scaling: compact icon buttons on mobile (≤640px), 480px–500px on tablet (640px–1024px), and 40%–45% width on desktop.
+  - Created client wrapper `ItemDrawerProvider` and `useItemDrawer()` hook (`src/components/items/item-drawer-context.tsx`) managing drawer open state across React Server Component layouts.
+  - Updated `ItemCard` (`src/components/dashboard/item-card.tsx`) to open the drawer on card/title click or dropdown "View" click without page navigation.
+  - Implemented typed query function `getItemById` in `src/lib/db/items.ts` with joins for item types, tags, and collections.
+  - Created authenticated API route handler `GET /api/items/[id]` (`src/app/api/items/[id]/route.ts`) with NextAuth session validation.
+  - Added `formatLongDate` utility and unit tests (`src/lib/item-utils.test.ts`), plus database test script (`scripts/test-item-detail.ts`).
+  - Verified with full test suite (`npm test`), database test scripts (`npm run test:item-detail`, `npm run test:items`, `npm run test:items-by-type`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
 
