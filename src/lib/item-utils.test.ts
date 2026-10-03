@@ -5,6 +5,7 @@ import {
   getItemTypeDescription,
   isProType,
   itemTypeIconMap,
+  formatLongDate,
 } from "@/lib/item-utils";
 
 describe("item-utils", () => {
@@ -102,6 +103,22 @@ describe("item-utils", () => {
       expect(itemTypeIconMap["Image"]).toBeDefined();
       expect(itemTypeIconMap["link"]).toBeDefined();
       expect(itemTypeIconMap["Link"]).toBeDefined();
+    });
+  });
+
+  describe("formatLongDate", () => {
+    it("formats Date object into long human-readable date", () => {
+      const date = new Date(2026, 0, 15); // January 15, 2026
+      expect(formatLongDate(date)).toBe("January 15, 2026");
+    });
+
+    it("formats ISO date string into long human-readable date", () => {
+      expect(formatLongDate("2024-05-20T00:00:00Z")).toContain("2024");
+      expect(formatLongDate("2024-05-20T00:00:00Z")).toContain("May");
+    });
+
+    it("returns empty string for invalid date inputs", () => {
+      expect(formatLongDate("invalid-date")).toBe("");
     });
   });
 });

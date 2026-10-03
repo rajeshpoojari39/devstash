@@ -1,20 +1,25 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Item Drawer
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Implement right-side slide-in drawer using shadcn/ui `Sheet` component that opens when clicking an `ItemCard`.
+- Make the drawer act as the primary item detail view across both the dashboard (`/dashboard`) and items list pages (`/items/[type]`) without full page navigation.
+- Build the action bar with Favorite (star icon, yellow when active), Pin, Copy, Edit (pencil icon), and Delete (trash icon, right-aligned).
+- Create a client wrapper/provider component to manage item drawer open/close state and selected item ID since pages are React Server Components.
+- Implement full item detail database query function in `src/lib/db/items.ts` returning complete item payload (content, collections, language, tags, timestamps).
+- Implement authenticated API route (`GET /api/items/[id]`) calling the query function with NextAuth session validation.
+- Display a skeleton/loading placeholder state inside the drawer during async item fetching.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Spec File**: `context/features/item-drawer-spec.md`
+- **Visual Reference**: `context/screenshots/dashboard-ui-drawer.png`
+- **Scope**: Focus on the drawer details display, action bar, metadata, and loading state. Advanced type-specific editors (such as an embedded code editor) will be handled in subsequent tasks.
+- **Architecture**: Parent pages remain Server Components providing card previews; full item details are fetched dynamically via client trigger without triggering full page reloads.
 
 ## History
 

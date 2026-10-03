@@ -100,3 +100,17 @@ export function isProType(name: string): boolean {
     lower === "images"
   );
 }
+
+/**
+ * Formats a date into a long human-readable format (e.g. 'January 15, 2024').
+ */
+export function formatLongDate(date: Date | string): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  if (!d || isNaN(d.getTime())) return "";
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  }).format(d);
+}
+

@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import {
   Code,
   Sparkles,
@@ -26,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DashboardItem } from "@/lib/db/items";
+import { useItemDrawer } from "@/components/items/item-drawer-context";
 
 export type Item = DashboardItem;
 
@@ -55,6 +55,7 @@ function formatDate(date: Date): string {
 }
 
 export function ItemCard({ item }: ItemCardProps) {
+  const { openDrawer } = useItemDrawer();
   const [copied, setCopied] = React.useState(false);
 
   const itemType = item.itemType || {
@@ -87,9 +88,14 @@ export function ItemCard({ item }: ItemCardProps) {
     }
   };
 
+  const handleCardClick = () => {
+    openDrawer(item.id);
+  };
+
   return (
     <div
-      className="group relative flex flex-col justify-between gap-3 rounded-xl border border-border/80 border-l-2 bg-card/60 p-4 backdrop-blur transition-all duration-200 hover:border-border hover:bg-card/90"
+      onClick={handleCardClick}
+      className="group relative flex flex-col justify-between gap-3 rounded-xl border border-border/80 border-l-2 bg-card/60 p-4 backdrop-blur transition-all duration-200 hover:border-border hover:bg-card/90 cursor-pointer"
       style={{ borderLeftColor: itemType.color || "#3b82f6" }}
     >
       {/* Main info area: Type Icon + Title, Description, Tags */}
@@ -105,12 +111,9 @@ export function ItemCard({ item }: ItemCardProps) {
         {/* Info Area */}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/items/${item.id}`}
-              className="font-medium text-sm sm:text-base text-foreground hover:text-primary transition-colors line-clamp-1"
-            >
+            <span className="font-medium text-sm sm:text-base text-foreground group-hover:text-primary transition-colors line-clamp-1">
               {item.title}
-            </Link>
+            </span>
 
             {item.isPinned && (
               <Pin className="h-3.5 w-3.5 text-muted-foreground rotate-45 shrink-0" />
@@ -149,7 +152,10 @@ export function ItemCard({ item }: ItemCardProps) {
       </div>
 
       {/* Bottom action row: Date and Quick Actions */}
-      <div className="flex items-center gap-2.5 self-end shrink-0">
+      <div
+        className="flex items-center gap-2.5 self-end shrink-0"
+        onClick={(e) => e.stopPropagation()}
+      >
         <span className="text-xs text-muted-foreground font-mono">
           {formatDate(item.createdAt)}
         </span>
@@ -187,18 +193,19 @@ export function ItemCard({ item }: ItemCardProps) {
             <MoreHorizontal className="h-4 w-4" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-36">
-            <DropdownMenuItem>
-              <Link
-                href={`/items/${item.id}`}
-                className="flex w-full items-center gap-2"
-              >
-                <ExternalLink className="h-4 w-4" />
-                <span>View</span>
-              </Link>
+            <DropdownMenuItem
+              onClick={(e) => {
+                e.stopPropagation();
+                openDrawer(item.id);
+              }}
+              className="flex items-center gap-2 cursor-pointer"
+            >
+              <ExternalLink className="h-4 w-4" />
+              <span>View</span>
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleCopy}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 cursor-pointer"
             >
               <Copy className="h-4 w-4" />
               <span>Copy</span>
@@ -206,7 +213,7 @@ export function ItemCard({ item }: ItemCardProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
-              className="flex items-center gap-2 text-destructive"
+              className="flex items-center gap-2 text-destructive cursor-pointer"
             >
               <span>Delete</span>
             </DropdownMenuItem>
@@ -216,3 +223,4 @@ export function ItemCard({ item }: ItemCardProps) {
     </div>
   );
 }
+

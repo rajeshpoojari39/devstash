@@ -62,6 +62,32 @@ export interface DashboardItem {
   tags: string[];
 }
 
+export interface ItemDetailCollection {
+  id: string;
+  name: string;
+}
+
+export interface ItemDetail {
+  id: string;
+  title: string;
+  contentType: string;
+  content: string | null;
+  description: string | null;
+  isFavorite: boolean;
+  isPinned: boolean;
+  language: string | null;
+  url: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
+  createdAt: Date;
+  updatedAt: Date;
+  itemTypeId: string;
+  itemType: ItemTypeInfo;
+  tags: string[];
+  collections: ItemDetailCollection[];
+}
+
 /**
  * Fetches all pinned items for a given user ordered by newest first.
  */
@@ -457,3 +483,78 @@ export async function getItemsByType(
     tags: item.tags.map((tag) => tag.name),
   }));
 }
+
+/**
+ * Fetches a single item's full detail by its ID, scoped to the specified user.
+ */
+export async function getItemById(
+  id: string,
+  userId?: string | null,
+): Promise<ItemDetail | null> {
+  const targetUserId = userId || (await getDefaultUserId());
+
+  if (!targetUserId || !id) {
+    return null;
+  }
+
+  const item = await prisma.item.findFirst({
+    where: {
+      id: id,
+      userId: targetUserId,
+    },
+    include: {
+      itemType: {
+        select: {
+          id: true,
+          name: true,
+          icon: true,
+          color: true,
+        },
+      },
+      tags: {
+        select: {
+          name: true,
+        },
+      },
+      collections: {
+        select: {
+          collection: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!item) {
+    return null;
+  }
+
+  return {
+    id: item.id,
+    title: item.title,
+    contentType: item.contentType,
+    content: item.content,
+    description: item.description,
+    isFavorite: item.isFavorite,
+    isPinned: item.isPinned,
+    language: item.language,
+    url: item.url,
+    fileUrl: item.fileUrl,
+    fileName: item.fileName,
+    fileSize: item.fileSize,
+    createdAt: item.createdAt,
+    updatedAt: item.updatedAt,
+    itemTypeId: item.itemTypeId,
+    itemType: item.itemType,
+    tags: item.tags.map((tag) => tag.name),
+    collections: item.collections.map((c) => ({
+      id: c.collection.id,
+      name: c.collection.name,
+    })),
+  };
+}
+
