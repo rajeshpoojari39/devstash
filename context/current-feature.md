@@ -1,30 +1,20 @@
-# Current Feature: Item Drawer — Edit Mode
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- [x] Add inline edit mode toggle to `ItemDrawer` via the action bar Edit button (pencil icon).
-- [x] Implement edit mode action bar with `Save` and `Cancel` buttons (replacing standard action bar during editing).
-- [x] Render controlled editable form fields based on item type:
-  - All types: `title` (required text input), `description` (optional textarea), `tags` (comma-separated text input converting to string array).
-  - Type-specific: `content` (textarea for `snippet`, `prompt`, `command`, `note`), `language` (text input for `snippet`, `command`), `url` (text input for `link`).
-- [x] Keep item type, collections, and created/updated dates read-only in edit mode.
-- [x] Create Zod update schema and server action `updateItem(itemId, data)` in `src/actions/items.ts` following `{ success, data, error }` pattern, session verification, and ownership check.
-- [x] Implement database query function `updateItem` in `src/lib/db/items.ts` with tag disconnect and connect-or-create logic, returning updated `ItemDetail`.
-- [x] Update `ItemDrawer` state upon save, refresh drawer data without second fetch, trigger toast notification on success/error, and call `router.refresh()` to sync background cards.
-- [x] Add unit tests for `src/actions/items.ts` using Vitest and verify database integration.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Spec File**: [context/features/item-drawer-edit-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/item-drawer-edit-spec.md)
-- **Form Handling**: Use controlled inputs with local state inside the drawer (no external form library needed).
-- **Client Validation**: Disable Save button when `title` is empty or only whitespace.
-- **Server Validation**: Validate input payload in the server action with Zod as the single source of truth.
-- **Tag Management**: Disconnect all existing item tags and connect-or-create new tags on update.
-- **Coding Standards**: Unit test server action `src/actions/items.ts` and utilities with Vitest (`npm test`). Do NOT write UI component tests.
+<!-- Any extra notes -->
 
 ## History
 
@@ -250,5 +240,15 @@ In Progress
   - Created authenticated API route handler `GET /api/items/[id]` (`src/app/api/items/[id]/route.ts`) with NextAuth session validation.
   - Added `formatLongDate` utility and unit tests (`src/lib/item-utils.test.ts`), plus database test script (`scripts/test-item-detail.ts`).
   - Verified with full test suite (`npm test`), database test scripts (`npm run test:item-detail`, `npm run test:items`, `npm run test:items-by-type`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
+- **Item Drawer — Edit Mode (2026-10-04)**
+  - Implemented inline edit mode toggle in `ItemDrawer` (`src/components/items/item-drawer.tsx`) switching between read-only view and controlled form inputs without closing or reloading the drawer.
+  - Implemented edit mode action bar with Cancel and Save buttons (disabled on empty title, with loading spinner).
+  - Created controlled form inputs for all item types: title (required), description (optional), tags (comma-separated), content (monospaced textarea for snippets/prompts/commands/notes), language (snippets/commands), and URL (links), with read-only badges for collections, file attachments, and timestamps.
+  - Implemented reusable `Textarea` (`src/components/ui/textarea.tsx`) and `Sonner` toast notifications (`src/components/ui/sonner.tsx`, `src/app/layout.tsx`).
+  - Created pure Zod validation schemas in `src/lib/validations/item.ts` (`updateItemSchema`) and server action `updateItem` in `src/actions/items.ts` with NextAuth session validation and ownership checks.
+  - Added typed query function `updateItem` in `src/lib/db/items.ts` with tag upserting and relation reconnects (`tags: { set: [{ name }] }`).
+  - Added comprehensive Vitest unit tests in `src/actions/items.test.ts` (9 tests) and database test script in `scripts/test-item-edit.ts`.
+  - Verified with full test suite (`npm test`), database tests (`npm run test:item-edit`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
 
 
