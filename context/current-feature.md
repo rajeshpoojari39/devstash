@@ -1,20 +1,30 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Item Drawer — Edit Mode
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- [x] Add inline edit mode toggle to `ItemDrawer` via the action bar Edit button (pencil icon).
+- [x] Implement edit mode action bar with `Save` and `Cancel` buttons (replacing standard action bar during editing).
+- [x] Render controlled editable form fields based on item type:
+  - All types: `title` (required text input), `description` (optional textarea), `tags` (comma-separated text input converting to string array).
+  - Type-specific: `content` (textarea for `snippet`, `prompt`, `command`, `note`), `language` (text input for `snippet`, `command`), `url` (text input for `link`).
+- [x] Keep item type, collections, and created/updated dates read-only in edit mode.
+- [x] Create Zod update schema and server action `updateItem(itemId, data)` in `src/actions/items.ts` following `{ success, data, error }` pattern, session verification, and ownership check.
+- [x] Implement database query function `updateItem` in `src/lib/db/items.ts` with tag disconnect and connect-or-create logic, returning updated `ItemDetail`.
+- [x] Update `ItemDrawer` state upon save, refresh drawer data without second fetch, trigger toast notification on success/error, and call `router.refresh()` to sync background cards.
+- [x] Add unit tests for `src/actions/items.ts` using Vitest and verify database integration.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Spec File**: [context/features/item-drawer-edit-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/item-drawer-edit-spec.md)
+- **Form Handling**: Use controlled inputs with local state inside the drawer (no external form library needed).
+- **Client Validation**: Disable Save button when `title` is empty or only whitespace.
+- **Server Validation**: Validate input payload in the server action with Zod as the single source of truth.
+- **Tag Management**: Disconnect all existing item tags and connect-or-create new tags on update.
+- **Coding Standards**: Unit test server action `src/actions/items.ts` and utilities with Vitest (`npm test`). Do NOT write UI component tests.
 
 ## History
 

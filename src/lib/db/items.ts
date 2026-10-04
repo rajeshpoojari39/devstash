@@ -558,3 +558,146 @@ export async function getItemById(
   };
 }
 
+export interface UpdateItemData {
+  title?: string;
+  description?: string | null;
+  content?: string | null;
+  url?: string | null;
+  language?: string | null;
+  tags?: string[];
+}
+
+/**
+ * Updates an item's details, tags, and timestamps, scoped to the specified user.
+ * Disconnects existing tags and reconnects/creates new ones.
+ * Returns the updated ItemDetail.
+ */
+export async function updateItem(
+  id: string,
+  userId: string,
+  data: UpdateItemData,
+): Promise<ItemDetail | null> {
+  if (!id || !userId) {
+    return null;
+  }
+
+  // Ensure item exists and belongs to user
+  const existingItem = await prisma.item.findFirst({
+    where: {
+      id,
+      userId,
+    },
+  });
+
+  if (!existingItem) {
+    return null;
+  }
+
+  // Ensure all tags exist before connecting
+  if (data.tags !== undefined) {
+    const cleanTagNames = Array.from(
+      new Set(
+        data.tags
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0),
+      ),
+    );
+
+    if (cleanTagNames.length > 0) {
+      await Promise.all(
+        cleanTagNames.map((name) =>
+          prisma.tag.upsert({
+            where: { name },
+            update: {},
+            create: { name },
+          }),
+        ),
+      );
+    }
+  }
+
+  const cleanTagNames =
+    data.tags !== undefined
+      ? Array.from(
+          new Set(
+            data.tags
+              .map((t) => t.trim())
+              .filter((t) => t.length > 0),
+          ),
+        )
+      : undefined;
+
+  const updatedItem = await prisma.item.update({
+    where: {
+      id,
+    },
+    data: {
+      ...(data.title !== undefined ? { title: data.title.trim() } : {}),
+      ...(data.description !== undefined
+        ? { description: data.description?.trim() || null }
+        : {}),
+      ...(data.content !== undefined ? { content: data.content } : {}),
+      ...(data.url !== undefined ? { url: data.url?.trim() || null } : {}),
+      ...(data.language !== undefined
+        ? { language: data.language?.trim() || null }
+        : {}),
+      ...(cleanTagNames !== undefined
+        ? {
+            tags: {
+              set: cleanTagNames.map((name) => ({ name })),
+            },
+          }
+        : {}),
+    },
+    include: {
+      itemType: {
+        select: {
+          id: true,
+          name: true,
+          icon: true,
+          color: true,
+        },
+      },
+      tags: {
+        select: {
+          name: true,
+        },
+      },
+      collections: {
+        select: {
+          collection: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return {
+    id: updatedItem.id,
+    title: updatedItem.title,
+    contentType: updatedItem.contentType,
+    content: updatedItem.content,
+    description: updatedItem.description,
+    isFavorite: updatedItem.isFavorite,
+    isPinned: updatedItem.isPinned,
+    language: updatedItem.language,
+    url: updatedItem.url,
+    fileUrl: updatedItem.fileUrl,
+    fileName: updatedItem.fileName,
+    fileSize: updatedItem.fileSize,
+    createdAt: updatedItem.createdAt,
+    updatedAt: updatedItem.updatedAt,
+    itemTypeId: updatedItem.itemTypeId,
+    itemType: updatedItem.itemType,
+    tags: updatedItem.tags.map((tag) => tag.name),
+    collections: updatedItem.collections.map((c) => ({
+      id: c.collection.id,
+      name: c.collection.name,
+    })),
+  };
+}
+
