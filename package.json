@@ -18,6 +18,7 @@
     "test:items": "tsx scripts/test-items.ts",
     "test:items-by-type": "tsx scripts/test-items-by-type.ts",
     "test:item-detail": "tsx scripts/test-item-detail.ts",
+    "test:item-create": "tsx scripts/test-item-create.ts",
     "test:item-edit": "tsx scripts/test-item-edit.ts",
     "test:item-delete": "tsx scripts/test-item-delete.ts",
     "test:sidebar": "tsx scripts/test-sidebar.ts",

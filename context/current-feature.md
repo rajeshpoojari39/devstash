@@ -1,20 +1,36 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Item Create
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Implement "New Item" modal dialog triggered from the top bar button using shadcn / Base UI Dialog.
+- Implement item type selector supporting `snippet`, `prompt`, `command`, `note`, and `link`.
+- Dynamically render form fields based on selected item type:
+  - All types: title (required), description, tags
+  - snippet/command: content, language
+  - prompt/note: content
+  - link: URL (required)
+- Create pure Zod validation schema `createItemSchema` in `src/lib/validations/item.ts`.
+- Implement typed query function `createItem` in `src/lib/db/items.ts` with tag handling and relation linking.
+- Implement authenticated server action `createItem` in `src/actions/items.ts` with session validation and revalidation.
+- Display toast on success, close modal dialog, reset form state, and refresh items view.
+- Add Vitest unit test coverage for validation schemas and server action.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Specification Reference**: [context/features/item-create-spec.md](context/features/item-create-spec.md)
+- **UI Components**:
+  - `src/components/dashboard/top-bar.tsx`: Connect "New Item" button to open create dialog.
+  - `src/components/items/create-item-dialog.tsx`: Create modular dialog component with responsive layout and dynamic form fields.
+  - `src/components/ui/dialog.tsx`: Base UI dialog component.
+- **Backend & Actions**:
+  - `src/lib/validations/item.ts`: Pure Zod schema for input validation.
+  - `src/lib/db/items.ts`: Prisma database creation helper with tag upserts and item type resolution.
+  - `src/actions/items.ts`: Authenticated server action returning typed `ActionResult`.
+- **Feedback & Notifications**: Use Sonner toasts (`toast.success`, `toast.error`) for instant feedback.
 
 ## History
 

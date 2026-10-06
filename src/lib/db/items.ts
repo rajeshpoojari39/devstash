@@ -603,16 +603,12 @@ export async function updateItem(
       ),
     );
 
-    if (cleanTagNames.length > 0) {
-      await Promise.all(
-        cleanTagNames.map((name) =>
-          prisma.tag.upsert({
-            where: { name },
-            update: {},
-            create: { name },
-          }),
-        ),
-      );
+    for (const name of cleanTagNames) {
+      await prisma.tag.upsert({
+        where: { name },
+        update: {},
+        create: { name },
+      });
     }
   }
 
@@ -735,5 +731,145 @@ export async function deleteItem(
   });
 
   return true;
+}
+
+export interface CreateItemData {
+  type: string;
+  title: string;
+  description?: string | null;
+  content?: string | null;
+  url?: string | null;
+  language?: string | null;
+  tags?: string[];
+}
+
+/**
+ * Creates a new item in the database, connecting or creating tags and linking to the resolved item type.
+ * Returns the created ItemDetail.
+ */
+export async function createItem(
+  userId: string,
+  data: CreateItemData,
+): Promise<ItemDetail> {
+  if (!userId) {
+    throw new Error("User ID is required to create an item.");
+  }
+
+  const normalizedType = normalizeItemTypeSlug(data.type);
+  const rawType = data.type.trim().toLowerCase();
+
+  const itemType = await prisma.itemType.findFirst({
+    where: {
+      OR: [
+        { name: { equals: normalizedType, mode: "insensitive" } },
+        { name: { equals: rawType, mode: "insensitive" } },
+      ],
+      AND: [
+        {
+          OR: [{ isSystem: true }, { userId }],
+        },
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      icon: true,
+      color: true,
+    },
+  });
+
+  if (!itemType) {
+    throw new Error(`Item type '${data.type}' not found.`);
+  }
+
+  const cleanTagNames =
+    data.tags !== undefined
+      ? Array.from(
+          new Set(
+            data.tags
+              .map((t) => t.trim())
+              .filter((t) => t.length > 0),
+          ),
+        )
+      : [];
+
+  for (const name of cleanTagNames) {
+    await prisma.tag.upsert({
+      where: { name },
+      update: {},
+      create: { name },
+    });
+  }
+
+  const contentType = normalizedType === "link" ? "URL" : "TEXT";
+
+  const createdItem = await prisma.item.create({
+    data: {
+      userId,
+      itemTypeId: itemType.id,
+      title: data.title.trim(),
+      description: data.description?.trim() || null,
+      contentType,
+      content: contentType === "TEXT" ? data.content || null : null,
+      url: contentType === "URL" ? data.url?.trim() || null : null,
+      language: contentType === "TEXT" ? data.language?.trim() || null : null,
+      ...(cleanTagNames.length > 0
+        ? {
+            tags: {
+              connect: cleanTagNames.map((name) => ({ name })),
+            },
+          }
+        : {}),
+    },
+    include: {
+      itemType: {
+        select: {
+          id: true,
+          name: true,
+          icon: true,
+          color: true,
+        },
+      },
+      tags: {
+        select: {
+          name: true,
+        },
+      },
+      collections: {
+        select: {
+          collection: {
+            select: {
+              id: true,
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  return {
+    id: createdItem.id,
+    title: createdItem.title,
+    contentType: createdItem.contentType,
+    content: createdItem.content,
+    description: createdItem.description,
+    isFavorite: createdItem.isFavorite,
+    isPinned: createdItem.isPinned,
+    language: createdItem.language,
+    url: createdItem.url,
+    fileUrl: createdItem.fileUrl,
+    fileName: createdItem.fileName,
+    fileSize: createdItem.fileSize,
+    createdAt: createdItem.createdAt,
+    updatedAt: createdItem.updatedAt,
+    itemTypeId: createdItem.itemTypeId,
+    itemType: createdItem.itemType,
+    tags: createdItem.tags.map((tag) => tag.name),
+    collections: createdItem.collections.map((c) => ({
+      id: c.collection.id,
+      name: c.collection.name,
+    })),
+  };
 }
 

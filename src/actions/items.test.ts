@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { updateItem, deleteItem } from "@/actions/items";
-import { updateItemSchema } from "@/lib/validations/item";
+import { createItem, updateItem, deleteItem } from "@/actions/items";
+import { createItemSchema, updateItemSchema } from "@/lib/validations/item";
 import * as authModule from "@/auth";
 import * as itemsDbModule from "@/lib/db/items";
 import { prisma } from "@/lib/prisma";
@@ -19,9 +19,215 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/lib/db/items", () => ({
+  createItem: vi.fn(),
   updateItem: vi.fn(),
   deleteItem: vi.fn(),
 }));
+
+describe("createItemSchema validation", () => {
+  it("validates valid snippet payload", () => {
+    const validData = {
+      type: "snippet" as const,
+      title: "React Hook",
+      description: "Custom useDebounce hook",
+      content: "export function useDebounce() {}",
+      language: "typescript",
+      tags: ["react", "hooks"],
+    };
+    const result = createItemSchema.safeParse(validData);
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.title).toBe("React Hook");
+      expect(result.data.type).toBe("snippet");
+      expect(result.data.language).toBe("typescript");
+      expect(result.data.tags).toEqual(["react", "hooks"]);
+    }
+  });
+
+  it("validates valid prompt, command, note payload", () => {
+    const validPrompt = createItemSchema.safeParse({
+      type: "prompt",
+      title: "System Prompt",
+      content: "You are an expert developer.",
+    });
+    expect(validPrompt.success).toBe(true);
+
+    const validCommand = createItemSchema.safeParse({
+      type: "command",
+      title: "Docker prune",
+      content: "docker system prune -a --volumes",
+      language: "bash",
+    });
+    expect(validCommand.success).toBe(true);
+
+    const validNote = createItemSchema.safeParse({
+      type: "note",
+      title: "Meeting notes",
+      content: "Discuss architecture roadmap",
+    });
+    expect(validNote.success).toBe(true);
+  });
+
+  it("validates valid link payload with required URL", () => {
+    const validLink = createItemSchema.safeParse({
+      type: "link",
+      title: "Next.js Docs",
+      url: "https://nextjs.org/docs",
+      tags: ["nextjs", "documentation"],
+    });
+    expect(validLink.success).toBe(true);
+  });
+
+  it("fails if link type has missing or empty URL", () => {
+    const missingUrl = createItemSchema.safeParse({
+      type: "link",
+      title: "Next.js Docs",
+      url: "",
+    });
+    expect(missingUrl.success).toBe(false);
+
+    const undefinedUrl = createItemSchema.safeParse({
+      type: "link",
+      title: "Next.js Docs",
+    });
+    expect(undefinedUrl.success).toBe(false);
+  });
+
+  it("fails if URL has invalid format", () => {
+    const invalidUrl = createItemSchema.safeParse({
+      type: "link",
+      title: "Next.js Docs",
+      url: "not-a-valid-url",
+    });
+    expect(invalidUrl.success).toBe(false);
+  });
+
+  it("fails if title is empty or only whitespace", () => {
+    const invalidTitle = createItemSchema.safeParse({
+      type: "snippet",
+      title: "   ",
+    });
+    expect(invalidTitle.success).toBe(false);
+  });
+
+  it("fails if type is invalid or unsupported", () => {
+    const invalidType = createItemSchema.safeParse({
+      type: "unsupported_type" as unknown as "snippet",
+      title: "Some Title",
+    });
+    expect(invalidType.success).toBe(false);
+  });
+
+  it("fails if any tag in array is empty string", () => {
+    const invalidTags = createItemSchema.safeParse({
+      type: "snippet",
+      title: "Valid Title",
+      tags: ["valid", "   "],
+    });
+    expect(invalidTags.success).toBe(false);
+  });
+});
+
+describe("createItem server action", () => {
+  const mockCreatedItem = {
+    id: "item-new-123",
+    title: "New Snippet",
+    contentType: "TEXT",
+    content: "console.log('hello');",
+    description: "Sample description",
+    isFavorite: false,
+    isPinned: false,
+    language: "javascript",
+    url: null,
+    fileUrl: null,
+    fileName: null,
+    fileSize: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    itemTypeId: "type-snippet",
+    itemType: {
+      id: "type-snippet",
+      name: "snippet",
+      icon: "Code",
+      color: "#3b82f6",
+    },
+    tags: ["javascript"],
+    collections: [],
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns error if validation fails (e.g. empty title)", async () => {
+    const result = await createItem({
+      type: "snippet",
+      title: "   ",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toBeDefined();
+  });
+
+  it("returns unauthorized error if user session is missing", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+
+    const result = await createItem({
+      type: "snippet",
+      title: "New Snippet",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Unauthorized");
+  });
+
+  it("returns error if database creation fails (e.g. item type not found)", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    vi.mocked(itemsDbModule.createItem).mockRejectedValueOnce(
+      new Error("Item type 'snippet' not found."),
+    );
+
+    const result = await createItem({
+      type: "snippet",
+      title: "New Snippet",
+    });
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Item type 'snippet' not found.");
+  });
+
+  it("successfully creates item and returns created data", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    vi.mocked(itemsDbModule.createItem).mockResolvedValueOnce(
+      mockCreatedItem as unknown as itemsDbModule.ItemDetail,
+    );
+
+    const result = await createItem({
+      type: "snippet",
+      title: "New Snippet",
+      description: "Sample description",
+      content: "console.log('hello');",
+      language: "javascript",
+      tags: ["javascript"],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual(mockCreatedItem);
+    expect(itemsDbModule.createItem).toHaveBeenCalledWith("user-123", {
+      type: "snippet",
+      title: "New Snippet",
+      description: "Sample description",
+      content: "console.log('hello');",
+      language: "javascript",
+      tags: ["javascript"],
+      url: undefined,
+    });
+  });
+});
 
 describe("updateItemSchema validation", () => {
   it("validates valid payload", () => {
