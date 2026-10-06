@@ -1,25 +1,20 @@
-# Current Feature: Delete Item Functionality
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Implement database deletion helper `deleteItem(itemId: string, userId: string)` in `src/lib/db/items.ts` with user ownership verification.
-- Implement server action `deleteItem(itemId: string)` in `src/actions/items.ts` with NextAuth session validation, user authorization, and error handling.
-- Build a reusable confirmation dialog component `DeleteItemDialog` using shadcn UI / Base UI Dialog components with clear warnings and loading feedback.
-- Integrate the deletion confirmation dialog in `ItemDrawer` (`src/components/items/item-drawer.tsx`) triggered by the trash action button, with Sonner toast feedback and drawer closing on success.
-- Integrate the deletion confirmation dialog in `ItemCard` (`src/components/dashboard/item-card.tsx`) dropdown menu ("Delete" item), with Sonner toast feedback and view refresh.
-- Add Vitest unit tests in `src/actions/items.test.ts` to test authorization, input validation, non-existent item handling, and successful deletion.
-- Verify test suite (`npm test`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
+<!-- Goals & requirements -->
 
 ## Notes
 
-- Spec file: [context/features/delete-item-spec.md](context/features/delete-item-spec.md)
-- UI Components: Reusing shadcn UI / `@base-ui/react` dialog primitives (`src/components/ui/dialog.tsx`) and `sonner` (`src/components/ui/sonner.tsx`).
-- Security & Permissions: Enforce strict ownership verification (`where: { id: itemId, userId }`) so users can only delete their own items.
-- Schema Reference: Check relations for `Item` (`itemCollections`, `tags`) in `prisma/schema.prisma` to ensure relations are handled cleanly upon deletion.
+<!-- Any extra notes -->
 
 ## History
 
@@ -255,5 +250,14 @@ In Progress
   - Added typed query function `updateItem` in `src/lib/db/items.ts` with tag upserting and relation reconnects (`tags: { set: [{ name }] }`).
   - Added comprehensive Vitest unit tests in `src/actions/items.test.ts` (9 tests) and database test script in `scripts/test-item-edit.ts`.
   - Verified with full test suite (`npm test`), database tests (`npm run test:item-edit`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
+- **Delete Item Functionality (2026-10-06)**
+  - Built database deletion query helper `deleteItem(itemId, userId)` in `src/lib/db/items.ts` with user ownership validation.
+  - Implemented authenticated server action `deleteItem(itemId)` in `src/actions/items.ts` with session validation, ownership authorization, and typed `ActionResult`.
+  - Created reusable `DeleteItemDialog` confirmation component (`src/components/items/delete-item-dialog.tsx`) using ShadCN UI / Base UI dialog primitives with warning description, item title display, and loading spinner.
+  - Elevated modal backdrop and content z-index (`z-[60]` in `src/components/ui/dialog.tsx`) and integrated top-level confirmation state in `ItemDrawer` (`src/components/items/item-drawer.tsx`) to guard sheet dismissal and suppress drawer close buttons during confirmation.
+  - Integrated deletion confirmation in `ItemDrawer` action bar and `ItemCard` (`src/components/dashboard/item-card.tsx`) 3-dots dropdown menu with Sonner success toast notifications.
+  - Added 5 Vitest unit tests in `src/actions/items.test.ts` (`55 passed`) and database integration test script in `scripts/test-item-delete.ts` (`npm run test:item-delete`).
+  - Verified with full test suite (`npm test`), database test scripts (`npm run test:item-delete`, `npm run test:items`, `npm run test:item-detail`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
 
 
