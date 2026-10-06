@@ -1,20 +1,25 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Delete Item Functionality
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Implement database deletion helper `deleteItem(itemId: string, userId: string)` in `src/lib/db/items.ts` with user ownership verification.
+- Implement server action `deleteItem(itemId: string)` in `src/actions/items.ts` with NextAuth session validation, user authorization, and error handling.
+- Build a reusable confirmation dialog component `DeleteItemDialog` using shadcn UI / Base UI Dialog components with clear warnings and loading feedback.
+- Integrate the deletion confirmation dialog in `ItemDrawer` (`src/components/items/item-drawer.tsx`) triggered by the trash action button, with Sonner toast feedback and drawer closing on success.
+- Integrate the deletion confirmation dialog in `ItemCard` (`src/components/dashboard/item-card.tsx`) dropdown menu ("Delete" item), with Sonner toast feedback and view refresh.
+- Add Vitest unit tests in `src/actions/items.test.ts` to test authorization, input validation, non-existent item handling, and successful deletion.
+- Verify test suite (`npm test`), ESLint (`npm run lint`), and Next.js production build (`npm run build`).
 
 ## Notes
 
-<!-- Any extra notes -->
+- Spec file: [context/features/delete-item-spec.md](context/features/delete-item-spec.md)
+- UI Components: Reusing shadcn UI / `@base-ui/react` dialog primitives (`src/components/ui/dialog.tsx`) and `sonner` (`src/components/ui/sonner.tsx`).
+- Security & Permissions: Enforce strict ownership verification (`where: { id: itemId, userId }`) so users can only delete their own items.
+- Schema Reference: Check relations for `Item` (`itemCollections`, `tags`) in `prisma/schema.prisma` to ensure relations are handled cleanly upon deletion.
 
 ## History
 

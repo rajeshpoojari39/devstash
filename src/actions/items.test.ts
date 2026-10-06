@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { updateItem } from "@/actions/items";
+import { updateItem, deleteItem } from "@/actions/items";
 import { updateItemSchema } from "@/lib/validations/item";
 import * as authModule from "@/auth";
 import * as itemsDbModule from "@/lib/db/items";
@@ -20,6 +20,7 @@ vi.mock("@/lib/prisma", () => ({
 
 vi.mock("@/lib/db/items", () => ({
   updateItem: vi.fn(),
+  deleteItem: vi.fn(),
 }));
 
 describe("updateItemSchema validation", () => {
@@ -176,3 +177,71 @@ describe("updateItem server action", () => {
     );
   });
 });
+
+describe("deleteItem server action", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns error if itemId is missing or empty string", async () => {
+    const resultEmpty = await deleteItem("");
+    expect(resultEmpty.success).toBe(false);
+    expect(resultEmpty.error).toBe("Item ID is required.");
+
+    const resultWhitespace = await deleteItem("   ");
+    expect(resultWhitespace.success).toBe(false);
+    expect(resultWhitespace.error).toBe("Item ID is required.");
+  });
+
+  it("returns unauthorized error if user session is missing", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    vi.mocked(prisma.user.findUnique).mockResolvedValueOnce(null);
+
+    const result = await deleteItem("item-123");
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Unauthorized");
+  });
+
+  it("returns error if item is not found or not owned by user", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    vi.mocked(itemsDbModule.deleteItem).mockResolvedValueOnce(false);
+
+    const result = await deleteItem("item-123");
+    expect(result.success).toBe(false);
+    expect(result.error).toContain(
+      "Item not found or you do not have permission",
+    );
+    expect(itemsDbModule.deleteItem).toHaveBeenCalledWith("item-123", "user-123");
+  });
+
+  it("successfully deletes item and returns item id", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    vi.mocked(itemsDbModule.deleteItem).mockResolvedValueOnce(true);
+
+    const result = await deleteItem("item-123");
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual({ id: "item-123" });
+    expect(itemsDbModule.deleteItem).toHaveBeenCalledWith("item-123", "user-123");
+  });
+
+  it("handles unexpected database exceptions gracefully", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    vi.mocked(itemsDbModule.deleteItem).mockRejectedValueOnce(
+      new Error("Database connection lost"),
+    );
+
+    const result = await deleteItem("item-123");
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Database connection lost");
+  });
+});
+

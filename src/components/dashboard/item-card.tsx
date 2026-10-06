@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import {
   Code,
   Sparkles,
@@ -15,7 +16,9 @@ import {
   Check,
   MoreHorizontal,
   ExternalLink,
+  Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -24,6 +27,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { DeleteItemDialog } from "@/components/items/delete-item-dialog";
+import { deleteItem as deleteItemAction } from "@/actions/items";
 import { DashboardItem } from "@/lib/db/items";
 import { useItemDrawer } from "@/components/items/item-drawer-context";
 
@@ -55,8 +60,11 @@ function formatDate(date: Date): string {
 }
 
 export function ItemCard({ item }: ItemCardProps) {
+  const router = useRouter();
   const { openDrawer } = useItemDrawer();
   const [copied, setCopied] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
   const itemType = item.itemType || {
     name: "snippet",
@@ -85,6 +93,25 @@ export function ItemCard({ item }: ItemCardProps) {
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
       console.error("Failed to copy text to clipboard:", err);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteItemAction(item.id);
+      if (result.success) {
+        setIsDeleteDialogOpen(false);
+        toast.success("Item deleted successfully");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to delete item");
+      }
+    } catch (err) {
+      console.error("Failed to delete item:", err);
+      toast.error("An unexpected error occurred while deleting the item.");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -213,13 +240,27 @@ export function ItemCard({ item }: ItemCardProps) {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDeleteDialogOpen(true);
+              }}
               className="flex items-center gap-2 text-destructive cursor-pointer"
             >
+              <Trash2 className="h-4 w-4" />
               <span>Delete</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteItemDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        itemTitle={item.title}
+        onConfirm={handleDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

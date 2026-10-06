@@ -19,6 +19,7 @@
     "test:items-by-type": "tsx scripts/test-items-by-type.ts",
     "test:item-detail": "tsx scripts/test-item-detail.ts",
     "test:item-edit": "tsx scripts/test-item-edit.ts",
+    "test:item-delete": "tsx scripts/test-item-delete.ts",
     "test:sidebar": "tsx scripts/test-sidebar.ts",
     "test:auth": "tsx scripts/test-auth.ts && tsx scripts/test-auth-credentials.ts && tsx scripts/test-auth-ui.ts && tsx scripts/test-email-verification.ts && tsx scripts/test-forgot-password.ts && tsx scripts/test-rate-limit.ts",
     "test:auth:credentials": "tsx scripts/test-auth-credentials.ts",

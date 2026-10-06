@@ -701,3 +701,39 @@ export async function updateItem(
   };
 }
 
+/**
+ * Deletes an item by its ID, scoped to the specified user.
+ * Returns true if successfully deleted, false if item not found or does not belong to user.
+ */
+export async function deleteItem(
+  id: string,
+  userId: string,
+): Promise<boolean> {
+  if (!id || !userId) {
+    return false;
+  }
+
+  // Ensure item exists and belongs to user
+  const existingItem = await prisma.item.findFirst({
+    where: {
+      id,
+      userId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!existingItem) {
+    return false;
+  }
+
+  await prisma.item.delete({
+    where: {
+      id,
+    },
+  });
+
+  return true;
+}
+

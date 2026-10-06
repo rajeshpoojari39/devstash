@@ -38,7 +38,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useItemDrawer } from "@/components/items/item-drawer-context";
-import { updateItem as updateItemAction } from "@/actions/items";
+import {
+  updateItem as updateItemAction,
+  deleteItem as deleteItemAction,
+} from "@/actions/items";
+import { DeleteItemDialog } from "@/components/items/delete-item-dialog";
 import { ItemDetail } from "@/lib/db/items";
 import { formatItemTypeTitle, formatLongDate } from "@/lib/item-utils";
 import { cn } from "@/lib/utils";
@@ -65,35 +69,89 @@ function formatFileSize(bytes?: number | null): string {
 }
 
 export function ItemDrawer() {
+  const router = useRouter();
   const { isOpen, selectedItemId, closeDrawer } = useItemDrawer();
+  const [deleteTargetItem, setDeleteTargetItem] =
+    React.useState<ItemDetail | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const isDeleteDialogOpen = Boolean(deleteTargetItem);
+
+  const handleDeleteItem = async () => {
+    if (!deleteTargetItem) return;
+
+    setIsDeleting(true);
+    try {
+      const result = await deleteItemAction(deleteTargetItem.id);
+
+      if (result.success) {
+        setDeleteTargetItem(null);
+        closeDrawer();
+        toast.success("Item deleted successfully");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to delete item");
+      }
+    } catch (err) {
+      console.error("Failed to delete item:", err);
+      toast.error("An unexpected error occurred while deleting the item.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
-    <Sheet
-      open={isOpen}
-      onOpenChange={(open) => {
-        if (!open) closeDrawer();
-      }}
-    >
-      <SheetContent
-        side="right"
-        className="w-full sm:w-[480px] md:w-[500px] lg:w-[45%] xl:w-[40%] sm:max-w-none md:max-w-none lg:max-w-none xl:max-w-none data-[side=right]:w-full data-[side=right]:sm:w-[480px] data-[side=right]:md:w-[500px] data-[side=right]:lg:w-[45%] data-[side=right]:xl:w-[40%] data-[side=right]:sm:max-w-none data-[side=right]:md:max-w-none data-[side=right]:lg:max-w-none data-[side=right]:xl:max-w-none p-0 gap-0 border-l border-border bg-background text-foreground flex flex-col h-full overflow-hidden"
+    <>
+      <Sheet
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (isDeleteDialogOpen) return;
+          if (!open) closeDrawer();
+        }}
       >
-        {isOpen && selectedItemId && (
-          <ItemDrawerContent
-            key={selectedItemId}
-            itemId={selectedItemId}
-          />
-        )}
-      </SheetContent>
-    </Sheet>
+        <SheetContent
+          side="right"
+          showCloseButton={!isDeleteDialogOpen}
+          className={cn(
+            "w-full sm:w-[480px] md:w-[500px] lg:w-[45%] xl:w-[40%] sm:max-w-none md:max-w-none lg:max-w-none xl:max-w-none data-[side=right]:w-full data-[side=right]:sm:w-[480px] data-[side=right]:md:w-[500px] data-[side=right]:lg:w-[45%] data-[side=right]:xl:w-[40%] data-[side=right]:sm:max-w-none data-[side=right]:md:max-w-none data-[side=right]:lg:max-w-none data-[side=right]:xl:max-w-none p-0 gap-0 border-l border-border bg-background text-foreground flex flex-col h-full overflow-hidden",
+            isDeleteDialogOpen && "pointer-events-none select-none",
+          )}
+        >
+          {isOpen && selectedItemId && (
+            <ItemDrawerContent
+              key={selectedItemId}
+              itemId={selectedItemId}
+              onRequestDelete={(item) => setDeleteTargetItem(item)}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteItemDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open && !isDeleting) {
+            setDeleteTargetItem(null);
+          }
+        }}
+        itemTitle={deleteTargetItem?.title}
+        onConfirm={handleDeleteItem}
+        isDeleting={isDeleting}
+      />
+    </>
   );
 }
 
 interface ItemDrawerContentProps {
   itemId: string;
+  onRequestDelete?: (item: ItemDetail) => void;
 }
 
-function ItemDrawerContent({ itemId }: ItemDrawerContentProps) {
+function ItemDrawerContent({
+  itemId,
+  onRequestDelete,
+}: ItemDrawerContentProps) {
   const router = useRouter();
   const [item, setItem] = React.useState<ItemDetail | null>(null);
   const [loading, setLoading] = React.useState(true);
@@ -481,6 +539,7 @@ function ItemDrawerContent({ itemId }: ItemDrawerContentProps) {
           <Button
             variant="ghost"
             size="icon-sm"
+            onClick={() => item && onRequestDelete?.(item)}
             className="ml-auto h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0 cursor-pointer"
             title="Delete item"
             aria-label="Delete item"
