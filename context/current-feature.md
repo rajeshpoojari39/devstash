@@ -1,36 +1,20 @@
-# Current Feature: Item Create
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Implement "New Item" modal dialog triggered from the top bar button using shadcn / Base UI Dialog.
-- Implement item type selector supporting `snippet`, `prompt`, `command`, `note`, and `link`.
-- Dynamically render form fields based on selected item type:
-  - All types: title (required), description, tags
-  - snippet/command: content, language
-  - prompt/note: content
-  - link: URL (required)
-- Create pure Zod validation schema `createItemSchema` in `src/lib/validations/item.ts`.
-- Implement typed query function `createItem` in `src/lib/db/items.ts` with tag handling and relation linking.
-- Implement authenticated server action `createItem` in `src/actions/items.ts` with session validation and revalidation.
-- Display toast on success, close modal dialog, reset form state, and refresh items view.
-- Add Vitest unit test coverage for validation schemas and server action.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Specification Reference**: [context/features/item-create-spec.md](context/features/item-create-spec.md)
-- **UI Components**:
-  - `src/components/dashboard/top-bar.tsx`: Connect "New Item" button to open create dialog.
-  - `src/components/items/create-item-dialog.tsx`: Create modular dialog component with responsive layout and dynamic form fields.
-  - `src/components/ui/dialog.tsx`: Base UI dialog component.
-- **Backend & Actions**:
-  - `src/lib/validations/item.ts`: Pure Zod schema for input validation.
-  - `src/lib/db/items.ts`: Prisma database creation helper with tag upserts and item type resolution.
-  - `src/actions/items.ts`: Authenticated server action returning typed `ActionResult`.
-- **Feedback & Notifications**: Use Sonner toasts (`toast.success`, `toast.error`) for instant feedback.
+<!-- Any extra notes -->
 
 ## History
 
@@ -275,5 +259,15 @@ In Progress
   - Integrated deletion confirmation in `ItemDrawer` action bar and `ItemCard` (`src/components/dashboard/item-card.tsx`) 3-dots dropdown menu with Sonner success toast notifications.
   - Added 5 Vitest unit tests in `src/actions/items.test.ts` (`55 passed`) and database integration test script in `scripts/test-item-delete.ts` (`npm run test:item-delete`).
   - Verified with full test suite (`npm test`), database test scripts (`npm run test:item-delete`, `npm run test:items`, `npm run test:item-detail`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
+- **Item Create (2026-10-06)**
+  - Implemented responsive `CreateItemDialog` modal component supporting 5 item types (`snippet`, `prompt`, `command`, `note`, `link`) with adaptive field rendering and full-page mobile scaling (`src/components/items/create-item-dialog.tsx`).
+  - Integrated "New Item" top bar action button with dynamic route-aware default category pre-selection (`src/components/dashboard/top-bar.tsx`).
+  - Created pure Zod input validation schema `createItemSchema` and `CreateItemInput` type (`src/lib/validations/item.ts`).
+  - Implemented typed database creation query `createItem` in `src/lib/db/items.ts` with tag upserting, item type resolution, and `ContentType` assignment.
+  - Built authenticated `createItem` server action in `src/actions/items.ts` with NextAuth session validation, Sonner toast notifications, and Next.js route revalidations (`/dashboard`, `/items`, `/items/[type]`).
+  - Added 12 Vitest unit tests in `src/actions/items.test.ts` (totaling 67 test suite passes) and database integration test script `scripts/test-item-create.ts` (`npm run test:item-create`).
+  - Verified with full test suite (`npm test`), database test scripts (`npm run test:item-create`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
 
 
