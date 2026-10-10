@@ -114,3 +114,40 @@ export function formatLongDate(date: Date | string): string {
   }).format(d);
 }
 
+/**
+ * Normalizes a programming or shell language identifier to a Monaco-supported language.
+ */
+export function normalizeMonacoLanguage(lang?: string | null): string {
+  if (!lang || !lang.trim()) return "plaintext";
+  const clean = lang.trim().toLowerCase();
+  const aliasMap: Record<string, string> = {
+    js: "javascript",
+    jsx: "javascript",
+    ts: "typescript",
+    tsx: "typescript",
+    py: "python",
+    python3: "python",
+    sh: "shell",
+    bash: "shell",
+    zsh: "shell",
+    shell: "shell",
+    cmd: "bat",
+    batch: "bat",
+    ps1: "powershell",
+    powershell: "powershell",
+    cs: "csharp",
+    "c#": "csharp",
+    "c++": "cpp",
+    cpp: "cpp",
+    c: "c",
+    yml: "yaml",
+    md: "markdown",
+    docker: "dockerfile",
+    golang: "go",
+    rb: "ruby",
+    rs: "rust",
+    htm: "html",
+  };
+  return aliasMap[clean] || clean;
+}
+

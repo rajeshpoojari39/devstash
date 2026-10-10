@@ -1,20 +1,29 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Monaco Code Editor
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Create `CodeEditor` component using Monaco Editor with a dark theme.
+- Replace `Textarea` with `CodeEditor` for `snippet` and `command` item types only.
+- Keep `Textarea` for `note`, `prompt`, and other non-code item types.
+- Add macOS-style window control dots (red/yellow/green) at the top of the editor header.
+- Add quick copy button in the editor header with visual feedback.
+- Add the language label in the editor header next to the copy button.
+- Support both display (read-only) and edit modes.
+- Make the height of the editor fluid with a max height of 400px and a styled scrollbar matching the dark theme.
 
 ## Notes
 
-<!-- Any extra notes -->
+- Specification: [context/features/code-editor-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/code-editor-spec.md)
+- Target Components:
+  - Create reusable `CodeEditor` component (`src/components/ui/code-editor.tsx` or `src/components/items/code-editor.tsx`).
+  - Integrate into `ItemDrawer` (`src/components/items/item-drawer.tsx`) for read-only preview and edit mode.
+  - Integrate into `CreateItemDialog` (`src/components/items/create-item-dialog.tsx`) when selecting `snippet` or `command`.
+- Dependencies: Check if `@monaco-editor/react` is installed or needs installation.
+- Responsive & Fluid: Ensure clean layout integration in both modal dialogs and slide-in drawers.
 
 ## History
 

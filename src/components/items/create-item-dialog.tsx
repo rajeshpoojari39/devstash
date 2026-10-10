@@ -24,6 +24,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { CodeEditor } from "@/components/ui/code-editor";
 import { createItem as createItemAction } from "@/actions/items";
 import { cn } from "@/lib/utils";
 
@@ -412,31 +413,29 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
                   Optional
                 </span>
               </div>
-              <Textarea
-                id="item-content"
-                placeholder={
-                  selectedType === "snippet"
-                    ? "export function useDebounce<T>(value: T, delay: number) {\n  // Code here...\n}"
-                    : selectedType === "command"
-                      ? "docker system prune -a --volumes -f"
-                      : selectedType === "prompt"
-                        ? "Act as a principal software engineer. Review the following code for security and performance..."
-                        : "Write down your thoughts, ideas, or meeting notes..."
-                }
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                disabled={isSubmitting}
-                rows={
-                  selectedType === "snippet" || selectedType === "prompt"
-                    ? 6
-                    : 4
-                }
-                className={cn(
-                  "resize-y min-h-[100px]",
-                  (selectedType === "snippet" || selectedType === "command") &&
-                    "font-mono text-xs sm:text-sm leading-relaxed",
-                )}
-              />
+              {selectedType === "snippet" || selectedType === "command" ? (
+                <CodeEditor
+                  value={content}
+                  onChange={setContent}
+                  language={language}
+                  minHeight={130}
+                  maxHeight={280}
+                />
+              ) : (
+                <Textarea
+                  id="item-content"
+                  placeholder={
+                    selectedType === "prompt"
+                      ? "Act as a principal software engineer. Review the following code for security and performance..."
+                      : "Write down your thoughts, ideas, or meeting notes..."
+                  }
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  disabled={isSubmitting}
+                  rows={selectedType === "prompt" ? 6 : 4}
+                  className="resize-y min-h-[100px]"
+                />
+              )}
             </div>
           )}
 

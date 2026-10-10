@@ -36,6 +36,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { CodeEditor } from "@/components/ui/code-editor";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useItemDrawer } from "@/components/items/item-drawer-context";
 import {
@@ -355,8 +356,6 @@ function ItemDrawerContent({
   const Icon =
     typeIconMap[iconKey] || typeIconMap[normalizedTypeName] || Code;
 
-  const contentLines = item.content ? item.content.split("\n") : [];
-
   const hasContentField = [
     "snippet",
     "prompt",
@@ -369,6 +368,13 @@ function ItemDrawerContent({
   ].includes(normalizedTypeName);
 
   const hasLanguageField = [
+    "snippet",
+    "command",
+    "code",
+    "terminal",
+  ].includes(normalizedTypeName);
+
+  const isCodeType = [
     "snippet",
     "command",
     "code",
@@ -634,16 +640,26 @@ function ItemDrawerContent({
                 htmlFor="edit-item-content"
                 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block"
               >
-                Content
+                {isCodeType ? "Code Content" : "Content"}
               </label>
-              <Textarea
-                id="edit-item-content"
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                placeholder="Enter item content..."
-                rows={8}
-                className="font-mono text-xs leading-relaxed resize-y bg-zinc-950/40 dark:bg-zinc-900/40"
-              />
+              {isCodeType ? (
+                <CodeEditor
+                  value={editContent}
+                  onChange={(val) => setEditContent(val)}
+                  language={editLanguage || item.language}
+                  minHeight={120}
+                  maxHeight={400}
+                />
+              ) : (
+                <Textarea
+                  id="edit-item-content"
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  placeholder="Enter item content..."
+                  rows={8}
+                  className="font-mono text-xs leading-relaxed resize-y bg-zinc-950/40 dark:bg-zinc-900/40"
+                />
+              )}
             </div>
           )}
 
@@ -753,21 +769,21 @@ function ItemDrawerContent({
                 Content
               </h4>
 
-              {/* Text / Code / Snippet / Command / Note Content */}
-              {item.content && (
-                <div className="relative rounded-lg border border-border/80 bg-zinc-950 dark:bg-zinc-900 text-zinc-200 font-mono text-xs overflow-x-auto p-4 max-h-96">
-                  <div className="table w-full">
-                    {contentLines.map((line, idx) => (
-                      <div key={idx} className="table-row leading-6">
-                        <span className="table-cell pr-4 text-right select-none text-zinc-600 font-mono text-xs w-8">
-                          {idx + 1}
-                        </span>
-                        <span className="table-cell whitespace-pre font-mono text-xs text-zinc-100">
-                          {line || " "}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+              {/* Code / Snippet / Command Content */}
+              {item.content && isCodeType && (
+                <CodeEditor
+                  value={item.content}
+                  readOnly={true}
+                  language={item.language}
+                  minHeight={80}
+                  maxHeight={400}
+                />
+              )}
+
+              {/* Non-Code (Prompt / Note) Content */}
+              {item.content && !isCodeType && (
+                <div className="relative rounded-lg border border-border/80 bg-zinc-950/60 dark:bg-zinc-900/60 text-zinc-200 font-mono text-xs overflow-x-auto p-4 max-h-96 whitespace-pre-wrap leading-relaxed">
+                  {item.content}
                 </div>
               )}
 

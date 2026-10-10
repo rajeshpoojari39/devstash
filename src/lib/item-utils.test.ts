@@ -6,6 +6,7 @@ import {
   isProType,
   itemTypeIconMap,
   formatLongDate,
+  normalizeMonacoLanguage,
 } from "@/lib/item-utils";
 
 describe("item-utils", () => {
@@ -119,6 +120,38 @@ describe("item-utils", () => {
 
     it("returns empty string for invalid date inputs", () => {
       expect(formatLongDate("invalid-date")).toBe("");
+    });
+  });
+
+  describe("normalizeMonacoLanguage", () => {
+    it("maps shorthand aliases to Monaco language names", () => {
+      expect(normalizeMonacoLanguage("js")).toBe("javascript");
+      expect(normalizeMonacoLanguage("ts")).toBe("typescript");
+      expect(normalizeMonacoLanguage("py")).toBe("python");
+      expect(normalizeMonacoLanguage("bash")).toBe("shell");
+      expect(normalizeMonacoLanguage("zsh")).toBe("shell");
+      expect(normalizeMonacoLanguage("sh")).toBe("shell");
+      expect(normalizeMonacoLanguage("c#")).toBe("csharp");
+      expect(normalizeMonacoLanguage("c++")).toBe("cpp");
+      expect(normalizeMonacoLanguage("yml")).toBe("yaml");
+      expect(normalizeMonacoLanguage("md")).toBe("markdown");
+      expect(normalizeMonacoLanguage("docker")).toBe("dockerfile");
+    });
+
+    it("returns standard languages as lowercase", () => {
+      expect(normalizeMonacoLanguage("TypeScript")).toBe("typescript");
+      expect(normalizeMonacoLanguage("PYTHON")).toBe("python");
+      expect(normalizeMonacoLanguage("json")).toBe("json");
+      expect(normalizeMonacoLanguage("html")).toBe("html");
+      expect(normalizeMonacoLanguage("css")).toBe("css");
+      expect(normalizeMonacoLanguage("sql")).toBe("sql");
+    });
+
+    it("returns plaintext for null, undefined, or empty strings", () => {
+      expect(normalizeMonacoLanguage(null)).toBe("plaintext");
+      expect(normalizeMonacoLanguage(undefined)).toBe("plaintext");
+      expect(normalizeMonacoLanguage("")).toBe("plaintext");
+      expect(normalizeMonacoLanguage("   ")).toBe("plaintext");
     });
   });
 });
