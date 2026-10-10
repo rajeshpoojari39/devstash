@@ -278,5 +278,15 @@ Not Started
   - Added `normalizeMonacoLanguage` utility mapping CLI shells and language aliases with full Vitest unit test coverage.
   - Verified with full test suite (`npm test` - 70 passing tests), database integration test suite (`test:item-detail`, `test:item-create`, `test:item-edit`, `test:item-delete`), ESLint (`npm run lint`), and Next.js Turbopack build (`npm run build`).
 
+- **Markdown Editor (2026-10-10)**
+  - Installed `react-markdown` and `remark-gfm` for GitHub Flavored Markdown support.
+  - Created reusable `MarkdownEditor` component (`src/components/ui/markdown-editor.tsx`) with Write and Preview tabs, dark theme container styling (`bg-[#1e1e1e]`), macOS window dots header (`bg-[#2d2d2d]`), and copy-to-clipboard button with visual feedback.
+  - Supported read-only mode (`readOnly={true}`, displaying Preview only) and interactive edit mode (Write/Preview toggle).
+  - Built dark mode markdown typography styles for headings (h1–h6), code blocks, inline tags, lists, task checkboxes, blockquotes, links, and tables, with generous initial height (`minHeight={180-200px}`).
+  - Integrated `MarkdownEditor` across `CreateItemDialog` (`src/components/items/create-item-dialog.tsx`) and `ItemDrawer` (`src/components/items/item-drawer.tsx` in both view and edit modes) for `prompt` and `note` types while keeping `CodeEditor` for `snippet` and `command`.
+  - Added `isCodeItemType` and `isMarkdownItemType` utilities with Vitest unit tests in `src/lib/item-utils.test.ts`.
+  - Verified with full unit test suite (`npm test` - 74 passing tests), database integration test scripts (`test:item-detail`, `test:item-edit`, `test:item-create`, `test:item-delete`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
+
 
 
