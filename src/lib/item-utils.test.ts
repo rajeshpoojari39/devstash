@@ -7,6 +7,8 @@ import {
   itemTypeIconMap,
   formatLongDate,
   normalizeMonacoLanguage,
+  isCodeItemType,
+  isMarkdownItemType,
 } from "@/lib/item-utils";
 
 describe("item-utils", () => {
@@ -152,6 +154,48 @@ describe("item-utils", () => {
       expect(normalizeMonacoLanguage(undefined)).toBe("plaintext");
       expect(normalizeMonacoLanguage("")).toBe("plaintext");
       expect(normalizeMonacoLanguage("   ")).toBe("plaintext");
+    });
+  });
+
+  describe("isCodeItemType", () => {
+    it("returns true for code-oriented types", () => {
+      expect(isCodeItemType("snippet")).toBe(true);
+      expect(isCodeItemType("snippets")).toBe(true);
+      expect(isCodeItemType("command")).toBe(true);
+      expect(isCodeItemType("commands")).toBe(true);
+      expect(isCodeItemType("code")).toBe(true);
+      expect(isCodeItemType("terminal")).toBe(true);
+    });
+
+    it("returns false for non-code types", () => {
+      expect(isCodeItemType("note")).toBe(false);
+      expect(isCodeItemType("prompt")).toBe(false);
+      expect(isCodeItemType("link")).toBe(false);
+      expect(isCodeItemType("file")).toBe(false);
+      expect(isCodeItemType("image")).toBe(false);
+      expect(isCodeItemType(null)).toBe(false);
+      expect(isCodeItemType(undefined)).toBe(false);
+    });
+  });
+
+  describe("isMarkdownItemType", () => {
+    it("returns true for markdown-oriented types", () => {
+      expect(isMarkdownItemType("note")).toBe(true);
+      expect(isMarkdownItemType("notes")).toBe(true);
+      expect(isMarkdownItemType("prompt")).toBe(true);
+      expect(isMarkdownItemType("prompts")).toBe(true);
+      expect(isMarkdownItemType("stickynote")).toBe(true);
+      expect(isMarkdownItemType("sparkles")).toBe(true);
+    });
+
+    it("returns false for non-markdown types", () => {
+      expect(isMarkdownItemType("snippet")).toBe(false);
+      expect(isMarkdownItemType("command")).toBe(false);
+      expect(isMarkdownItemType("link")).toBe(false);
+      expect(isMarkdownItemType("file")).toBe(false);
+      expect(isMarkdownItemType("image")).toBe(false);
+      expect(isMarkdownItemType(null)).toBe(false);
+      expect(isMarkdownItemType(undefined)).toBe(false);
     });
   });
 });

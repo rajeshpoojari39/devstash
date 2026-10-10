@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CodeEditor } from "@/components/ui/code-editor";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { createItem as createItemAction } from "@/actions/items";
 import { cn } from "@/lib/utils";
 
@@ -421,18 +422,26 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
                   minHeight={130}
                   maxHeight={280}
                 />
-              ) : (
-                <Textarea
-                  id="item-content"
+              ) : selectedType === "prompt" || selectedType === "note" ? (
+                <MarkdownEditor
+                  value={content}
+                  onChange={setContent}
+                  minHeight={180}
+                  maxHeight={320}
                   placeholder={
                     selectedType === "prompt"
                       ? "Act as a principal software engineer. Review the following code for security and performance..."
-                      : "Write down your thoughts, ideas, or meeting notes..."
+                      : "Write down your thoughts, ideas, or meeting notes in markdown..."
                   }
+                />
+              ) : (
+                <Textarea
+                  id="item-content"
+                  placeholder="Enter item content..."
                   value={content}
                   onChange={(e) => setContent(e.target.value)}
                   disabled={isSubmitting}
-                  rows={selectedType === "prompt" ? 6 : 4}
+                  rows={4}
                   className="resize-y min-h-[100px]"
                 />
               )}

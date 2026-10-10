@@ -151,3 +151,23 @@ export function normalizeMonacoLanguage(lang?: string | null): string {
   return aliasMap[clean] || clean;
 }
 
+/**
+ * Checks whether an item type name/slug is a code-oriented type (e.g. snippet, command).
+ */
+export function isCodeItemType(type?: string | null): boolean {
+  if (!type) return false;
+  const clean = normalizeItemTypeSlug(type);
+  return ["snippet", "command", "code", "terminal"].includes(clean);
+}
+
+/**
+ * Checks whether an item type name/slug is a markdown-oriented type (e.g. note, prompt).
+ */
+export function isMarkdownItemType(type?: string | null): boolean {
+  if (!type) return false;
+  const clean = normalizeItemTypeSlug(type);
+  return ["note", "prompt", "stickynote", "sparkles"].includes(clean);
+}
+
+
+

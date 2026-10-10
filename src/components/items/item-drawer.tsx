@@ -37,6 +37,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { CodeEditor } from "@/components/ui/code-editor";
+import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useItemDrawer } from "@/components/items/item-drawer-context";
 import {
@@ -45,7 +46,12 @@ import {
 } from "@/actions/items";
 import { DeleteItemDialog } from "@/components/items/delete-item-dialog";
 import { ItemDetail } from "@/lib/db/items";
-import { formatItemTypeTitle, formatLongDate } from "@/lib/item-utils";
+import {
+  formatItemTypeTitle,
+  formatLongDate,
+  isCodeItemType,
+  isMarkdownItemType,
+} from "@/lib/item-utils";
 import { cn } from "@/lib/utils";
 
 const typeIconMap: Record<string, React.ElementType> = {
@@ -367,20 +373,9 @@ function ItemDrawerContent({
     "stickynote",
   ].includes(normalizedTypeName);
 
-  const hasLanguageField = [
-    "snippet",
-    "command",
-    "code",
-    "terminal",
-  ].includes(normalizedTypeName);
-
-  const isCodeType = [
-    "snippet",
-    "command",
-    "code",
-    "terminal",
-  ].includes(normalizedTypeName);
-
+  const hasLanguageField = isCodeItemType(normalizedTypeName);
+  const isCodeType = isCodeItemType(normalizedTypeName);
+  const isMarkdownType = isMarkdownItemType(normalizedTypeName);
   const hasUrlField = ["link"].includes(normalizedTypeName);
 
   return (
@@ -640,7 +635,11 @@ function ItemDrawerContent({
                 htmlFor="edit-item-content"
                 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground block"
               >
-                {isCodeType ? "Code Content" : "Content"}
+                {isCodeType
+                  ? "Code Content"
+                  : isMarkdownType
+                    ? "Markdown Content"
+                    : "Content"}
               </label>
               {isCodeType ? (
                 <CodeEditor
@@ -649,6 +648,14 @@ function ItemDrawerContent({
                   language={editLanguage || item.language}
                   minHeight={120}
                   maxHeight={400}
+                />
+              ) : isMarkdownType ? (
+                <MarkdownEditor
+                  value={editContent}
+                  onChange={(val) => setEditContent(val)}
+                  minHeight={200}
+                  maxHeight={450}
+                  placeholder="Enter markdown content..."
                 />
               ) : (
                 <Textarea
@@ -780,8 +787,18 @@ function ItemDrawerContent({
                 />
               )}
 
-              {/* Non-Code (Prompt / Note) Content */}
-              {item.content && !isCodeType && (
+              {/* Markdown (Prompt / Note) Content */}
+              {item.content && isMarkdownType && (
+                <MarkdownEditor
+                  value={item.content}
+                  readOnly={true}
+                  minHeight={100}
+                  maxHeight={450}
+                />
+              )}
+
+              {/* Non-Code, Non-Markdown Fallback Content */}
+              {item.content && !isCodeType && !isMarkdownType && (
                 <div className="relative rounded-lg border border-border/80 bg-zinc-950/60 dark:bg-zinc-900/60 text-zinc-200 font-mono text-xs overflow-x-auto p-4 max-h-96 whitespace-pre-wrap leading-relaxed">
                   {item.content}
                 </div>
