@@ -1,29 +1,20 @@
-# Current Feature: Monaco Code Editor
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Create `CodeEditor` component using Monaco Editor with a dark theme.
-- Replace `Textarea` with `CodeEditor` for `snippet` and `command` item types only.
-- Keep `Textarea` for `note`, `prompt`, and other non-code item types.
-- Add macOS-style window control dots (red/yellow/green) at the top of the editor header.
-- Add quick copy button in the editor header with visual feedback.
-- Add the language label in the editor header next to the copy button.
-- Support both display (read-only) and edit modes.
-- Make the height of the editor fluid with a max height of 400px and a styled scrollbar matching the dark theme.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- Specification: [context/features/code-editor-spec.md](file:///c:/Rajesh%20Files/Personal%20Project/devstash/context/features/code-editor-spec.md)
-- Target Components:
-  - Create reusable `CodeEditor` component (`src/components/ui/code-editor.tsx` or `src/components/items/code-editor.tsx`).
-  - Integrate into `ItemDrawer` (`src/components/items/item-drawer.tsx`) for read-only preview and edit mode.
-  - Integrate into `CreateItemDialog` (`src/components/items/create-item-dialog.tsx`) when selecting `snippet` or `command`.
-- Dependencies: Check if `@monaco-editor/react` is installed or needs installation.
-- Responsive & Fluid: Ensure clean layout integration in both modal dialogs and slide-in drawers.
+<!-- Any extra notes -->
 
 ## History
 
@@ -277,6 +268,15 @@ In Progress
   - Built authenticated `createItem` server action in `src/actions/items.ts` with NextAuth session validation, Sonner toast notifications, and Next.js route revalidations (`/dashboard`, `/items`, `/items/[type]`).
   - Added 12 Vitest unit tests in `src/actions/items.test.ts` (totaling 67 test suite passes) and database integration test script `scripts/test-item-create.ts` (`npm run test:item-create`).
   - Verified with full test suite (`npm test`), database test scripts (`npm run test:item-create`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
+
+- **Monaco Code Editor (2026-10-10)**
+  - Created reusable `CodeEditor` component (`src/components/ui/code-editor.tsx`) wrapping Monaco Editor with custom `"devstash-dark"` theme.
+  - Added macOS window dots (red/yellow/green) styling and interactive header with uppercase language badge and quick copy button with feedback state.
+  - Implemented fluid auto-height sizing with minimum height and maximum height capped at 400px with theme-matched scrollbars.
+  - Replaced `<Textarea>` with `CodeEditor` for `snippet` and `command` item types in `ItemDrawer` (both read-only display and edit modes) and `CreateItemDialog`.
+  - Retained standard `<Textarea>` for non-code types (`prompt`, `note`).
+  - Added `normalizeMonacoLanguage` utility mapping CLI shells and language aliases with full Vitest unit test coverage.
+  - Verified with full test suite (`npm test` - 70 passing tests), database integration test suite (`test:item-detail`, `test:item-create`, `test:item-edit`, `test:item-delete`), ESLint (`npm run lint`), and Next.js Turbopack build (`npm run build`).
 
 
 
