@@ -17,6 +17,7 @@ import {
   MoreHorizontal,
   ExternalLink,
   Trash2,
+  Download,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ import { DeleteItemDialog } from "@/components/items/delete-item-dialog";
 import { deleteItem as deleteItemAction } from "@/actions/items";
 import { DashboardItem } from "@/lib/db/items";
 import { useItemDrawer } from "@/components/items/item-drawer-context";
+import { formatFileSize } from "@/lib/item-utils";
 
 export type Item = DashboardItem;
 
@@ -79,7 +81,7 @@ export function ItemCard({ item }: ItemCardProps) {
   const handleCopy = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    const textToCopy = item.content || item.url || item.title;
+    const textToCopy = item.content || item.url || item.fileUrl || item.title;
     if (
       !textToCopy ||
       typeof navigator === "undefined" ||
@@ -95,6 +97,10 @@ export function ItemCard({ item }: ItemCardProps) {
       console.error("Failed to copy text to clipboard:", err);
     }
   };
+
+  const isImage =
+    itemType.name.toLowerCase() === "image" ||
+    Boolean(item.fileName && /\.(png|jpe?g|gif|webp|svg)$/i.test(item.fileName));
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -157,24 +163,40 @@ export function ItemCard({ item }: ItemCardProps) {
             </p>
           )}
 
-          {/* Tags */}
-          {item.tags.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 mt-2">
-              {item.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center rounded-md bg-muted/80 px-2 py-0.5 text-[11px] font-normal text-muted-foreground"
-                >
-                  {tag}
-                </span>
-              ))}
-              {item.language && (
-                <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-mono text-primary/80">
-                  {item.language}
-                </span>
-              )}
+          {/* Image preview thumbnail */}
+          {isImage && item.fileUrl && (
+            <div className="relative mt-2 h-36 w-full overflow-hidden rounded-md border border-border/60 bg-muted/20">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={item.fileUrl}
+                alt={item.title}
+                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                loading="lazy"
+              />
             </div>
           )}
+
+          {/* Tags & Metadata */}
+          <div className="flex flex-wrap items-center gap-1.5 mt-2">
+            {item.tags.map((tag) => (
+              <span
+                key={tag}
+                className="inline-flex items-center rounded-md bg-muted/80 px-2 py-0.5 text-[11px] font-normal text-muted-foreground"
+              >
+                {tag}
+              </span>
+            ))}
+            {item.language && (
+              <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-mono text-primary/80">
+                {item.language}
+              </span>
+            )}
+            {item.fileSize && (
+              <span className="inline-flex items-center rounded-md bg-muted/80 px-2 py-0.5 text-[11px] font-mono text-muted-foreground">
+                {formatFileSize(item.fileSize)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -237,6 +259,18 @@ export function ItemCard({ item }: ItemCardProps) {
               <Copy className="h-4 w-4" />
               <span>Copy</span>
             </DropdownMenuItem>
+            {item.fileUrl && (
+              <DropdownMenuItem
+                onClick={() => {
+                  const downloadUrl = `/api/download?key=${encodeURIComponent(item.fileUrl!)}&filename=${encodeURIComponent(item.fileName || "download")}`;
+                  window.open(downloadUrl, "_blank");
+                }}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <Download className="h-4 w-4" />
+                <span>Download</span>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant="destructive"

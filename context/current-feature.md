@@ -1,20 +1,34 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: File Upload with Cloudflare R2
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Configure Cloudflare R2 S3-compatible client and environment variables.
+- Create secure upload API route for Cloudflare R2 with file size and MIME type validation.
+- Create download proxy API route to serve files securely and avoid CORS issues.
+- Implement file deletion from Cloudflare R2 when an item is deleted.
+- Build reusable `FileUpload` component with drag-and-drop support, upload progress indicator, and validation feedback.
+- Update `CreateItemDialog` to support `file` and `image` item types using `FileUpload`.
+- Display image preview for image items and file info (name, size, extension) for file items in UI (item cards, item drawer).
+- Add download button in `ItemDrawer` for file and image items.
+- Maintain all Prisma/DB query functions in `src/lib/db/items.ts`.
+- Write unit tests for upload/download helpers and server actions (`src/actions/**/*.test.ts`, `src/lib/**/*.test.ts`).
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Spec Document**: [context/features/file-image-spec.md](file:///c:/Rajesh Files/Personal Project/devstash/context/features/file-image-spec.md)
+- **File Constraints**:
+  - **Images**: Max size 5 MB. Allowed extensions: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`. MIME types: `image/png`, `image/jpeg`, `image/gif`, `image/webp`, `image/svg+xml`.
+  - **Files**: Max size 10 MB. Allowed extensions: `.pdf`, `.txt`, `.md`, `.json`, `.yaml`, `.yml`, `.xml`, `.csv`, `.toml`, `.ini`. MIME types: `application/pdf`, `text/plain`, `text/markdown`, `application/json`, `application/x-yaml`, `text/yaml`, `application/xml`, `text/xml`, `text/csv`, `application/toml`.
+- **Architectural Rules**:
+  - Keep all Prisma database operations inside `src/lib/db/items.ts`.
+  - Ensure unit tests strictly target server actions and utilities (`npm test`).
+  - NextAuth session validation must guard all upload/download/deletion endpoints and actions.
 
 ## History
 

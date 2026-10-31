@@ -78,6 +78,42 @@ describe("createItemSchema validation", () => {
     expect(validLink.success).toBe(true);
   });
 
+  it("validates valid file and image payloads", () => {
+    const validFile = createItemSchema.safeParse({
+      type: "file",
+      title: "Quarterly Report",
+      fileUrl: "https://pub-r2.test.dev/uploads/user-123/report.pdf",
+      fileName: "report.pdf",
+      fileSize: 102400,
+      tags: ["finance"],
+    });
+    expect(validFile.success).toBe(true);
+
+    const validImage = createItemSchema.safeParse({
+      type: "image",
+      title: "Architecture Diagram",
+      fileUrl: "https://pub-r2.test.dev/uploads/user-123/arch.png",
+      fileName: "arch.png",
+      fileSize: 204800,
+    });
+    expect(validImage.success).toBe(true);
+  });
+
+  it("fails if file or image type has missing or empty fileUrl", () => {
+    const missingFileUrl = createItemSchema.safeParse({
+      type: "file",
+      title: "Doc Without File",
+      fileUrl: "",
+    });
+    expect(missingFileUrl.success).toBe(false);
+
+    const missingImageUrl = createItemSchema.safeParse({
+      type: "image",
+      title: "Image Without File",
+    });
+    expect(missingImageUrl.success).toBe(false);
+  });
+
   it("fails if link type has missing or empty URL", () => {
     const missingUrl = createItemSchema.safeParse({
       type: "link",
@@ -225,6 +261,55 @@ describe("createItem server action", () => {
       language: "javascript",
       tags: ["javascript"],
       url: undefined,
+      fileUrl: undefined,
+      fileName: undefined,
+      fileSize: undefined,
+    });
+  });
+
+  it("successfully creates a file item with fileUrl and metadata", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+
+    const mockFileItem = {
+      id: "item-file-1",
+      title: "Design System",
+      contentType: "FILE",
+      fileUrl: "https://pub-r2.test.dev/uploads/user-123/design.pdf",
+      fileName: "design.pdf",
+      fileSize: 512000,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    vi.mocked(itemsDbModule.createItem).mockResolvedValueOnce(
+      mockFileItem as unknown as itemsDbModule.ItemDetail,
+    );
+
+    const result = await createItem({
+      type: "file",
+      title: "Design System",
+      fileUrl: "https://pub-r2.test.dev/uploads/user-123/design.pdf",
+      fileName: "design.pdf",
+      fileSize: 512000,
+      tags: ["design"],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data).toEqual(mockFileItem);
+    expect(itemsDbModule.createItem).toHaveBeenCalledWith("user-123", {
+      type: "file",
+      title: "Design System",
+      description: undefined,
+      content: undefined,
+      url: undefined,
+      language: undefined,
+      tags: ["design"],
+      fileUrl: "https://pub-r2.test.dev/uploads/user-123/design.pdf",
+      fileName: "design.pdf",
+      fileSize: 512000,
     });
   });
 });

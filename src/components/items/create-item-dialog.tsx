@@ -8,6 +8,8 @@ import {
   Terminal,
   StickyNote,
   Link as LinkIcon,
+  File as FileIcon,
+  Image as ImageIcon,
   Loader2,
   AlertCircle,
 } from "lucide-react";
@@ -26,10 +28,18 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CodeEditor } from "@/components/ui/code-editor";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
+import { FileUpload, UploadedFileData } from "@/components/ui/file-upload";
 import { createItem as createItemAction } from "@/actions/items";
 import { cn } from "@/lib/utils";
 
-export type CreateItemType = "snippet" | "prompt" | "command" | "note" | "link";
+export type CreateItemType =
+  | "snippet"
+  | "prompt"
+  | "command"
+  | "note"
+  | "link"
+  | "file"
+  | "image";
 
 interface ItemTypeOption {
   type: CreateItemType;
@@ -74,6 +84,20 @@ const itemTypeOptions: ItemTypeOption[] = [
     icon: LinkIcon,
     color: "#ec4899",
     description: "Web links & documentation",
+  },
+  {
+    type: "file",
+    label: "File",
+    icon: FileIcon,
+    color: "#06b6d4",
+    description: "Configurations, docs & attachments",
+  },
+  {
+    type: "image",
+    label: "Image",
+    icon: ImageIcon,
+    color: "#10b981",
+    description: "Screenshots, UI diagrams & graphics",
   },
 ];
 
@@ -147,6 +171,7 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
     defaultType === "command" ? "bash" : "typescript",
   );
   const [url, setUrl] = React.useState("");
+  const [fileData, setFileData] = React.useState<UploadedFileData | null>(null);
   const [tagsInput, setTagsInput] = React.useState("");
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
@@ -158,6 +183,15 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
       setLanguage("bash");
     } else if (type === "snippet" && (language === "bash" || !language)) {
       setLanguage("typescript");
+    }
+  };
+
+  const handleFileChange = (newFileData: UploadedFileData | null) => {
+    setFileData(newFileData);
+    if (newFileData?.fileName && !title.trim()) {
+      // Auto-populate title with filename without extension if title is empty
+      const cleanName = newFileData.fileName.replace(/\.[^/.]+$/, "");
+      setTitle(cleanName);
     }
   };
 
@@ -185,6 +219,13 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
       }
     }
 
+    if (selectedType === "file" || selectedType === "image") {
+      if (!fileData?.fileUrl) {
+        setErrorMessage(`Please upload a ${selectedType} file.`);
+        return;
+      }
+    }
+
     const parsedTags = tagsInput
       .split(",")
       .map((t) => t.trim())
@@ -198,7 +239,9 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
         title: trimmedTitle,
         description: description.trim() || undefined,
         content:
-          selectedType === "link"
+          selectedType === "link" ||
+          selectedType === "file" ||
+          selectedType === "image"
             ? undefined
             : content.trim() || undefined,
         language:
@@ -206,6 +249,18 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
             ? language.trim() || undefined
             : undefined,
         url: selectedType === "link" ? url.trim() : undefined,
+        fileUrl:
+          selectedType === "file" || selectedType === "image"
+            ? fileData?.fileUrl
+            : undefined,
+        fileName:
+          selectedType === "file" || selectedType === "image"
+            ? fileData?.fileName
+            : undefined,
+        fileSize:
+          selectedType === "file" || selectedType === "image"
+            ? fileData?.fileSize
+            : undefined,
         tags: parsedTags.length > 0 ? parsedTags : undefined,
       });
 
@@ -235,6 +290,8 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
     itemTypeOptions.find((opt) => opt.type === selectedType) ||
     itemTypeOptions[0];
 
+  const isFileOrImage = selectedType === "file" || selectedType === "image";
+
   return (
     <>
       <DialogHeader className="px-5 sm:px-6 pt-5 sm:pt-6 pb-4 border-b border-border shrink-0 pr-12">
@@ -260,7 +317,7 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
             <Label className="text-xs text-muted-foreground font-medium">
               Item Type
             </Label>
-            <div className="grid grid-cols-5 gap-1 sm:gap-2">
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-1 sm:gap-1.5">
               {itemTypeOptions.map((opt) => {
                 const isSelected = selectedType === opt.type;
                 const Icon = opt.icon;
@@ -271,7 +328,7 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
                     onClick={() => handleTypeSelect(opt.type)}
                     disabled={isSubmitting}
                     className={cn(
-                      "flex flex-col items-center justify-center gap-1 py-2 sm:py-2.5 px-0.5 sm:px-1 rounded-lg border text-xs font-medium transition-all cursor-pointer select-none min-w-0",
+                      "flex flex-col items-center justify-center gap-1 py-2 sm:py-2 px-0.5 sm:px-1 rounded-lg border text-xs font-medium transition-all cursor-pointer select-none min-w-0",
                       isSelected
                         ? "bg-accent/80 border-primary/50 text-foreground shadow-xs ring-1 ring-primary/40"
                         : "border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/50 hover:text-foreground",
@@ -318,7 +375,11 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
                       ? "e.g., Docker Container Cleanup"
                       : selectedType === "note"
                         ? "e.g., System Architecture Thoughts"
-                        : "e.g., Next.js Documentation"
+                        : selectedType === "link"
+                          ? "e.g., Next.js Documentation"
+                          : selectedType === "image"
+                            ? "e.g., Database ER Diagram"
+                            : "e.g., Docker Compose Configuration"
               }
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -329,6 +390,22 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
           </div>
 
           {/* Type-Specific Fields */}
+          {/* File & Image Upload */}
+          {isFileOrImage && (
+            <div className="space-y-1.5">
+              <Label className="text-xs sm:text-sm">
+                Upload {activeTypeInfo.label}{" "}
+                <span className="text-destructive">*</span>
+              </Label>
+              <FileUpload
+                category={selectedType as "file" | "image"}
+                value={fileData}
+                onChange={handleFileChange}
+                disabled={isSubmitting}
+              />
+            </div>
+          )}
+
           {/* Link Type: URL */}
           {selectedType === "link" && (
             <div className="space-y-1.5">
@@ -397,8 +474,8 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
             </div>
           )}
 
-          {/* Content Field (for snippet, prompt, command, note) */}
-          {selectedType !== "link" && (
+          {/* Content Field (for snippet, prompt, command, note only) */}
+          {selectedType !== "link" && !isFileOrImage && (
             <div className="space-y-1.5">
               <div className="flex items-center justify-between">
                 <Label htmlFor="item-content" className="text-xs sm:text-sm">
@@ -506,7 +583,8 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
             disabled={
               isSubmitting ||
               !title.trim() ||
-              (selectedType === "link" && !url.trim())
+              (selectedType === "link" && !url.trim()) ||
+              (isFileOrImage && !fileData?.fileUrl)
             }
             className="w-full sm:w-auto cursor-pointer"
           >

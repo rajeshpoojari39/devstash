@@ -9,6 +9,9 @@ import {
   normalizeMonacoLanguage,
   isCodeItemType,
   isMarkdownItemType,
+  isFileItemType,
+  isImageItemType,
+  formatFileSize,
 } from "@/lib/item-utils";
 
 describe("item-utils", () => {
@@ -196,6 +199,51 @@ describe("item-utils", () => {
       expect(isMarkdownItemType("image")).toBe(false);
       expect(isMarkdownItemType(null)).toBe(false);
       expect(isMarkdownItemType(undefined)).toBe(false);
+    });
+  });
+
+  describe("isFileItemType", () => {
+    it("returns true for file types", () => {
+      expect(isFileItemType("file")).toBe(true);
+      expect(isFileItemType("files")).toBe(true);
+      expect(isFileItemType("FILE")).toBe(true);
+    });
+
+    it("returns false for non-file types", () => {
+      expect(isFileItemType("image")).toBe(false);
+      expect(isFileItemType("snippet")).toBe(false);
+      expect(isFileItemType(null)).toBe(false);
+    });
+  });
+
+  describe("isImageItemType", () => {
+    it("returns true for image types", () => {
+      expect(isImageItemType("image")).toBe(true);
+      expect(isImageItemType("images")).toBe(true);
+      expect(isImageItemType("IMAGE")).toBe(true);
+    });
+
+    it("returns false for non-image types", () => {
+      expect(isImageItemType("file")).toBe(false);
+      expect(isImageItemType("snippet")).toBe(false);
+      expect(isImageItemType(null)).toBe(false);
+    });
+  });
+
+  describe("formatFileSize", () => {
+    it("formats 0 bytes or invalid numbers properly", () => {
+      expect(formatFileSize(0)).toBe("0 B");
+      expect(formatFileSize(-100)).toBe("0 B");
+      expect(formatFileSize(null)).toBe("0 B");
+      expect(formatFileSize(undefined)).toBe("0 B");
+    });
+
+    it("formats bytes, kilobytes, and megabytes", () => {
+      expect(formatFileSize(500)).toBe("500 B");
+      expect(formatFileSize(1024)).toBe("1.0 KB");
+      expect(formatFileSize(1536)).toBe("1.5 KB");
+      expect(formatFileSize(1048576)).toBe("1.0 MB");
+      expect(formatFileSize(5242880)).toBe("5.0 MB");
     });
   });
 });

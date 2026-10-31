@@ -26,6 +26,8 @@ export function TopBar() {
       if (slug.includes("note")) return "note";
       if (slug.includes("link")) return "link";
       if (slug.includes("snippet")) return "snippet";
+      if (slug.includes("file")) return "file";
+      if (slug.includes("image")) return "image";
     }
     return "snippet";
   }, [pathname]);

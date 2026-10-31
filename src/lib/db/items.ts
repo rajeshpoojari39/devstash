@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { deleteFromR2 } from "@/lib/storage/r2";
 import { getDefaultUserId } from "@/lib/db/collections";
 import {
   ItemTypeInfo,
@@ -565,6 +566,9 @@ export interface UpdateItemData {
   url?: string | null;
   language?: string | null;
   tags?: string[];
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
 }
 
 /**
@@ -636,6 +640,15 @@ export async function updateItem(
       ...(data.url !== undefined ? { url: data.url?.trim() || null } : {}),
       ...(data.language !== undefined
         ? { language: data.language?.trim() || null }
+        : {}),
+      ...(data.fileUrl !== undefined
+        ? { fileUrl: data.fileUrl?.trim() || null }
+        : {}),
+      ...(data.fileName !== undefined
+        ? { fileName: data.fileName?.trim() || null }
+        : {}),
+      ...(data.fileSize !== undefined
+        ? { fileSize: data.fileSize || null }
         : {}),
       ...(cleanTagNames !== undefined
         ? {
@@ -717,6 +730,7 @@ export async function deleteItem(
     },
     select: {
       id: true,
+      fileUrl: true,
     },
   });
 
@@ -730,6 +744,14 @@ export async function deleteItem(
     },
   });
 
+  if (existingItem.fileUrl) {
+    try {
+      await deleteFromR2(existingItem.fileUrl);
+    } catch (err) {
+      console.error("Failed to delete file from Cloudflare R2 on item delete:", err);
+    }
+  }
+
   return true;
 }
 
@@ -741,6 +763,9 @@ export interface CreateItemData {
   url?: string | null;
   language?: string | null;
   tags?: string[];
+  fileUrl?: string | null;
+  fileName?: string | null;
+  fileSize?: number | null;
 }
 
 /**
@@ -801,7 +826,12 @@ export async function createItem(
     });
   }
 
-  const contentType = normalizedType === "link" ? "URL" : "TEXT";
+  let contentType: "TEXT" | "FILE" | "URL" = "TEXT";
+  if (normalizedType === "link") {
+    contentType = "URL";
+  } else if (normalizedType === "file" || normalizedType === "image") {
+    contentType = "FILE";
+  }
 
   const createdItem = await prisma.item.create({
     data: {
@@ -813,6 +843,9 @@ export async function createItem(
       content: contentType === "TEXT" ? data.content || null : null,
       url: contentType === "URL" ? data.url?.trim() || null : null,
       language: contentType === "TEXT" ? data.language?.trim() || null : null,
+      fileUrl: contentType === "FILE" ? data.fileUrl?.trim() || null : null,
+      fileName: contentType === "FILE" ? data.fileName?.trim() || null : null,
+      fileSize: contentType === "FILE" ? data.fileSize || null : null,
       ...(cleanTagNames.length > 0
         ? {
             tags: {

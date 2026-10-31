@@ -74,6 +74,9 @@ export async function createItem(
       url: validatedData.url,
       language: validatedData.language,
       tags: validatedData.tags,
+      fileUrl: validatedData.fileUrl,
+      fileName: validatedData.fileName,
+      fileSize: validatedData.fileSize,
     });
 
     try {
@@ -163,6 +166,9 @@ export async function updateItem(
       url: validatedData.url,
       language: validatedData.language,
       tags: validatedData.tags,
+      fileUrl: validatedData.fileUrl,
+      fileName: validatedData.fileName,
+      fileSize: validatedData.fileSize,
     });
 
     if (!updated) {

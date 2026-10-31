@@ -169,5 +169,36 @@ export function isMarkdownItemType(type?: string | null): boolean {
   return ["note", "prompt", "stickynote", "sparkles"].includes(clean);
 }
 
+/**
+ * Checks whether an item type name/slug is a file type.
+ */
+export function isFileItemType(type?: string | null): boolean {
+  if (!type) return false;
+  const clean = normalizeItemTypeSlug(type);
+  return clean === "file";
+}
 
+/**
+ * Checks whether an item type name/slug is an image type.
+ */
+export function isImageItemType(type?: string | null): boolean {
+  if (!type) return false;
+  const clean = normalizeItemTypeSlug(type);
+  return clean === "image";
+}
 
+/**
+ * Formats byte count into a human-readable string (e.g. '1.5 MB').
+ */
+export function formatFileSize(bytes?: number | null): string {
+  if (bytes === undefined || bytes === null || isNaN(bytes) || bytes <= 0) {
+    return "0 B";
+  }
+  const units = ["B", "KB", "MB", "GB"];
+  const i = Math.min(
+    Math.floor(Math.log(bytes) / Math.log(1024)),
+    units.length - 1,
+  );
+  const formatted = (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1);
+  return `${formatted} ${units[i]}`;
+}

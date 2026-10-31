@@ -51,6 +51,8 @@ import {
   formatLongDate,
   isCodeItemType,
   isMarkdownItemType,
+
+  isImageItemType,
 } from "@/lib/item-utils";
 import { cn } from "@/lib/utils";
 
@@ -244,7 +246,7 @@ function ItemDrawerContent({
 
   const handleCopy = async () => {
     if (!item) return;
-    const textToCopy = item.content || item.url || item.title;
+    const textToCopy = item.content || item.url || item.fileUrl || item.title;
     if (
       !textToCopy ||
       typeof navigator === "undefined" ||
@@ -376,6 +378,10 @@ function ItemDrawerContent({
   const hasLanguageField = isCodeItemType(normalizedTypeName);
   const isCodeType = isCodeItemType(normalizedTypeName);
   const isMarkdownType = isMarkdownItemType(normalizedTypeName);
+
+  const isImageType =
+    isImageItemType(normalizedTypeName) ||
+    Boolean(item.fileName && /\.(png|jpe?g|gif|webp|svg)$/i.test(item.fileName));
   const hasUrlField = ["link"].includes(normalizedTypeName);
 
   return (
@@ -770,7 +776,7 @@ function ItemDrawerContent({
           )}
 
           {/* Content Section */}
-          {(item.content || item.url || item.fileName) && (
+          {(item.content || item.url || item.fileName || item.fileUrl) && (
             <div>
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
                 Content
@@ -829,14 +835,32 @@ function ItemDrawerContent({
                 </div>
               )}
 
+              {/* Image Preview for image items */}
+              {isImageType && item.fileUrl && (
+                <div className="overflow-hidden rounded-xl border border-border/80 bg-neutral-950/80 mb-3">
+                  <div className="relative max-h-80 w-full flex items-center justify-center p-2">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={item.fileUrl}
+                      alt={item.title || item.fileName || "Image preview"}
+                      className="max-h-72 w-auto max-w-full rounded-lg object-contain shadow-md"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* File / Image Attachment Details */}
               {(item.fileName || item.fileUrl) && (
                 <div className="flex items-center justify-between gap-3 p-3.5 rounded-lg border border-border/80 bg-muted/30">
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <File className="h-4 w-4 text-muted-foreground shrink-0" />
+                    {isImageType ? (
+                      <ImageIcon className="h-4 w-4 text-emerald-400 shrink-0" />
+                    ) : (
+                      <File className="h-4 w-4 text-indigo-400 shrink-0" />
+                    )}
                     <div className="min-w-0">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {item.fileName || "Uploaded File"}
+                        {item.fileName || (isImageType ? "Uploaded Image" : "Uploaded File")}
                       </p>
                       {item.fileSize && (
                         <p className="text-xs text-muted-foreground">
@@ -847,9 +871,7 @@ function ItemDrawerContent({
                   </div>
                   {item.fileUrl && (
                     <a
-                      href={item.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      href={`/api/download?key=${encodeURIComponent(item.fileUrl)}&filename=${encodeURIComponent(item.fileName || (isImageType ? "image" : "file"))}`}
                       download={item.fileName || true}
                       className={buttonVariants({
                         variant: "outline",

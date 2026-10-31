@@ -58,19 +58,55 @@ async function main() {
 
   console.log(`   ✓ Created Command ID: ${command.id}`);
 
-  // 4. Verify fetched detail
-  console.log("\n🔍 Verifying item detail via getItemById...");
-  const fetchedSnippet = await getItemById(snippet.id, userId);
-  if (!fetchedSnippet || fetchedSnippet.tags.length !== 2) {
-    throw new Error(`Fetched snippet detail mismatch for ID ${snippet.id}`);
-  }
-  console.log(`   ✓ Fetched snippet has tags: [${fetchedSnippet.tags.join(", ")}]`);
+  // 4. Test File Creation
+  console.log("📄 Creating test file...");
+  const fileItem = await createItem(userId, {
+    type: "file",
+    title: "Test Created File",
+    description: "Automated test file description",
+    fileUrl: "https://pub-r2.test.dev/uploads/test-user/sample.pdf",
+    fileName: "sample.pdf",
+    fileSize: 10240,
+    tags: ["test-create-tag", "file-tag"],
+  });
 
-  // 5. Cleanup created items
+  console.log(`   ✓ Created File ID: ${fileItem.id} (type: ${fileItem.itemType.name}, fileUrl: ${fileItem.fileUrl})`);
+  if (fileItem.contentType !== "FILE" || fileItem.fileName !== "sample.pdf" || fileItem.fileSize !== 10240) {
+    throw new Error(`File verification failed for ID ${fileItem.id}`);
+  }
+
+  // 5. Test Image Creation
+  console.log("🖼️ Creating test image...");
+  const imageItem = await createItem(userId, {
+    type: "image",
+    title: "Test Created Image",
+    description: "Automated test image description",
+    fileUrl: "https://pub-r2.test.dev/uploads/test-user/architecture.png",
+    fileName: "architecture.png",
+    fileSize: 20480,
+    tags: ["test-create-tag", "image-tag"],
+  });
+
+  console.log(`   ✓ Created Image ID: ${imageItem.id} (type: ${imageItem.itemType.name}, fileUrl: ${imageItem.fileUrl})`);
+  if (imageItem.contentType !== "FILE" || imageItem.fileName !== "architecture.png" || imageItem.fileSize !== 20480) {
+    throw new Error(`Image verification failed for ID ${imageItem.id}`);
+  }
+
+  // 6. Verify fetched detail
+  console.log("\n🔍 Verifying item detail via getItemById...");
+  const fetchedFile = await getItemById(fileItem.id, userId);
+  if (!fetchedFile || fetchedFile.fileUrl !== "https://pub-r2.test.dev/uploads/test-user/sample.pdf") {
+    throw new Error(`Fetched file detail mismatch for ID ${fileItem.id}`);
+  }
+  console.log(`   ✓ Fetched file has fileName: ${fetchedFile.fileName}, size: ${fetchedFile.fileSize}`);
+
+  // 7. Cleanup created items
   console.log("\n🧹 Cleaning up test items...");
   await deleteItem(snippet.id, userId);
   await deleteItem(link.id, userId);
   await deleteItem(command.id, userId);
+  await deleteItem(fileItem.id, userId);
+  await deleteItem(imageItem.id, userId);
 
   const verifyDeleted = await getItemById(snippet.id, userId);
   if (verifyDeleted) {
