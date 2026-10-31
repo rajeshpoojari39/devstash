@@ -1,34 +1,20 @@
-# Current Feature: File Upload with Cloudflare R2
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
 <!-- Not Started|In Progress|Completed -->
 
-In Progress
+Not Started
 
 ## Goals
 
-- Configure Cloudflare R2 S3-compatible client and environment variables.
-- Create secure upload API route for Cloudflare R2 with file size and MIME type validation.
-- Create download proxy API route to serve files securely and avoid CORS issues.
-- Implement file deletion from Cloudflare R2 when an item is deleted.
-- Build reusable `FileUpload` component with drag-and-drop support, upload progress indicator, and validation feedback.
-- Update `CreateItemDialog` to support `file` and `image` item types using `FileUpload`.
-- Display image preview for image items and file info (name, size, extension) for file items in UI (item cards, item drawer).
-- Add download button in `ItemDrawer` for file and image items.
-- Maintain all Prisma/DB query functions in `src/lib/db/items.ts`.
-- Write unit tests for upload/download helpers and server actions (`src/actions/**/*.test.ts`, `src/lib/**/*.test.ts`).
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Spec Document**: [context/features/file-image-spec.md](file:///c:/Rajesh Files/Personal Project/devstash/context/features/file-image-spec.md)
-- **File Constraints**:
-  - **Images**: Max size 5 MB. Allowed extensions: `.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`. MIME types: `image/png`, `image/jpeg`, `image/gif`, `image/webp`, `image/svg+xml`.
-  - **Files**: Max size 10 MB. Allowed extensions: `.pdf`, `.txt`, `.md`, `.json`, `.yaml`, `.yml`, `.xml`, `.csv`, `.toml`, `.ini`. MIME types: `application/pdf`, `text/plain`, `text/markdown`, `application/json`, `application/x-yaml`, `text/yaml`, `application/xml`, `text/xml`, `text/csv`, `application/toml`.
-- **Architectural Rules**:
-  - Keep all Prisma database operations inside `src/lib/db/items.ts`.
-  - Ensure unit tests strictly target server actions and utilities (`npm test`).
-  - NextAuth session validation must guard all upload/download/deletion endpoints and actions.
+<!-- Any extra notes -->
 
 ## History
 
@@ -301,6 +287,14 @@ In Progress
   - Added `isCodeItemType` and `isMarkdownItemType` utilities with Vitest unit tests in `src/lib/item-utils.test.ts`.
   - Verified with full unit test suite (`npm test` - 74 passing tests), database integration test scripts (`test:item-detail`, `test:item-edit`, `test:item-create`, `test:item-delete`), ESLint (`npm run lint`), and Next.js Turbopack production build (`npm run build`).
 
-
-
+- **File Upload with Cloudflare R2 (2026-10-31)**
+  - Configured Cloudflare R2 S3-compatible client singleton in `src/lib/storage/r2.ts` with size/MIME validation (5MB max for images, 10MB max for documents).
+  - Built authenticated upload endpoint `POST /api/upload` and streaming download proxy route `GET /api/download` with user-level access isolation to eliminate CORS issues.
+  - Built reusable `FileUpload` component with drag-and-drop, upload progress bar, and instant image thumbnail preview (`src/components/ui/file-upload.tsx`).
+  - Updated `CreateItemDialog` with 7-column category selector supporting `file` and `image` item types and auto-populating titles from filenames.
+  - Updated `ItemDrawer` to render image previews and attachment download cards with proxy download link.
+  - Updated `ItemCard` to display image thumbnail previews, file size badges, and quick download dropdown actions.
+  - Updated `src/lib/db/items.ts` to persist `fileUrl`, `fileName`, and `fileSize` with `contentType: "FILE"`, and delete objects from Cloudflare R2 upon item deletion.
+  - Added 24 storage utility unit tests (`src/lib/storage/r2.test.ts`), extended server action tests (`src/actions/items.test.ts`), and updated DB integration test script (`scripts/test-item-create.ts`).
+  - Verified with full unit test suite (107 tests passing), ESLint (0 errors, 0 warnings), Neon PostgreSQL database test, and Next.js Turbopack production build (`npm run build`).
 
