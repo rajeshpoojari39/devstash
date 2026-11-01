@@ -163,19 +163,6 @@ export function ItemCard({ item }: ItemCardProps) {
             </p>
           )}
 
-          {/* Image preview thumbnail */}
-          {isImage && item.fileUrl && (
-            <div className="relative mt-2 h-36 w-full overflow-hidden rounded-md border border-border/60 bg-muted/20">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={item.fileUrl}
-                alt={item.title}
-                className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
-                loading="lazy"
-              />
-            </div>
-          )}
-
           {/* Tags & Metadata */}
           <div className="flex flex-wrap items-center gap-1.5 mt-2">
             {item.tags.map((tag) => (
@@ -198,93 +185,108 @@ export function ItemCard({ item }: ItemCardProps) {
             )}
           </div>
         </div>
+
+        {/* Compact Right-Side Thumbnail for Image Items */}
+        {isImage && item.fileUrl && (
+          <div className="relative h-16 w-28 sm:h-18 sm:w-32 aspect-video shrink-0 overflow-hidden rounded-lg border border-border/60 bg-muted/20 [isolation:isolate] [transform:translateZ(0)] self-start">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={item.fileUrl}
+              alt={item.title}
+              className="h-full w-full object-cover transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-105 transition-transform duration-300"
+              decoding="async"
+            />
+          </div>
+        )}
       </div>
 
       {/* Bottom action row: Date and Quick Actions */}
       <div
-        className="flex items-center gap-2.5 self-end shrink-0"
+        className="flex items-center justify-between shrink-0"
         onClick={(e) => e.stopPropagation()}
       >
         <span className="text-xs text-muted-foreground font-mono">
           {formatDate(item.createdAt)}
         </span>
 
-        {/* Copy Button */}
-        {(item.content || item.url) && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-80 group-hover:opacity-100 transition-opacity cursor-pointer"
-            onClick={handleCopy}
-            title={copied ? "Copied!" : "Copy content"}
-            aria-label="Copy item content"
-          >
-            {copied ? (
-              <Check className="h-4 w-4 text-emerald-500" />
-            ) : (
-              <Copy className="h-4 w-4" />
-            )}
-          </Button>
-        )}
-
-        {/* Action Menu */}
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
-                aria-label="Item actions"
-              />
-            }
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-36">
-            <DropdownMenuItem
-              onClick={(e) => {
-                e.stopPropagation();
-                openDrawer(item.id);
-              }}
-              className="flex items-center gap-2 cursor-pointer"
-            >
-              <ExternalLink className="h-4 w-4" />
-              <span>View</span>
-            </DropdownMenuItem>
-            <DropdownMenuItem
+        <div className="flex items-center gap-1">
+          {/* Copy Button */}
+          {(item.content || item.url || item.fileUrl) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground opacity-80 group-hover:opacity-100 transition-opacity cursor-pointer"
               onClick={handleCopy}
-              className="flex items-center gap-2 cursor-pointer"
+              title={copied ? "Copied!" : "Copy"}
+              aria-label="Copy item content"
             >
-              <Copy className="h-4 w-4" />
-              <span>Copy</span>
-            </DropdownMenuItem>
-            {item.fileUrl && (
+              {copied ? (
+                <Check className="h-4 w-4 text-emerald-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+
+          {/* Action Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:text-foreground cursor-pointer"
+                  aria-label="Item actions"
+                />
+              }
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-36">
               <DropdownMenuItem
-                onClick={() => {
-                  const downloadUrl = `/api/download?key=${encodeURIComponent(item.fileUrl!)}&filename=${encodeURIComponent(item.fileName || "download")}`;
-                  window.open(downloadUrl, "_blank");
+                onClick={(e) => {
+                  e.stopPropagation();
+                  openDrawer(item.id);
                 }}
                 className="flex items-center gap-2 cursor-pointer"
               >
-                <Download className="h-4 w-4" />
-                <span>Download</span>
+                <ExternalLink className="h-4 w-4" />
+                <span>View</span>
               </DropdownMenuItem>
-            )}
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              variant="destructive"
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsDeleteDialogOpen(true);
-              }}
-              className="flex items-center gap-2 text-destructive cursor-pointer"
-            >
-              <Trash2 className="h-4 w-4" />
-              <span>Delete</span>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuItem
+                onClick={handleCopy}
+                className="flex items-center gap-2 cursor-pointer"
+              >
+                <Copy className="h-4 w-4" />
+                <span>Copy</span>
+              </DropdownMenuItem>
+              {item.fileUrl && (
+                <DropdownMenuItem
+                  onClick={() => {
+                    const downloadUrl = `/api/download?key=${encodeURIComponent(item.fileUrl!)}&filename=${encodeURIComponent(item.fileName || "download")}`;
+                    window.open(downloadUrl, "_blank");
+                  }}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
+                  <Download className="h-4 w-4" />
+                  <span>Download</span>
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsDeleteDialogOpen(true);
+                }}
+                className="flex items-center gap-2 text-destructive cursor-pointer"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
 
       {/* Delete Confirmation Dialog */}
@@ -298,4 +300,3 @@ export function ItemCard({ item }: ItemCardProps) {
     </div>
   );
 }
-

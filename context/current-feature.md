@@ -1,20 +1,24 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Image Gallery View
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Create an image thumbnail card component to replace the current item card for image items
+- Show an image grid/gallery with 3 columns (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`)
+- Display image thumbnail with 16:9 aspect ratio (`aspect-video`)
+- Use `object-cover` to fill the card (may crop edges)
+- Subtle hover zoom effect (5% scale with 300ms transition)
+- Ensure full compatibility with the existing `ItemDrawer`, actions, and metadata display
 
 ## Notes
 
-<!-- Any extra notes -->
+- Specification reference: `context/features/image-display-spec.md`
+- Applies when rendering image items (e.g., `/items/images` or `/items/image`)
+- Adheres to Next.js 16 App Router, React 19, and Tailwind CSS v4 conventions
+- Retains existing drawer opening and item management capabilities
 
 ## History
 

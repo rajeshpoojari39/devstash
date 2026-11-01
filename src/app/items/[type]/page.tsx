@@ -2,8 +2,13 @@ import { notFound, redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getItemTypeBySlug, getItemsByType } from "@/lib/db/items";
-import { formatItemTypeTitle, getItemTypeDescription } from "@/lib/item-utils";
+import {
+  formatItemTypeTitle,
+  getItemTypeDescription,
+  isImageItemType,
+} from "@/lib/item-utils";
 import { ItemCard } from "@/components/dashboard/item-card";
+import { ImageThumbnailCard } from "@/components/items/image-thumbnail-card";
 import { ItemsListHeader } from "@/components/items/items-list-header";
 import { ItemsEmptyState } from "@/components/items/items-empty-state";
 
@@ -61,6 +66,7 @@ export default async function ItemTypePage({ params }: ItemTypePageProps) {
   }
 
   const items = await getItemsByType(itemType.id, targetUserId);
+  const isImageCategory = isImageItemType(itemType.name);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -70,6 +76,12 @@ export default async function ItemTypePage({ params }: ItemTypePageProps) {
       {/* Items Section */}
       {items.length === 0 ? (
         <ItemsEmptyState itemType={itemType} />
+      ) : isImageCategory ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item) => (
+            <ImageThumbnailCard key={item.id} item={item} />
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((item) => (

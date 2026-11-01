@@ -162,30 +162,31 @@ export function FileUpload({
     <div className="w-full space-y-2">
       {/* Uploaded File Preview Card */}
       {value?.fileUrl ? (
-        <div className="relative flex flex-col sm:flex-row items-center gap-4 rounded-xl border border-neutral-800 bg-neutral-900/60 p-4 backdrop-blur-sm">
+        <div className="relative flex flex-col sm:flex-row items-center gap-4 rounded-xl border border-border/80 bg-card/90 p-3.5 sm:p-4">
           {isImage ? (
-            <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-lg border border-neutral-800 bg-black/40">
+            <div className="relative w-36 sm:w-44 aspect-video shrink-0 overflow-hidden rounded-lg border border-border/60 bg-muted/20 [isolation:isolate] [transform:translateZ(0)]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={value.fileUrl}
                 alt={value.fileName || "Uploaded image"}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)]"
+                decoding="async"
               />
             </div>
           ) : (
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-800/50 text-neutral-300">
-              <FileText className="h-7 w-7 text-indigo-400" />
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-border/80 bg-muted/50 text-foreground">
+              <FileText className="h-7 w-7 text-primary" />
             </div>
           )}
 
           <div className="flex-1 min-w-0 space-y-1 text-center sm:text-left">
             <div className="flex items-center justify-center sm:justify-start gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
-              <p className="truncate text-sm font-medium text-neutral-100">
+              <p className="truncate text-sm font-medium text-foreground">
                 {value.fileName || "Uploaded file"}
               </p>
             </div>
-            <p className="text-xs text-neutral-400">
+            <p className="text-xs text-muted-foreground">
               {formatFileSize(value.fileSize)} • Storage Ready
             </p>
           </div>
@@ -194,7 +195,7 @@ export function FileUpload({
             type="button"
             onClick={handleRemove}
             disabled={disabled}
-            className="shrink-0 rounded-lg border border-neutral-800 bg-neutral-800/80 p-2 text-neutral-400 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 transition-colors"
+            className="shrink-0 rounded-lg border border-border/80 bg-muted/60 p-2 text-muted-foreground hover:border-destructive/50 hover:bg-destructive/10 hover:text-destructive transition-colors cursor-pointer"
             title="Remove attachment"
           >
             <X className="h-4 w-4" />

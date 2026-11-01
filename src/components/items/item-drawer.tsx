@@ -837,13 +837,14 @@ function ItemDrawerContent({
 
               {/* Image Preview for image items */}
               {isImageType && item.fileUrl && (
-                <div className="overflow-hidden rounded-xl border border-border/80 bg-neutral-950/80 mb-3">
+                <div className="overflow-hidden rounded-xl border border-border/80 bg-neutral-950/80 mb-3 [isolation:isolate] [transform:translateZ(0)]">
                   <div className="relative max-h-80 w-full flex items-center justify-center p-2">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={item.fileUrl}
                       alt={item.title || item.fileName || "Image preview"}
-                      className="max-h-72 w-auto max-w-full rounded-lg object-contain shadow-md"
+                      className="max-h-72 w-auto max-w-full rounded-lg object-contain shadow-md transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)]"
+                      decoding="async"
                     />
                   </div>
                 </div>
