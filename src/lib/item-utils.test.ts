@@ -12,7 +12,19 @@ import {
   isFileItemType,
   isImageItemType,
   formatFileSize,
+  getFileExtension,
+  getFileIconInfo,
 } from "@/lib/item-utils";
+import {
+  FileText,
+  FileCode,
+  FileArchive,
+  FileSpreadsheet,
+  FileImage,
+  FileAudio,
+  FileVideo,
+  File,
+} from "lucide-react";
 
 describe("item-utils", () => {
   describe("normalizeItemTypeSlug", () => {
@@ -244,6 +256,120 @@ describe("item-utils", () => {
       expect(formatFileSize(1536)).toBe("1.5 KB");
       expect(formatFileSize(1048576)).toBe("1.0 MB");
       expect(formatFileSize(5242880)).toBe("5.0 MB");
+    });
+  });
+
+  describe("getFileExtension", () => {
+    it("extracts extension correctly from simple filenames", () => {
+      expect(getFileExtension("document.pdf")).toBe("pdf");
+      expect(getFileExtension("archive.tar.gz")).toBe("gz");
+      expect(getFileExtension("script.TS")).toBe("ts");
+      expect(getFileExtension("data.csv")).toBe("csv");
+    });
+
+    it("extracts extension correctly from URLs or full paths", () => {
+      expect(
+        getFileExtension("https://r2.devstash.io/uploads/user-1/file.xlsx?token=abc#hash"),
+      ).toBe("xlsx");
+      expect(getFileExtension("C:\\projects\\devstash\\config.json")).toBe("json");
+      expect(getFileExtension("uploads/user-123/172900-report.doc")).toBe("doc");
+    });
+
+    it("handles dotfiles correctly", () => {
+      expect(getFileExtension(".env")).toBe("env");
+      expect(getFileExtension(".gitignore")).toBe("gitignore");
+    });
+
+    it("returns empty string for files without extension or null/undefined", () => {
+      expect(getFileExtension("Dockerfile")).toBe("");
+      expect(getFileExtension("README")).toBe("");
+      expect(getFileExtension(null)).toBe("");
+      expect(getFileExtension(undefined)).toBe("");
+      expect(getFileExtension("")).toBe("");
+    });
+  });
+
+  describe("getFileIconInfo", () => {
+    it("returns PDF icon and red styling for PDF files", () => {
+      const info = getFileIconInfo("report.pdf");
+      expect(info.icon).toBe(FileText);
+      expect(info.colorClass).toContain("text-red-400");
+      expect(info.category).toBe("PDF Document");
+      expect(info.extension).toBe("pdf");
+    });
+
+    it("returns Code icon and sky styling for code and config files", () => {
+      const infoTs = getFileIconInfo("app.tsx");
+      expect(infoTs.icon).toBe(FileCode);
+      expect(infoTs.colorClass).toContain("text-sky-400");
+      expect(infoTs.category).toBe("Code & Config");
+
+      const infoJson = getFileIconInfo("package.json");
+      expect(infoJson.icon).toBe(FileCode);
+
+      const infoEnv = getFileIconInfo(".env");
+      expect(infoEnv.icon).toBe(FileCode);
+    });
+
+    it("returns Archive icon and amber styling for compressed files", () => {
+      const infoZip = getFileIconInfo("backup.zip");
+      expect(infoZip.icon).toBe(FileArchive);
+      expect(infoZip.colorClass).toContain("text-amber-400");
+      expect(infoZip.category).toBe("Archive");
+
+      const infoTar = getFileIconInfo("archive.tar.gz");
+      expect(infoTar.icon).toBe(FileArchive);
+    });
+
+    it("returns Spreadsheet icon and emerald styling for spreadsheet files", () => {
+      const infoCsv = getFileIconInfo("dataset.csv");
+      expect(infoCsv.icon).toBe(FileSpreadsheet);
+      expect(infoCsv.colorClass).toContain("text-emerald-400");
+      expect(infoCsv.category).toBe("Spreadsheet");
+
+      const infoXlsx = getFileIconInfo("budget.xlsx");
+      expect(infoXlsx.icon).toBe(FileSpreadsheet);
+    });
+
+    it("returns Document icon and blue styling for word documents and markdown", () => {
+      const infoDoc = getFileIconInfo("notes.docx");
+      expect(infoDoc.icon).toBe(FileText);
+      expect(infoDoc.colorClass).toContain("text-blue-400");
+      expect(infoDoc.category).toBe("Document");
+
+      const infoMd = getFileIconInfo("README.md");
+      expect(infoMd.icon).toBe(FileText);
+    });
+
+    it("returns Image icon and pink styling for image files", () => {
+      const infoImg = getFileIconInfo("screenshot.png");
+      expect(infoImg.icon).toBe(FileImage);
+      expect(infoImg.colorClass).toContain("text-pink-400");
+      expect(infoImg.category).toBe("Image");
+    });
+
+    it("returns Audio icon and purple styling for audio files", () => {
+      const infoAudio = getFileIconInfo("podcast.mp3");
+      expect(infoAudio.icon).toBe(FileAudio);
+      expect(infoAudio.colorClass).toContain("text-purple-400");
+      expect(infoAudio.category).toBe("Audio");
+    });
+
+    it("returns Video icon and rose styling for video files", () => {
+      const infoVideo = getFileIconInfo("demo.mp4");
+      expect(infoVideo.icon).toBe(FileVideo);
+      expect(infoVideo.colorClass).toContain("text-rose-400");
+      expect(infoVideo.category).toBe("Video");
+    });
+
+    it("falls back to generic File icon and indigo styling for unknown files", () => {
+      const infoUnknown = getFileIconInfo("unknown-binary.bin");
+      expect(infoUnknown.icon).toBe(File);
+      expect(infoUnknown.colorClass).toContain("text-indigo-400");
+      expect(infoUnknown.category).toBe("File");
+
+      const infoNoExt = getFileIconInfo("NO_EXTENSION_FILE");
+      expect(infoNoExt.icon).toBe(File);
     });
   });
 });

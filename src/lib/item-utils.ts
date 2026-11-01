@@ -5,6 +5,13 @@ import {
   Terminal,
   StickyNote,
   File,
+  FileText,
+  FileCode,
+  FileArchive,
+  FileSpreadsheet,
+  FileImage,
+  FileAudio,
+  FileVideo,
   Image as ImageIcon,
   Link as LinkIcon,
 } from "lucide-react";
@@ -201,4 +208,241 @@ export function formatFileSize(bytes?: number | null): string {
   );
   const formatted = (bytes / Math.pow(1024, i)).toFixed(i === 0 ? 0 : 1);
   return `${formatted} ${units[i]}`;
+}
+
+export interface FileIconInfo {
+  icon: ElementType;
+  colorClass: string;
+  bgClass: string;
+  category: string;
+  extension: string;
+}
+
+/**
+ * Extracts the file extension (in lowercase, without dot) from a filename, url, or path.
+ */
+export function getFileExtension(filename?: string | null): string {
+  if (!filename || typeof filename !== "string") return "";
+  // Strip url query parameters and hash
+  const cleanPath = filename.split("?")[0].split("#")[0].trim();
+  const basename = cleanPath.split("/").pop()?.split("\\").pop() || "";
+
+  // Special dotfiles handling (e.g. .env, .gitignore)
+  if (basename.startsWith(".") && !basename.slice(1).includes(".")) {
+    return basename.slice(1).toLowerCase();
+  }
+
+  const lastDotIndex = basename.lastIndexOf(".");
+  if (lastDotIndex === -1 || lastDotIndex === basename.length - 1) {
+    return "";
+  }
+  return basename.slice(lastDotIndex + 1).toLowerCase();
+}
+
+/**
+ * Returns icon, color classes, and category metadata for a given file name or extension.
+ */
+export function getFileIconInfo(filename?: string | null): FileIconInfo {
+  const ext = getFileExtension(filename);
+
+  // PDF
+  if (ext === "pdf") {
+    return {
+      icon: FileText,
+      colorClass: "text-red-400",
+      bgClass: "bg-red-500/10 border-red-500/20",
+      category: "PDF Document",
+      extension: ext,
+    };
+  }
+
+  // Code & Config
+  const codeExtensions = new Set([
+    "js",
+    "jsx",
+    "ts",
+    "tsx",
+    "mjs",
+    "cjs",
+    "py",
+    "java",
+    "c",
+    "cpp",
+    "cs",
+    "go",
+    "rs",
+    "php",
+    "rb",
+    "swift",
+    "kt",
+    "scala",
+    "html",
+    "htm",
+    "css",
+    "scss",
+    "sass",
+    "less",
+    "json",
+    "yaml",
+    "yml",
+    "xml",
+    "sql",
+    "graphql",
+    "sh",
+    "bash",
+    "zsh",
+    "bat",
+    "ps1",
+    "cmd",
+    "dockerfile",
+    "toml",
+    "env",
+    "gitignore",
+    "prisma",
+    "config",
+  ]);
+  if (codeExtensions.has(ext)) {
+    return {
+      icon: FileCode,
+      colorClass: "text-sky-400",
+      bgClass: "bg-sky-500/10 border-sky-500/20",
+      category: "Code & Config",
+      extension: ext,
+    };
+  }
+
+  // Archives
+  const archiveExtensions = new Set([
+    "zip",
+    "tar",
+    "gz",
+    "7z",
+    "rar",
+    "bz2",
+    "xz",
+    "tgz",
+    "iso",
+  ]);
+  if (archiveExtensions.has(ext)) {
+    return {
+      icon: FileArchive,
+      colorClass: "text-amber-400",
+      bgClass: "bg-amber-500/10 border-amber-500/20",
+      category: "Archive",
+      extension: ext,
+    };
+  }
+
+  // Spreadsheets & Data
+  const spreadsheetExtensions = new Set([
+    "csv",
+    "xlsx",
+    "xls",
+    "tsv",
+    "ods",
+    "parquet",
+  ]);
+  if (spreadsheetExtensions.has(ext)) {
+    return {
+      icon: FileSpreadsheet,
+      colorClass: "text-emerald-400",
+      bgClass: "bg-emerald-500/10 border-emerald-500/20",
+      category: "Spreadsheet",
+      extension: ext,
+    };
+  }
+
+  // Documents & Notes
+  const docExtensions = new Set([
+    "doc",
+    "docx",
+    "txt",
+    "rtf",
+    "odt",
+    "pages",
+    "md",
+    "markdown",
+  ]);
+  if (docExtensions.has(ext)) {
+    return {
+      icon: FileText,
+      colorClass: "text-blue-400",
+      bgClass: "bg-blue-500/10 border-blue-500/20",
+      category: "Document",
+      extension: ext,
+    };
+  }
+
+  // Images
+  const imageExtensions = new Set([
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "svg",
+    "webp",
+    "bmp",
+    "ico",
+    "avif",
+    "tiff",
+  ]);
+  if (imageExtensions.has(ext)) {
+    return {
+      icon: FileImage,
+      colorClass: "text-pink-400",
+      bgClass: "bg-pink-500/10 border-pink-500/20",
+      category: "Image",
+      extension: ext,
+    };
+  }
+
+  // Audio
+  const audioExtensions = new Set([
+    "mp3",
+    "wav",
+    "ogg",
+    "flac",
+    "aac",
+    "m4a",
+    "wma",
+  ]);
+  if (audioExtensions.has(ext)) {
+    return {
+      icon: FileAudio,
+      colorClass: "text-purple-400",
+      bgClass: "bg-purple-500/10 border-purple-500/20",
+      category: "Audio",
+      extension: ext,
+    };
+  }
+
+  // Video
+  const videoExtensions = new Set([
+    "mp4",
+    "mov",
+    "avi",
+    "mkv",
+    "webm",
+    "wmv",
+    "flv",
+    "m4v",
+  ]);
+  if (videoExtensions.has(ext)) {
+    return {
+      icon: FileVideo,
+      colorClass: "text-rose-400",
+      bgClass: "bg-rose-500/10 border-rose-500/20",
+      category: "Video",
+      extension: ext,
+    };
+  }
+
+  // Default fallback
+  return {
+    icon: File,
+    colorClass: "text-indigo-400",
+    bgClass: "bg-indigo-500/10 border-indigo-500/20",
+    category: "File",
+    extension: ext,
+  };
 }
