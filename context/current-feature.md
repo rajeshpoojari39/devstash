@@ -304,3 +304,11 @@ Not Started
   - Fixed resting image blurriness across Chromium/WebKit on Windows by adding permanent GPU compositing and hardware acceleration (`transform-gpu`, `will-change-transform`, `[backface-visibility:hidden]`, `[transform:translateZ(0)]`, `[isolation:isolate]`, and `decoding="async"`) across `ImageThumbnailCard`, `ItemCard`, `FileUpload`, and `ItemDrawer`.
   - Redesigned desktop dashboard image card layout in `ItemCard` (`src/components/dashboard/item-card.tsx`) with compact 16:9 thumbnail previews, perfectly preserving standard ~110px card height, typography, and title/description vertical baseline alignment.
   - Verified with full Vitest unit test suite (107 tests passing), database integration test (`npm run test:items-by-type`), ESLint (0 errors, 0 warnings), and Next.js production build (`npm run build`).
+
+- **File List View Display (2026-11-01)**
+  - Updated `/items/files` (and singular `/items/file`) category view route to display items as a single-column table/list view instead of grid cards.
+  - Built `FileListItem` component (`src/components/items/file-list-item.tsx` and re-export in `file-item.tsx`) with category-colored left accent borders, extension-specific file icons, formatted file size, upload dates, direct proxy download button, and 3-dots action menu.
+  - Implemented `getFileExtension` and `getFileIconInfo` in `src/lib/item-utils.ts` mapping 9 file categories (PDF, Code, Archive, Spreadsheet, Document, Image, Audio, Video, Generic) with 13 Vitest unit tests in `src/lib/item-utils.test.ts`.
+  - Isolated action button clicks with `stopPropagation` to prevent accidentally triggering drawer expansion, while clicking anywhere on the row opens `ItemDrawer`.
+  - Added desktop table headers (`File Name`, `Size`, `Uploaded`, `Actions`) and responsive mobile stacking.
+  - Verified with full unit test suite (120 tests passing), ESLint (0 errors, 0 warnings), TypeScript check, and Next.js Turbopack production build.
