@@ -1,24 +1,20 @@
-# Current Feature: Image Gallery View
+# Current Feature
+
+<!-- Feature Name -->
 
 ## Status
 
-In Progress
+<!-- Not Started|In Progress|Completed -->
+
+Not Started
 
 ## Goals
 
-- Create an image thumbnail card component to replace the current item card for image items
-- Show an image grid/gallery with 3 columns (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`)
-- Display image thumbnail with 16:9 aspect ratio (`aspect-video`)
-- Use `object-cover` to fill the card (may crop edges)
-- Subtle hover zoom effect (5% scale with 300ms transition)
-- Ensure full compatibility with the existing `ItemDrawer`, actions, and metadata display
+<!-- Goals & requirements -->
 
 ## Notes
 
-- Specification reference: `context/features/image-display-spec.md`
-- Applies when rendering image items (e.g., `/items/images` or `/items/image`)
-- Adheres to Next.js 16 App Router, React 19, and Tailwind CSS v4 conventions
-- Retains existing drawer opening and item management capabilities
+<!-- Any extra notes -->
 
 ## History
 
@@ -302,3 +298,9 @@ In Progress
   - Added 24 storage utility unit tests (`src/lib/storage/r2.test.ts`), extended server action tests (`src/actions/items.test.ts`), and updated DB integration test script (`scripts/test-item-create.ts`).
   - Verified with full unit test suite (107 tests passing), ESLint (0 errors, 0 warnings), Neon PostgreSQL database test, and Next.js Turbopack production build (`npm run build`).
 
+- **Image Gallery View & Thumbnail Display (2026-11-01)**
+  - Created dedicated `ImageThumbnailCard` component (`src/components/items/image-thumbnail-card.tsx` and re-export in `image-card.tsx`) featuring 16:9 aspect ratio (`aspect-video`), `object-cover` sizing, subtle 5% hover zoom transition (`group-hover:scale-105 duration-300`), pin/favorite indicators, tags, and action dropdown menu.
+  - Updated category view route (`/items/[type]`) with `isImageItemType` detection to render image collections in a responsive 3-column gallery grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`).
+  - Fixed resting image blurriness across Chromium/WebKit on Windows by adding permanent GPU compositing and hardware acceleration (`transform-gpu`, `will-change-transform`, `[backface-visibility:hidden]`, `[transform:translateZ(0)]`, `[isolation:isolate]`, and `decoding="async"`) across `ImageThumbnailCard`, `ItemCard`, `FileUpload`, and `ItemDrawer`.
+  - Redesigned desktop dashboard image card layout in `ItemCard` (`src/components/dashboard/item-card.tsx`) with compact 16:9 thumbnail previews, perfectly preserving standard ~110px card height, typography, and title/description vertical baseline alignment.
+  - Verified with full Vitest unit test suite (107 tests passing), database integration test (`npm run test:items-by-type`), ESLint (0 errors, 0 warnings), and Next.js production build (`npm run build`).
