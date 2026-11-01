@@ -50,13 +50,7 @@ export const getDefaultUserId = cache(async (): Promise<string | null> => {
     select: { id: true },
   });
 
-  if (demoUser) return demoUser.id;
-
-  const firstUser = await prisma.user.findFirst({
-    select: { id: true },
-  });
-
-  return firstUser?.id ?? null;
+  return demoUser?.id ?? null;
 });
 
 /**

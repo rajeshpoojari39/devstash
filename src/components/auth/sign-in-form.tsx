@@ -47,7 +47,15 @@ function GitHubIcon(props: React.SVGProps<SVGSVGElement>) {
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/dashboard";
+  // Must be an internal relative path; disallow protocol-relative or backslash paths
+  const rawCallbackUrl = searchParams.get("callbackUrl");
+  const callbackUrl =
+    rawCallbackUrl &&
+    rawCallbackUrl.startsWith("/") &&
+    !rawCallbackUrl.startsWith("//") &&
+    !rawCallbackUrl.startsWith("/\\")
+      ? rawCallbackUrl
+      : "/dashboard";
   const isRegistered = searchParams.get("registered") === "true";
   const isVerified = searchParams.get("verified") === "true";
   const isReset = searchParams.get("reset") === "true";

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Code,
@@ -189,12 +190,12 @@ export function ItemCard({ item }: ItemCardProps) {
         {/* Compact Right-Side Thumbnail for Image Items */}
         {isImage && item.fileUrl && (
           <div className="relative h-16 w-28 sm:h-18 sm:w-32 aspect-video shrink-0 overflow-hidden rounded-lg border border-border/60 bg-muted/20 [isolation:isolate] [transform:translateZ(0)] self-start">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src={item.fileUrl}
               alt={item.title}
-              className="h-full w-full object-cover transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-105 transition-transform duration-300"
-              decoding="async"
+              fill
+              sizes="(max-width: 640px) 112px, 128px"
+              className="object-cover transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-105 transition-transform duration-300"
             />
           </div>
         )}

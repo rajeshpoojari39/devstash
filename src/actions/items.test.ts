@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { createItem, updateItem, deleteItem } from "@/actions/items";
+import { createItem, updateItem, deleteItem, toggleItemFavorite, toggleItemPin } from "@/actions/items";
 import { createItemSchema, updateItemSchema } from "@/lib/validations/item";
 import * as authModule from "@/auth";
 import * as itemsDbModule from "@/lib/db/items";
@@ -14,6 +14,9 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     user: {
       findUnique: vi.fn(),
+    },
+    item: {
+      findFirst: vi.fn(),
     },
   },
 }));
@@ -323,12 +326,16 @@ describe("updateItemSchema validation", () => {
       url: "https://example.com",
       language: "typescript",
       tags: ["react", "frontend"],
+      isFavorite: true,
+      isPinned: false,
     };
     const result = updateItemSchema.safeParse(validData);
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data.title).toBe("Updated Title");
       expect(result.data.tags).toEqual(["react", "frontend"]);
+      expect(result.data.isFavorite).toBe(true);
+      expect(result.data.isPinned).toBe(false);
     }
   });
 
@@ -536,3 +543,115 @@ describe("deleteItem server action", () => {
   });
 });
 
+
+describe("toggleItemFavorite server action", () => {
+  const mockItemDetail = {
+    id: "item-123",
+    title: "Item 123",
+    isFavorite: true,
+    isPinned: false,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns error if item ID is missing", async () => {
+    const result = await toggleItemFavorite("");
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Item ID is required.");
+  });
+
+  it("returns unauthorized error if user session is missing", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const result = await toggleItemFavorite("item-123");
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Unauthorized");
+  });
+
+  it("toggles favorite state based on existing item in db when targetState is omitted", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    vi.mocked(prisma.item.findFirst).mockResolvedValueOnce({
+      isFavorite: false,
+    } as unknown as Awaited<ReturnType<typeof prisma.item.findFirst>>);
+    vi.mocked(itemsDbModule.updateItem).mockResolvedValueOnce(
+      mockItemDetail as unknown as itemsDbModule.ItemDetail
+    );
+
+    const result = await toggleItemFavorite("item-123");
+    expect(result.success).toBe(true);
+    expect(itemsDbModule.updateItem).toHaveBeenCalledWith(
+      "item-123",
+      "user-123",
+      { isFavorite: true }
+    );
+  });
+
+  it("sets explicit favorite state when targetState is provided", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    vi.mocked(itemsDbModule.updateItem).mockResolvedValueOnce(
+      mockItemDetail as unknown as itemsDbModule.ItemDetail
+    );
+
+    const result = await toggleItemFavorite("item-123", false);
+    expect(result.success).toBe(true);
+    expect(itemsDbModule.updateItem).toHaveBeenCalledWith(
+      "item-123",
+      "user-123",
+      { isFavorite: false }
+    );
+  });
+});
+
+describe("toggleItemPin server action", () => {
+  const mockItemDetail = {
+    id: "item-123",
+    title: "Item 123",
+    isFavorite: false,
+    isPinned: true,
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns error if item ID is missing", async () => {
+    const result = await toggleItemPin("");
+    expect(result.success).toBe(false);
+    expect(result.error).toBe("Item ID is required.");
+  });
+
+  it("returns unauthorized error if user session is missing", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+    const result = await toggleItemPin("item-123");
+    expect(result.success).toBe(false);
+    expect(result.error).toContain("Unauthorized");
+  });
+
+  it("toggles pin state based on existing item in db when targetState is omitted", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    vi.mocked(prisma.item.findFirst).mockResolvedValueOnce({
+      isPinned: false,
+    } as unknown as Awaited<ReturnType<typeof prisma.item.findFirst>>);
+    vi.mocked(itemsDbModule.updateItem).mockResolvedValueOnce(
+      mockItemDetail as unknown as itemsDbModule.ItemDetail
+    );
+
+    const result = await toggleItemPin("item-123");
+    expect(result.success).toBe(true);
+    expect(itemsDbModule.updateItem).toHaveBeenCalledWith(
+      "item-123",
+      "user-123",
+      { isPinned: true }
+    );
+  });
+});

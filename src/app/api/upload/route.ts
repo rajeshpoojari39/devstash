@@ -6,6 +6,12 @@ import {
   validateFile,
   FileCategory,
 } from "@/lib/storage/r2";
+import {
+  getClientIp,
+  buildRateLimitIdentifier,
+  checkRateLimit,
+  createRateLimitResponse,
+} from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +42,15 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Parse multipart form data
+    // 2. Rate limit check (20 uploads per hour by IP + user ID)
+    const clientIp = getClientIp(request);
+    const identifier = buildRateLimitIdentifier("upload", clientIp, targetUserId);
+    const rateLimit = await checkRateLimit("upload", identifier);
+    if (!rateLimit.success) {
+      return createRateLimitResponse(rateLimit);
+    }
+
+    // 3. Parse multipart form data
     const formData = await request.formData();
     const file = formData.get("file");
     const rawType = formData.get("type");

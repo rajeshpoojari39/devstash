@@ -4,12 +4,12 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
   Code,
-  Sparkles,
-  Terminal,
-  StickyNote,
+
+
+
   File,
   Image as ImageIcon,
-  Link as LinkIcon,
+
   Star,
   Pin,
   Copy,
@@ -43,39 +43,22 @@ import { useItemDrawer } from "@/components/items/item-drawer-context";
 import {
   updateItem as updateItemAction,
   deleteItem as deleteItemAction,
+  toggleItemFavorite,
+  toggleItemPin,
 } from "@/actions/items";
 import { DeleteItemDialog } from "@/components/items/delete-item-dialog";
 import { ItemDetail } from "@/lib/db/items";
 import {
   formatItemTypeTitle,
   formatLongDate,
+  formatFileSize,
   isCodeItemType,
   isMarkdownItemType,
-
   isImageItemType,
+  itemTypeIconMap as typeIconMap,
 } from "@/lib/item-utils";
 import { cn } from "@/lib/utils";
 
-const typeIconMap: Record<string, React.ElementType> = {
-  snippet: Code,
-  code: Code,
-  prompt: Sparkles,
-  sparkles: Sparkles,
-  command: Terminal,
-  terminal: Terminal,
-  note: StickyNote,
-  stickynote: StickyNote,
-  file: File,
-  image: ImageIcon,
-  link: LinkIcon,
-};
-
-function formatFileSize(bytes?: number | null): string {
-  if (!bytes || bytes <= 0) return "0 B";
-  const units = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(1024));
-  return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${units[i]}`;
-}
 
 export function ItemDrawer() {
   const router = useRouter();
@@ -264,12 +247,44 @@ function ItemDrawerContent({
     }
   };
 
-  const handleToggleFavorite = () => {
-    setIsFavorite((prev) => !prev);
+  const handleToggleFavorite = async () => {
+    if (!item) return;
+    const nextState = !isFavorite;
+    setIsFavorite(nextState);
+    try {
+      const res = await toggleItemFavorite(item.id, nextState);
+      if (res.success && res.data) {
+        setItem(res.data);
+        toast.success(nextState ? "Added to favorites" : "Removed from favorites");
+        router.refresh();
+      } else {
+        setIsFavorite(!nextState);
+        toast.error(res.error || "Failed to update favorite status");
+      }
+    } catch {
+      setIsFavorite(!nextState);
+      toast.error("Failed to update favorite status");
+    }
   };
 
-  const handleTogglePin = () => {
-    setIsPinned((prev) => !prev);
+  const handleTogglePin = async () => {
+    if (!item) return;
+    const nextState = !isPinned;
+    setIsPinned(nextState);
+    try {
+      const res = await toggleItemPin(item.id, nextState);
+      if (res.success && res.data) {
+        setItem(res.data);
+        toast.success(nextState ? "Pinned to top" : "Unpinned item");
+        router.refresh();
+      } else {
+        setIsPinned(!nextState);
+        toast.error(res.error || "Failed to update pin status");
+      }
+    } catch {
+      setIsPinned(!nextState);
+      toast.error("Failed to update pin status");
+    }
   };
 
   const handleStartEdit = () => {

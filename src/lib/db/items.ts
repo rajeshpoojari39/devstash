@@ -266,6 +266,7 @@ export async function getSidebarCollections(
     where: {
       userId: targetUserId,
     },
+    take: 20,
     orderBy: [{ isFavorite: "desc" }, { updatedAt: "desc" }],
     include: {
       defaultType: {
@@ -366,9 +367,7 @@ export async function getSidebarUser(
  * Composite query fetching all sidebar data concurrently in parallel.
  */
 export async function getSidebarData(userId?: string): Promise<SidebarData> {
-  const targetUserId = userId || (await getDefaultUserId());
-
-  if (!targetUserId) {
+  if (!userId) {
     return {
       itemTypes: [],
       collections: [],
@@ -377,9 +376,9 @@ export async function getSidebarData(userId?: string): Promise<SidebarData> {
   }
 
   const [itemTypes, collections, user] = await Promise.all([
-    getSidebarItemTypes(targetUserId),
-    getSidebarCollections(targetUserId),
-    getSidebarUser(targetUserId),
+    getSidebarItemTypes(userId),
+    getSidebarCollections(userId),
+    getSidebarUser(userId),
   ]);
 
   return {
@@ -569,6 +568,8 @@ export interface UpdateItemData {
   fileUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
+  isFavorite?: boolean;
+  isPinned?: boolean;
 }
 
 /**
@@ -597,25 +598,6 @@ export async function updateItem(
     return null;
   }
 
-  // Ensure all tags exist before connecting
-  if (data.tags !== undefined) {
-    const cleanTagNames = Array.from(
-      new Set(
-        data.tags
-          .map((t) => t.trim())
-          .filter((t) => t.length > 0),
-      ),
-    );
-
-    for (const name of cleanTagNames) {
-      await prisma.tag.upsert({
-        where: { name },
-        update: {},
-        create: { name },
-      });
-    }
-  }
-
   const cleanTagNames =
     data.tags !== undefined
       ? Array.from(
@@ -626,6 +608,13 @@ export async function updateItem(
           ),
         )
       : undefined;
+
+  if (cleanTagNames && cleanTagNames.length > 0) {
+    await prisma.tag.createMany({
+      data: cleanTagNames.map((name) => ({ name })),
+      skipDuplicates: true,
+    });
+  }
 
   const updatedItem = await prisma.item.update({
     where: {
@@ -649,6 +638,12 @@ export async function updateItem(
         : {}),
       ...(data.fileSize !== undefined
         ? { fileSize: data.fileSize || null }
+        : {}),
+      ...(data.isFavorite !== undefined
+        ? { isFavorite: data.isFavorite }
+        : {}),
+      ...(data.isPinned !== undefined
+        ? { isPinned: data.isPinned }
         : {}),
       ...(cleanTagNames !== undefined
         ? {
@@ -766,6 +761,8 @@ export interface CreateItemData {
   fileUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
+  isFavorite?: boolean;
+  isPinned?: boolean;
 }
 
 /**
@@ -818,11 +815,10 @@ export async function createItem(
         )
       : [];
 
-  for (const name of cleanTagNames) {
-    await prisma.tag.upsert({
-      where: { name },
-      update: {},
-      create: { name },
+  if (cleanTagNames.length > 0) {
+    await prisma.tag.createMany({
+      data: cleanTagNames.map((name) => ({ name })),
+      skipDuplicates: true,
     });
   }
 

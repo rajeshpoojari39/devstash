@@ -137,12 +137,13 @@ export function CollectionCard({
                   <span>View</span>
                 </Link>
               </DropdownMenuItem>
-              <DropdownMenuItem className="flex items-center gap-2">
+              <DropdownMenuItem disabled className="flex items-center gap-2 opacity-50 cursor-not-allowed">
                 <Edit2 className="h-4 w-4" />
                 <span>Edit</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
+                disabled
                 variant="destructive"
                 className="flex items-center gap-2 text-destructive"
               >

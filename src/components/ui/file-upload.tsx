@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, DragEvent, ChangeEvent } from "react";
+import Image from "next/image";
 import {
   UploadCloud,
   FileText,
@@ -165,12 +166,12 @@ export function FileUpload({
         <div className="relative flex flex-col sm:flex-row items-center gap-4 rounded-xl border border-border/80 bg-card/90 p-3.5 sm:p-4">
           {isImage ? (
             <div className="relative w-36 sm:w-44 aspect-video shrink-0 overflow-hidden rounded-lg border border-border/60 bg-muted/20 [isolation:isolate] [transform:translateZ(0)]">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={value.fileUrl}
                 alt={value.fileName || "Uploaded image"}
-                className="h-full w-full object-cover transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)]"
-                decoding="async"
+                fill
+                sizes="(max-width: 640px) 144px, 176px"
+                className="object-cover transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)]"
               />
             </div>
           ) : (

@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { deleteFromR2 } from "@/lib/storage/r2";
 import { getDefaultUserId } from "@/lib/db/collections";
 
 export interface UserProfileInfo {
@@ -228,6 +229,29 @@ export async function deleteUserAccount(
       success: false,
       error: "The demo user account cannot be deleted.",
     };
+  }
+
+  // Clean up any uploaded files in Cloudflare R2 before user deletion
+  try {
+    const userFiles = await prisma.item.findMany({
+      where: {
+        userId: user.id,
+        fileUrl: { not: null },
+      },
+      select: { fileUrl: true },
+    });
+
+    for (const fileItem of userFiles) {
+      if (fileItem.fileUrl) {
+        try {
+          await deleteFromR2(fileItem.fileUrl);
+        } catch {
+          // Ignore individual file delete errors so user deletion proceeds
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to clean up user files from Cloudflare R2 on account deletion:", err);
   }
 
   // Delete any verification or password reset tokens for this user

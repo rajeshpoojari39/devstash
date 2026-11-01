@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { getSidebarData } from "@/lib/db/items";
 import { SidebarProvider } from "@/components/dashboard/sidebar-context";
@@ -14,7 +15,10 @@ export default async function ProfileLayout({
   children: React.ReactNode;
 }>) {
   const session = await auth();
-  const sidebarData = await getSidebarData(session?.user?.id);
+  if (!session?.user?.id) {
+    redirect("/sign-in?callbackUrl=/profile");
+  }
+  const sidebarData = await getSidebarData(session.user.id);
 
   return (
     <SidebarProvider>

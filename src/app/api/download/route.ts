@@ -51,7 +51,9 @@ export async function GET(request: Request) {
 
     const key = extractR2Key(rawKey);
 
-    if (!key) {
+    // Validate key against directory traversal and strict pattern uploads/{userId}/{filename}
+    const R2_KEY_REGEX = /^uploads\/[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/;
+    if (!key || key.includes("..") || !R2_KEY_REGEX.test(key)) {
       return NextResponse.json(
         { error: "Invalid storage key format." },
         { status: 400 },
@@ -60,7 +62,8 @@ export async function GET(request: Request) {
 
     // Security check: ensure key belongs to the current user (uploads/{userId}/...)
     // If not matching prefix, check if user owns an item referencing this fileUrl
-    if (!key.startsWith(`uploads/${targetUserId}/`)) {
+    const keyUserId = key.split("/")[1];
+    if (keyUserId !== targetUserId) {
       const itemWithFile = await prisma.item.findFirst({
         where: {
           userId: targetUserId,
@@ -116,8 +119,10 @@ export async function GET(request: Request) {
     }
     headers.set(
       "Content-Disposition",
-      `${requestedDisposition}; filename="${safeName}"`,
+      `${contentType.toLowerCase().includes("image/svg") || safeName.toLowerCase().endsWith(".svg") ? "attachment" : requestedDisposition}; filename="${safeName}"`,
     );
+    headers.set("Content-Security-Policy", "default-src 'none'; sandbox");
+    headers.set("X-Content-Type-Options", "nosniff");
     headers.set("Cache-Control", "private, max-age=3600");
 
     // 5. Convert S3 Body to Web ReadableStream

@@ -7,7 +7,8 @@ export type RateLimitAction =
   | "register"
   | "forgot-password"
   | "reset-password"
-  | "resend-verification";
+  | "resend-verification"
+  | "upload";
 
 export interface RateLimitConfig {
   limit: number;
@@ -45,6 +46,12 @@ export const RATE_LIMIT_CONFIGS: Record<RateLimitAction, RateLimitConfig> = {
     limit: 3,
     window: "15 m",
     windowSeconds: 15 * 60,
+    keyBy: "ip-and-identifier",
+  },
+  upload: {
+    limit: 20,
+    window: "1 h",
+    windowSeconds: 60 * 60,
     keyBy: "ip-and-identifier",
   },
 };

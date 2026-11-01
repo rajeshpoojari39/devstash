@@ -83,6 +83,15 @@ describe("rate-limit utilities", () => {
       );
       expect(key).toBe("127.0.0.1:test@devstash.io");
     });
+
+    it("builds composite key for upload action with user id", () => {
+      const key = buildRateLimitIdentifier(
+        "upload",
+        "127.0.0.1",
+        "user_123",
+      );
+      expect(key).toBe("127.0.0.1:user_123");
+    });
   });
 
   describe("checkRateLimit (fail-open mode)", () => {

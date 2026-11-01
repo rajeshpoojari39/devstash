@@ -27,6 +27,8 @@ export const createItemSchema = z
     fileUrl: z.string().trim().nullable().optional(),
     fileName: z.string().trim().nullable().optional(),
     fileSize: z.number().int().nonnegative().nullable().optional(),
+  isFavorite: z.boolean().optional(),
+  isPinned: z.boolean().optional(),
   })
   .superRefine((data, ctx) => {
     if (data.type === "link") {
@@ -53,7 +55,7 @@ export const createItemSchema = z
 export type CreateItemInput = z.infer<typeof createItemSchema>;
 
 export const updateItemSchema = z.object({
-  title: z.string().trim().min(1, "Title cannot be empty"),
+  title: z.string().trim().min(1, "Title cannot be empty").optional(),
   description: z.string().trim().nullable().optional(),
   content: z.string().nullable().optional(),
   url: z
@@ -71,6 +73,8 @@ export const updateItemSchema = z.object({
   fileUrl: z.string().trim().nullable().optional(),
   fileName: z.string().trim().nullable().optional(),
   fileSize: z.number().int().nonnegative().nullable().optional(),
+  isFavorite: z.boolean().optional(),
+  isPinned: z.boolean().optional(),
 });
 
 export type UpdateItemInput = z.infer<typeof updateItemSchema>;

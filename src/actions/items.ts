@@ -77,7 +77,16 @@ export async function createItem(
       fileUrl: validatedData.fileUrl,
       fileName: validatedData.fileName,
       fileSize: validatedData.fileSize,
+      isFavorite: validatedData.isFavorite,
+      isPinned: validatedData.isPinned,
     });
+
+    try {
+      revalidatePath("/dashboard");
+      revalidatePath("/items");
+    } catch {
+      // Ignore revalidation errors in non-request contexts
+    }
 
     try {
       revalidatePath("/dashboard");
@@ -262,3 +271,153 @@ export async function deleteItem(
   }
 }
 
+
+/**
+ * Server action to toggle or set an item's favorite status.
+ */
+export async function toggleItemFavorite(
+  itemId: string,
+  targetState?: boolean,
+): Promise<ActionResult<ItemDetail>> {
+  try {
+    if (!itemId || typeof itemId !== "string") {
+      return { success: false, error: "Item ID is required." };
+    }
+
+    let session = null;
+    try {
+      session = await auth();
+    } catch {
+      session = null;
+    }
+
+    let userId = session?.user?.id;
+    if (!userId && session?.user?.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+      userId = user?.id;
+    }
+
+    if (!userId) {
+      return {
+        success: false,
+        error: "Unauthorized. Please sign in to update items.",
+      };
+    }
+
+    let isFavorite = targetState;
+    if (isFavorite === undefined) {
+      const existing = await prisma.item.findFirst({
+        where: { id: itemId, userId },
+        select: { isFavorite: true },
+      });
+      if (!existing) {
+        return {
+          success: false,
+          error: "Item not found or you do not have permission to edit it.",
+        };
+      }
+      isFavorite = !existing.isFavorite;
+    }
+
+    const updated = await updateItemInDb(itemId, userId, { isFavorite });
+    if (!updated) {
+      return { success: false, error: "Failed to update item." };
+    }
+
+    try {
+      revalidatePath("/dashboard");
+      revalidatePath("/items");
+    } catch {
+      // Ignore revalidation errors in non-request contexts
+    }
+
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error("Error in toggleItemFavorite server action:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle favorite status.",
+    };
+  }
+}
+
+/**
+ * Server action to toggle or set an item's pin status.
+ */
+export async function toggleItemPin(
+  itemId: string,
+  targetState?: boolean,
+): Promise<ActionResult<ItemDetail>> {
+  try {
+    if (!itemId || typeof itemId !== "string") {
+      return { success: false, error: "Item ID is required." };
+    }
+
+    let session = null;
+    try {
+      session = await auth();
+    } catch {
+      session = null;
+    }
+
+    let userId = session?.user?.id;
+    if (!userId && session?.user?.email) {
+      const user = await prisma.user.findUnique({
+        where: { email: session.user.email },
+        select: { id: true },
+      });
+      userId = user?.id;
+    }
+
+    if (!userId) {
+      return {
+        success: false,
+        error: "Unauthorized. Please sign in to update items.",
+      };
+    }
+
+    let isPinned = targetState;
+    if (isPinned === undefined) {
+      const existing = await prisma.item.findFirst({
+        where: { id: itemId, userId },
+        select: { isPinned: true },
+      });
+      if (!existing) {
+        return {
+          success: false,
+          error: "Item not found or you do not have permission to edit it.",
+        };
+      }
+      isPinned = !existing.isPinned;
+    }
+
+    const updated = await updateItemInDb(itemId, userId, { isPinned });
+    if (!updated) {
+      return { success: false, error: "Failed to update item." };
+    }
+
+    try {
+      revalidatePath("/dashboard");
+      revalidatePath("/items");
+    } catch {
+      // Ignore revalidation errors in non-request contexts
+    }
+
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error("Error in toggleItemPin server action:", error);
+    return {
+      success: false,
+      error:
+        error instanceof Error
+          ? error.message
+          : "Failed to toggle pin status.",
+    };
+  }
+}

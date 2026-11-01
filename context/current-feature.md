@@ -1,24 +1,76 @@
-# Current Feature
-
-<!-- Feature Name -->
+# Current Feature: Security Hardening & Performance Quick Wins
 
 ## Status
 
-<!-- Not Started|In Progress|Completed -->
-
-Not Started
+Ready for Review / Verification Complete
 
 ## Goals
 
-<!-- Goals & requirements -->
+Implement high-impact security, performance, and quality fixes identified during the codebase audit:
+
+1. **Sanitize `callbackUrl` in Sign-In (`src/components/auth/sign-in-form.tsx`)**
+   - Prevent open redirects by ensuring `callbackUrl` begins with a single `/` and does not begin with `//` or `/\\`.
+   - Fall back to `/dashboard` for any external or malformed URLs.
+
+2. **Add Sandbox CSP & SVG Attachment to Download Proxy (`src/app/api/download/route.ts`)**
+   - Prevent Stored XSS by attaching `Content-Security-Policy: default-src 'none'; sandbox` and `X-Content-Type-Options: nosniff` headers to served files.
+   - Enforce `Content-Disposition: attachment` for `image/svg+xml` MIME types to block inline script execution.
+
+3. **Convert Static Components to React Server Components (`src/components/items/`, `src/components/profile/`)**
+   - Remove `"use client"` from `items-list-header.tsx`, `items-empty-state.tsx`, and `profile-stats.tsx` to reduce client bundle size.
+
+4. **Deduplicate Helpers in `ItemDrawer` (`src/components/items/item-drawer.tsx`)**
+   - Remove redundant local definitions of `formatFileSize` and `typeIconMap`.
+   - Import them directly from `src/lib/item-utils.ts`.
+
+5. **Batch Tag Upserts in Item Mutations (`src/lib/db/items.ts`)**
+   - Replace sequential `for ... await prisma.tag.upsert(...)` loops in `createItem` and `updateItem` with a single `prisma.tag.createMany({ data, skipDuplicates: true })`.
+   - Eliminate $N$ sequential round-trip queries to PostgreSQL.
+
+6. **Strict Key Regex Validation in Download Proxy (`src/app/api/download/route.ts`)**
+   - Enforce strict regex matching (`^uploads/[a-zA-Z0-9_-]+/[0-9]+-[a-z0-9]+-[a-zA-Z0-9._-]+$`) on requested storage keys.
+   - Reject path traversal (`..`) and malformed key queries upfront with 400 Bad Request.
+
+7. **Persist Favorite & Pin Toggles in `ItemDrawer` (`src/components/items/item-drawer.tsx`, `src/actions/items.ts`, `src/lib/validations/item.ts`)**
+   - Add optional `isFavorite` and `isPinned` booleans to `updateItemSchema`.
+   - Support `isFavorite` and `isPinned` in `updateItem` database helper and server action.
+   - Connect Star (Favorite) and Pin action buttons in `ItemDrawer` to persist state asynchronously with user feedback.
+   - Add unit tests covering favorite/pin updates.
+
+8. **Rate Limiting on File Uploads (`src/lib/rate-limit.ts`, `src/app/api/upload/route.ts`)**
+   - Added Upstash rate limiting for upload action (20 uploads/hour per IP + user ID composite).
+   - Return 429 Too Many Requests with `Retry-After` header when exceeded.
+
+9. **Low-Priority Audit Fixes & Cleanup**
+   - **Bounded Sidebar Collections**: Added `take: 20` limit to `getSidebarCollections` in `src/lib/db/items.ts`.
+   - **Next.js Image Optimization**: Configured `images.remotePatterns` in `next.config.ts` and replaced `<img>` tags with Next.js `<Image />` in `item-card.tsx`, `image-thumbnail-card.tsx`, and `file-upload.tsx`.
+   - **User Deletion S3/R2 Cleanup**: Added `deleteFromR2` cleanup for all user upload objects in `deleteUserAccount` (`src/lib/db/profile.ts`).
+   - **Dead Code Cleanup**: Disabled placeholder "Edit" and "Delete" actions in `collection-card.tsx`, and removed unused legacy wrapper files (`separator.tsx`, `file-item.tsx`, `image-card.tsx`).
 
 ## Notes
 
-<!-- Any extra notes -->
+- All changes adhere strictly to `context/coding-standards.md` and `context/ai-interaction.md`.
+- Verified with unit tests (`npm test`), TypeScript type checking (`tsc --noEmit`), and ESLint (`npm run lint`).
 
 ## History
 
 <!-- Keep this updated. Earliest to latest -->
+
+- **Security Hardening, Performance Quick Wins & Audit Fixes (2026-11-01)**
+  - Hardened authentication sign-in flow by sanitizing `callbackUrl` against open redirects (`src/components/auth/sign-in-form.tsx`).
+  - Added strict regex key validation, sandboxed CSP headers (`Content-Security-Policy: default-src 'none'; sandbox`), `X-Content-Type-Options: nosniff`, and forced attachment for SVGs in streaming download proxy (`src/app/api/download/route.ts`).
+  - Converted static presentation components (`items-list-header.tsx`, `items-empty-state.tsx`, `profile-stats.tsx`) to React Server Components.
+  - Deduplicated `formatFileSize` and `typeIconMap` helpers in `ItemDrawer` by importing centralized utilities from `src/lib/item-utils.ts`.
+  - Optimized database item mutations by replacing sequential tag upsert loops with batched `prisma.tag.createMany({ skipDuplicates: true })` in `src/lib/db/items.ts`.
+  - Wired interactive Star (Favorite) and Pin toggle persistence in `ItemDrawer` via `updateItem` server action with optimistic feedback and full Vitest unit test coverage.
+  - Added and strictly enforced Upstash rate limiting on authenticated file uploads (`POST /api/upload`) configured at 20 requests per hour per client IP and user identity composite (`src/app/api/upload/route.ts`).
+  - Closed tenant isolation and data leakage vulnerabilities by removing `prisma.user.findFirst()` from `getDefaultUserId()` in `src/lib/db/collections.ts`, returning empty defaults for unauthenticated queries in `getSidebarData()` (`src/lib/db/items.ts`), and adding session redirect guards across `DashboardLayout`, `ItemsLayout`, and `ProfileLayout`.
+  - Hardened image optimization in `next.config.ts` by replacing wildcard `hostname: "**"` with strict remote patterns for Cloudflare R2 and OAuth avatar providers (`*.r2.cloudflarestorage.com`, `*.r2.dev`, `avatars.githubusercontent.com`, `lh3.googleusercontent.com`, `localhost`).
+  - Bounded sidebar collection queries with `take: 20` in `getSidebarCollections` (`src/lib/db/items.ts`).
+  - Optimized image components with Next.js `<Image />` across `item-card.tsx`, `image-thumbnail-card.tsx`, and `file-upload.tsx`.
+  - Added orphaned R2 storage cleanup in `deleteUserAccount` (`src/lib/db/profile.ts`) before removing user database records.
+  - Disabled placeholder action items in `collection-card.tsx` and deleted redundant legacy components (`separator.tsx`, `file-item.tsx`, `image-card.tsx`).
+  - Verified with ESLint (0 errors, 0 warnings), TypeScript check (`tsc --noEmit` passing with 0 errors), and full Vitest unit test suite (128 passing tests across 6 test suites).
 
 - **Initial Project Setup & AI Context (2026-08-18)**
   - Initialized Next.js 16 (App Router), React 19, TypeScript, and Tailwind CSS v4.

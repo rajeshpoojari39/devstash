@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   Image as ImageIcon,
@@ -104,12 +105,12 @@ export function ImageThumbnailCard({ item }: ImageThumbnailCardProps) {
       {/* 16:9 Aspect Ratio Thumbnail Container */}
       <div className="relative w-full aspect-video overflow-hidden rounded-lg border border-border/60 bg-muted/20 flex items-center justify-center [isolation:isolate] [transform:translateZ(0)]">
         {item.fileUrl ? (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img
+          <Image
             src={item.fileUrl}
             alt={item.title}
-            className="h-full w-full object-cover transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-105 transition-transform duration-300"
-            decoding="async"
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            className="object-cover transform-gpu will-change-transform [backface-visibility:hidden] [transform:translateZ(0)] group-hover:scale-105 transition-transform duration-300"
           />
         ) : (
           <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground/50">
