@@ -1,28 +1,16 @@
-# Current Feature: Collection Create
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Wire up the "New Collection" button in the top bar (`src/components/dashboard/top-bar.tsx`) to open a Create Collection modal dialog.
-- Build a responsive `CreateCollectionDialog` modal component (`src/components/collections/create-collection-dialog.tsx`) matching `CreateItemDialog` patterns with fields for `name` (required) and `description` (optional).
-- Add Zod validation schema (`createCollectionSchema`) for collection creation inputs.
-- Implement user-scoped database creation (`createCollection`) in `src/lib/db/collections.ts`, keeping server component fetching via `src/lib/db/collections.ts`.
-- Expose a user-scoped API route (`POST /api/collections`, and `GET /api/collections` if needed for client calls) with NextAuth session authentication, Zod validation, and structured error handling.
-- Display Sonner toast notifications (`toast.success` / `toast.error`) on save success or failure.
-- Ensure all UI surfaces displaying collections and counts (dashboard `CollectionsSection`, `StatsCards`, desktop `Sidebar`, and `MobileSidebar`) update immediately with the newly created collection on save.
-- Add Vitest unit tests covering collection validation and creation logic, and verify with `npm test`, `npm run lint`, and `npm run build`.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Database Model**: `Collection` in `prisma/schema.prisma` includes `id`, `name`, `description` (optional text), `isFavorite`, `userId`, `defaultTypeId`, `createdAt`, `updatedAt`.
-- **Architecture & Patterns**:
-  - Server components (`src/app/dashboard/page.tsx`, `src/app/dashboard/layout.tsx`) fetch collections via `src/lib/db/collections.ts` and `src/lib/db/items.ts`.
-  - Client-side creation calls use an authenticated API route (`src/app/api/collections/route.ts`) returning appropriate HTTP status codes (`201`, `400`, `401`, `500`), while refreshing Server Components via `router.refresh()` (and `revalidatePath` where applicable) so sidebar, stats, and collections grid update immediately.
-  - Reference `src/components/items/create-item-dialog.tsx`, `src/components/dashboard/top-bar.tsx`, `src/lib/validations/item.ts`, and `src/lib/db/collections.ts` for styling, accessibility, and code conventions.
-  - Check responsive visibility of the "New Collection" button in `TopBar` (currently `hidden sm:inline-flex`) so mobile users can also access or trigger it cleanly.
+<!-- Any extra notes -->
 
 ## History
 
@@ -336,3 +324,10 @@ In Progress
   - Added orphaned R2 storage cleanup in `deleteUserAccount` (`src/lib/db/profile.ts`) before removing user database records.
   - Disabled placeholder action items in `collection-card.tsx` and deleted redundant legacy components (`separator.tsx`, `file-item.tsx`, `image-card.tsx`).
   - Verified with ESLint (0 errors, 0 warnings), TypeScript check (`tsc --noEmit` passing with 0 errors), and full Vitest unit test suite (128 passing tests across 6 test suites).
+
+- **Collection Create (2026-11-26)**
+  - Wired up the "New Collection" button in `TopBar` (`src/components/dashboard/top-bar.tsx`) across desktop and mobile viewports to open `CreateCollectionDialog`.
+  - Built responsive `CreateCollectionDialog` modal (`src/components/collections/create-collection-dialog.tsx`) with required `name` and optional `description` fields, inline validation, loading state, Sonner toast notifications (`toast.success` / `toast.error`), and `router.refresh()` so dashboard stats, collections grid, and sidebar immediately reflect newly created collections.
+  - Added Zod validation schema `createCollectionSchema` (`src/lib/validations/collection.ts`) and user-scoped `createCollection` database helper (`src/lib/db/collections.ts`).
+  - Created authenticated `GET` and `POST /api/collections` route handler (`src/app/api/collections/route.ts`) with NextAuth session resolution, Zod validation, and `revalidatePath` calls.
+  - Added 11 Vitest unit tests (`src/lib/validations/collection.test.ts`, `src/lib/db/collections.test.ts`) and verified with `npm test` (139 passing tests), `npm run test:collections`, `npm run lint`, `npx tsc --noEmit`, and `npm run build`.
