@@ -1,6 +1,8 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Star,
   MoreHorizontal,
@@ -12,10 +14,10 @@ import {
   Image as ImageIcon,
   Link as LinkIcon,
   Folder,
-  Eye,
   Edit2,
   Trash2,
 } from "lucide-react";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,6 +26,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { EditCollectionDialog } from "@/components/collections/edit-collection-dialog";
+import { DeleteCollectionDialog } from "@/components/collections/delete-collection-dialog";
+import { deleteCollection } from "@/actions/collections";
 
 export interface CollectionItem {
   id: string;
@@ -81,6 +86,11 @@ export function CollectionCard({
   accentColor,
   typeIcons = [],
 }: CollectionCardProps) {
+  const router = useRouter();
+  const [isEditDialogOpen, setIsEditDialogOpen] = React.useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
   const borderClasses: Record<string, string> = {
     blue: "border-blue-500/60 hover:border-blue-500",
     purple: "border-purple-500/60 hover:border-purple-500",
@@ -94,6 +104,27 @@ export function CollectionCard({
   const selectedBorder = accentColor
     ? borderClasses[accentColor] || "border-border"
     : "border-border";
+
+  const handleConfirmDelete = async () => {
+    setIsDeleting(true);
+    try {
+      const result = await deleteCollection(collection.id);
+      if (result.success) {
+        setIsDeleteDialogOpen(false);
+        toast.success("Collection deleted successfully");
+        router.refresh();
+      } else {
+        toast.error(result.error || "Failed to delete collection");
+      }
+    } catch (err) {
+      console.error("Failed to delete collection:", err);
+      toast.error(
+        "An unexpected error occurred while deleting the collection.",
+      );
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div
@@ -133,28 +164,32 @@ export function CollectionCard({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuItem
-                  render={
-                    <Link
-                      href={`/collections/${collection.id}`}
-                      className="flex w-full items-center gap-2"
-                    >
-                      <Eye className="h-4 w-4" />
-                      <span>View</span>
-                    </Link>
-                  }
-                />
-                <DropdownMenuItem
-                  disabled
-                  className="flex items-center gap-2 opacity-50 cursor-not-allowed"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsEditDialogOpen(true);
+                  }}
+                  className="flex items-center gap-2 cursor-pointer"
                 >
                   <Edit2 className="h-4 w-4" />
                   <span>Edit</span>
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
                 <DropdownMenuItem
                   disabled
+                  className="flex items-center gap-2 opacity-60 cursor-not-allowed"
+                >
+                  <Star
+                    className={`h-4 w-4 ${collection.isFavorite ? "fill-amber-400 text-amber-400" : ""}`}
+                  />
+                  <span>Favorite</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
                   variant="destructive"
-                  className="flex items-center gap-2 text-destructive"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsDeleteDialogOpen(true);
+                  }}
+                  className="flex items-center gap-2 text-destructive cursor-pointer"
                 >
                   <Trash2 className="h-4 w-4" />
                   <span>Delete</span>
@@ -166,7 +201,7 @@ export function CollectionCard({
 
         {/* Item count */}
         <p className="text-xs text-muted-foreground mt-0.5">
-          {collection.itemCount} items
+          {collection.itemCount} {collection.itemCount === 1 ? "item" : "items"}
         </p>
 
         {/* Description */}
@@ -179,6 +214,26 @@ export function CollectionCard({
       <div className="flex items-center gap-2 pt-3 mt-1">
         {typeIcons.map((t, idx) => renderTypeIcon(t, idx))}
       </div>
+
+      {/* Edit & Delete Modals */}
+      <EditCollectionDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        collection={{
+          id: collection.id,
+          name: collection.name,
+          description: collection.description,
+        }}
+      />
+
+      <DeleteCollectionDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        collectionName={collection.name}
+        itemCount={collection.itemCount}
+        onConfirm={handleConfirmDelete}
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

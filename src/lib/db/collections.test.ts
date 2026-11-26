@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import {
   createCollection,
+  updateCollection,
+  deleteCollection,
   getAllCollections,
   getCollectionById,
   getDashboardCollections,
@@ -14,6 +16,8 @@ vi.mock("@/lib/prisma", () => ({
     },
     collection: {
       create: vi.fn(),
+      update: vi.fn(),
+      deleteMany: vi.fn(),
       findMany: vi.fn(),
       findFirst: vi.fn(),
       count: vi.fn(),
@@ -401,5 +405,162 @@ describe("getCollectionById", () => {
     expect(result?.accentColor).toBe("orange");
     expect(result?.typeIcons).toEqual(["command", "link"]);
     expect(result?.items).toHaveLength(3);
+  });
+});
+
+describe("updateCollection DB helper", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns null when collectionId or userId is missing", async () => {
+    expect(
+      await updateCollection("", "user-1", { name: "Updated" }),
+    ).toBeNull();
+    expect(
+      await updateCollection("col-1", "", { name: "Updated" }),
+    ).toBeNull();
+    expect(prisma.collection.findFirst).not.toHaveBeenCalled();
+  });
+
+  it("throws when name is empty or whitespace-only", async () => {
+    await expect(
+      updateCollection("col-1", "user-1", { name: "   " }),
+    ).rejects.toThrow("Collection name is required");
+    expect(prisma.collection.update).not.toHaveBeenCalled();
+  });
+
+  it("returns null when collection does not exist or belongs to another user", async () => {
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue(null);
+
+    const result = await updateCollection("col-other", "user-1", {
+      name: "New Name",
+    });
+
+    expect(prisma.collection.findFirst).toHaveBeenCalledWith({
+      where: { id: "col-other", userId: "user-1" },
+      select: { id: true },
+    });
+    expect(prisma.collection.update).not.toHaveBeenCalled();
+    expect(result).toBeNull();
+  });
+
+  it("updates name and description with trimming and clears empty description to null", async () => {
+    const now = new Date("2026-11-26T00:00:00Z");
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+      id: "col-1",
+    } as never);
+    vi.mocked(prisma.collection.update).mockResolvedValue({
+      id: "col-1",
+      name: "Renamed Collection",
+      description: null,
+      isFavorite: true,
+      userId: "user-1",
+      defaultTypeId: null,
+      createdAt: now,
+      updatedAt: now,
+      defaultType: null,
+      items: [
+        {
+          item: {
+            itemType: { name: "snippet", color: "#3b82f6", icon: "Code" },
+          },
+        },
+      ],
+      _count: { items: 1 },
+    } as never);
+
+    const result = await updateCollection("col-1", "user-1", {
+      name: "  Renamed Collection  ",
+      description: "   ",
+    });
+
+    expect(prisma.collection.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "col-1" },
+        data: {
+          name: "Renamed Collection",
+          description: null,
+        },
+      }),
+    );
+    expect(result).toEqual({
+      id: "col-1",
+      name: "Renamed Collection",
+      description: null,
+      isFavorite: true,
+      itemCount: 1,
+      accentColor: "blue",
+      typeIcons: ["snippet"],
+      createdAt: now,
+      updatedAt: now,
+    });
+  });
+
+  it("trims and persists a non-empty description", async () => {
+    const now = new Date("2026-11-26T00:00:00Z");
+    vi.mocked(prisma.collection.findFirst).mockResolvedValue({
+      id: "col-2",
+    } as never);
+    vi.mocked(prisma.collection.update).mockResolvedValue({
+      id: "col-2",
+      name: "Design Docs",
+      description: "UI tokens and layout guides",
+      isFavorite: false,
+      userId: "user-1",
+      defaultTypeId: null,
+      createdAt: now,
+      updatedAt: now,
+      defaultType: null,
+      items: [],
+      _count: { items: 0 },
+    } as never);
+
+    const result = await updateCollection("col-2", "user-1", {
+      name: "Design Docs",
+      description: "  UI tokens and layout guides  ",
+    });
+
+    expect(prisma.collection.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "col-2" },
+        data: {
+          name: "Design Docs",
+          description: "UI tokens and layout guides",
+        },
+      }),
+    );
+    expect(result?.description).toBe("UI tokens and layout guides");
+  });
+});
+
+describe("deleteCollection DB helper", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it("returns false when collectionId or userId is missing", async () => {
+    expect(await deleteCollection("", "user-1")).toBe(false);
+    expect(await deleteCollection("col-1", "")).toBe(false);
+    expect(prisma.collection.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("deletes strictly scoped to userId and returns true when deleted", async () => {
+    vi.mocked(prisma.collection.deleteMany).mockResolvedValue({ count: 1 });
+
+    const result = await deleteCollection("col-1", "user-1");
+
+    expect(prisma.collection.deleteMany).toHaveBeenCalledWith({
+      where: { id: "col-1", userId: "user-1" },
+    });
+    expect(result).toBe(true);
+  });
+
+  it("returns false when no matching collection was deleted", async () => {
+    vi.mocked(prisma.collection.deleteMany).mockResolvedValue({ count: 0 });
+
+    const result = await deleteCollection("col-other", "user-1");
+
+    expect(result).toBe(false);
   });
 });

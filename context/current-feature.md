@@ -1,16 +1,28 @@
-# Current Feature
+# Current Feature: Collection Edit, Delete & Favorite UI
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Add action buttons on `/collections/[id]` header for **Edit**, **Delete**, and **Favorite** (Star icon/button only — do not implement favorite toggle functionality yet).
+- Build an **Edit Collection** modal (`EditCollectionDialog`) allowing users to edit collection metadata (`name` required, `description` optional) with Zod validation, loading state, toast feedback, and UI refresh.
+- Build a **Delete Collection** confirmation dialog (`DeleteCollectionDialog`) warning that deleting a collection only removes the collection and its item memberships (`ItemCollection`), while keeping all items intact in the user's stash.
+- Implement server actions (or API endpoints) and database helpers (`updateCollection`, `deleteCollection` in `src/lib/db/collections.ts` & `src/actions/collections.ts` with Vitest unit tests) enforcing authenticated user ownership and revalidating `/dashboard`, `/collections`, and `/collections/[id]`, redirecting away from `/collections/[id]` after deletion.
+- Update `CollectionCard` (`src/components/dashboard/collection-card.tsx`) used on both `/collections` and `/dashboard` so the 3-dots dropdown menu provides **Edit**, **Delete**, and **Favorite** (disabled/non-functional placeholder or icon button) actions while clicking anywhere else on the card navigates to `/collections/[id]`.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Favorites Scope**: Only render the Favorite icon/button on `/collections/[id]` and the Favorite option in the `CollectionCard` 3-dots dropdown; do not implement favorite toggling persistence yet.
+- **Delete Semantics**: Prisma `ItemCollection` has `onDelete: Cascade` on `collection`, so deleting a `Collection` automatically removes `ItemCollection` join rows without deleting `Item` records. Confirm explicitly in the dialog copy that items are preserved.
+- **UI & Existing Patterns**:
+  - Reuse `Dialog` (`src/components/ui/dialog.tsx`), `Button`, `Input`, `Label`, `Textarea`, and `DropdownMenu` primitives.
+  - Follow `CreateCollectionDialog` (`src/components/collections/create-collection-dialog.tsx`) and `DeleteItemDialog` (`src/components/items/delete-item-dialog.tsx`) patterns.
+  - `CollectionCard` (`src/components/dashboard/collection-card.tsx`) already uses a stretched `after:absolute after:inset-0` `<Link>` for card click navigation and an isolated `z-10` `onClick={(e) => e.stopPropagation()}` wrapper around the 3-dots `DropdownMenu`. Ensure opening Edit/Delete modals from the dropdown does not trigger card navigation.
+- **Validation & Testing**:
+  - Reuse/extend `src/lib/validations/collection.ts` (`updateCollectionSchema`).
+  - Add Vitest unit tests for new collection server actions and DB helpers (`src/actions/collections.test.ts`, `src/lib/db/collections.test.ts`, `src/lib/validations/collection.test.ts`), and avoid component unit tests per project rules.
 
 ## History
 

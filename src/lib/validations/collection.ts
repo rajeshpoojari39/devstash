@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const createCollectionSchema = z.object({
+export const collectionMetadataSchema = z.object({
   name: z
     .string()
     .trim()
@@ -14,4 +14,14 @@ export const createCollectionSchema = z.object({
     .optional(),
 });
 
+export const createCollectionSchema = collectionMetadataSchema;
+export const updateCollectionSchema = collectionMetadataSchema;
+
 export type CreateCollectionInput = z.infer<typeof createCollectionSchema>;
+export type UpdateCollectionInput = z.infer<typeof updateCollectionSchema>;
+
+export interface ActionResult<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+}

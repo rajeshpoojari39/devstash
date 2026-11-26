@@ -366,6 +366,11 @@ export interface CreateCollectionData {
   description?: string | null;
 }
 
+export interface UpdateCollectionData {
+  name: string;
+  description?: string | null;
+}
+
 /**
  * Creates a new collection in the database scoped to the specified user.
  * Returns the created collection formatted as a DashboardCollection.
@@ -406,5 +411,78 @@ export async function createCollection(
     createdAt: created.createdAt,
     updatedAt: created.updatedAt,
   };
+}
+
+/**
+ * Updates a collection's metadata (name and description), scoped to the specified user.
+ * Returns the updated DashboardCollection, or null if not found or not owned by user.
+ */
+export async function updateCollection(
+  collectionId: string,
+  userId: string,
+  data: UpdateCollectionData,
+): Promise<DashboardCollection | null> {
+  if (!collectionId || !userId) {
+    return null;
+  }
+
+  const trimmedName = data.name.trim();
+  if (!trimmedName) {
+    throw new Error("Collection name is required.");
+  }
+
+  const existing = await prisma.collection.findFirst({
+    where: {
+      id: collectionId,
+      userId,
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  if (!existing) {
+    return null;
+  }
+
+  const cleanDescription = data.description?.trim()
+    ? data.description.trim()
+    : null;
+
+  const updated = await prisma.collection.update({
+    where: {
+      id: existing.id,
+    },
+    data: {
+      name: trimmedName,
+      description: cleanDescription,
+    },
+    include: COLLECTION_SUMMARY_INCLUDE,
+  });
+
+  return mapCollectionSummary(updated);
+}
+
+/**
+ * Deletes a collection scoped to the specified user.
+ * ItemCollection memberships are removed via cascade; Item records remain intact.
+ * Returns true if the collection was deleted, false if not found or not owned by user.
+ */
+export async function deleteCollection(
+  collectionId: string,
+  userId: string,
+): Promise<boolean> {
+  if (!collectionId || !userId) {
+    return false;
+  }
+
+  const result = await prisma.collection.deleteMany({
+    where: {
+      id: collectionId,
+      userId,
+    },
+  });
+
+  return result.count > 0;
 }
 

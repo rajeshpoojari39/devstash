@@ -9,6 +9,7 @@ import { getCollectionById } from "@/lib/db/collections";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { ItemCard } from "@/components/dashboard/item-card";
+import { CollectionDetailActions } from "@/components/collections/collection-detail-actions";
 import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
@@ -139,6 +140,16 @@ export default async function CollectionDetailPage({
               )}
             </div>
           </div>
+
+          <CollectionDetailActions
+            collection={{
+              id: collection.id,
+              name: collection.name,
+              description: collection.description,
+              isFavorite: collection.isFavorite,
+              itemCount: collection.itemCount,
+            }}
+          />
         </div>
       </div>
 

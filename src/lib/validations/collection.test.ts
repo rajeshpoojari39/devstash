@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { createCollectionSchema } from "@/lib/validations/collection";
+import {
+  createCollectionSchema,
+  updateCollectionSchema,
+} from "@/lib/validations/collection";
 
 describe("createCollectionSchema validation", () => {
   it("validates a valid collection payload with name and description", () => {
@@ -76,5 +79,43 @@ describe("createCollectionSchema validation", () => {
     if (!result.success) {
       expect(result.error.issues[0]?.message).toContain("1000 characters");
     }
+  });
+});
+
+describe("updateCollectionSchema validation", () => {
+  it("validates updated name and nullable description", () => {
+    const result = updateCollectionSchema.safeParse({
+      name: "  Updated Collection  ",
+      description: null,
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.name).toBe("Updated Collection");
+      expect(result.data.description).toBeNull();
+    }
+  });
+
+  it("rejects empty name on update", () => {
+    const result = updateCollectionSchema.safeParse({
+      name: "   ",
+      description: "Valid description",
+    });
+
+    expect(result.success).toBe(false);
+  });
+
+  it("accepts boundary lengths (100 char name and 1000 char description) and rejects 1001 char description", () => {
+    const validBoundary = updateCollectionSchema.safeParse({
+      name: "a".repeat(100),
+      description: "b".repeat(1000),
+    });
+    expect(validBoundary.success).toBe(true);
+
+    const invalidDesc = updateCollectionSchema.safeParse({
+      name: "Valid",
+      description: "b".repeat(1001),
+    });
+    expect(invalidDesc.success).toBe(false);
   });
 });
