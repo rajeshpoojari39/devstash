@@ -1,28 +1,16 @@
-# Current Feature: Collection Edit, Delete & Favorite UI
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Add action buttons on `/collections/[id]` header for **Edit**, **Delete**, and **Favorite** (Star icon/button only — do not implement favorite toggle functionality yet).
-- Build an **Edit Collection** modal (`EditCollectionDialog`) allowing users to edit collection metadata (`name` required, `description` optional) with Zod validation, loading state, toast feedback, and UI refresh.
-- Build a **Delete Collection** confirmation dialog (`DeleteCollectionDialog`) warning that deleting a collection only removes the collection and its item memberships (`ItemCollection`), while keeping all items intact in the user's stash.
-- Implement server actions (or API endpoints) and database helpers (`updateCollection`, `deleteCollection` in `src/lib/db/collections.ts` & `src/actions/collections.ts` with Vitest unit tests) enforcing authenticated user ownership and revalidating `/dashboard`, `/collections`, and `/collections/[id]`, redirecting away from `/collections/[id]` after deletion.
-- Update `CollectionCard` (`src/components/dashboard/collection-card.tsx`) used on both `/collections` and `/dashboard` so the 3-dots dropdown menu provides **Edit**, **Delete**, and **Favorite** (disabled/non-functional placeholder or icon button) actions while clicking anywhere else on the card navigates to `/collections/[id]`.
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Favorites Scope**: Only render the Favorite icon/button on `/collections/[id]` and the Favorite option in the `CollectionCard` 3-dots dropdown; do not implement favorite toggling persistence yet.
-- **Delete Semantics**: Prisma `ItemCollection` has `onDelete: Cascade` on `collection`, so deleting a `Collection` automatically removes `ItemCollection` join rows without deleting `Item` records. Confirm explicitly in the dialog copy that items are preserved.
-- **UI & Existing Patterns**:
-  - Reuse `Dialog` (`src/components/ui/dialog.tsx`), `Button`, `Input`, `Label`, `Textarea`, and `DropdownMenu` primitives.
-  - Follow `CreateCollectionDialog` (`src/components/collections/create-collection-dialog.tsx`) and `DeleteItemDialog` (`src/components/items/delete-item-dialog.tsx`) patterns.
-  - `CollectionCard` (`src/components/dashboard/collection-card.tsx`) already uses a stretched `after:absolute after:inset-0` `<Link>` for card click navigation and an isolated `z-10` `onClick={(e) => e.stopPropagation()}` wrapper around the 3-dots `DropdownMenu`. Ensure opening Edit/Delete modals from the dropdown does not trigger card navigation.
-- **Validation & Testing**:
-  - Reuse/extend `src/lib/validations/collection.ts` (`updateCollectionSchema`).
-  - Add Vitest unit tests for new collection server actions and DB helpers (`src/actions/collections.test.ts`, `src/lib/db/collections.test.ts`, `src/lib/validations/collection.test.ts`), and avoid component unit tests per project rules.
+<!-- Any extra notes -->
 
 ## History
 
@@ -359,3 +347,10 @@ In Progress
   - Extracted request-cached `getAuthenticatedUserId` and `requireAuthenticatedUserId` helpers in `src/lib/auth.ts` for route authentication.
   - Updated `CollectionCard` (`src/components/dashboard/collection-card.tsx`) so the entire card links to `/collections/[id]` (with isolated 3-dots dropdown menu and keyboard focus ring) and verified "View all collections" links in `SidebarContent` (`src/components/dashboard/sidebar-content.tsx`), while fixing `ScrollArea` `min-h-0 overflow-hidden` flex clipping on the sidebar user profile footer.
   - Added Vitest unit tests in `src/lib/db/collections.test.ts` and `src/lib/auth.test.ts` and verified with `npm test` (162 passing tests), `npm run test:collections`, `npx tsc --noEmit`, `npm run lint`, and `npx next build --webpack`.
+
+- **Collection Edit, Delete & Favorite UI (2026-11-26)**
+  - Added header action buttons (`CollectionDetailActions` in `src/components/collections/collection-detail-actions.tsx`) on `/collections/[id]` (`src/app/collections/[id]/page.tsx`) for **Favorite** (UI-only Star button), **Edit**, and **Delete** (redirecting to `/collections` after deletion).
+  - Built `EditCollectionDialog` (`src/components/collections/edit-collection-dialog.tsx`) for editing collection metadata (`name`, `description`) and `DeleteCollectionDialog` (`src/components/collections/delete-collection-dialog.tsx`) confirming that items remain intact in the user's stash while removing only the collection and its memberships.
+  - Updated `CollectionCard` (`src/components/dashboard/collection-card.tsx`) on `/dashboard` and `/collections` so the 3-dots dropdown exposes **Edit**, **Favorite** (disabled placeholder), and **Delete**, while clicking anywhere else on the card navigates to `/collections/[id]`.
+  - Added Zod schema `updateCollectionSchema` (`src/lib/validations/collection.ts`), user-scoped `updateCollection` and `deleteCollection` DB helpers (`src/lib/db/collections.ts`), and Next.js server actions (`src/actions/collections.ts`) with route revalidation.
+  - Added Vitest unit tests in `src/lib/validations/collection.test.ts`, `src/lib/db/collections.test.ts`, and `src/actions/collections.test.ts` and verified with `npm test` (185 passing tests), `npm run test:collections`, `npx tsc --noEmit`, `npm run lint`, and `npx next build --webpack`.
