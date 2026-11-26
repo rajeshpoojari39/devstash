@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { DevStashLogo } from "@/components/brand/logo";
 import { CreateItemDialog, CreateItemType } from "@/components/items/create-item-dialog";
+import { CreateCollectionDialog } from "@/components/collections/create-collection-dialog";
 import { useSidebar } from "./sidebar-context";
 
 export function TopBar() {
   const { toggleSidebar, toggleMobileOpen } = useSidebar();
   const pathname = usePathname();
   const [isCreateOpen, setIsCreateOpen] = React.useState(false);
+  const [isCreateCollectionOpen, setIsCreateCollectionOpen] =
+    React.useState(false);
 
   // Derive defaultType from current URL if on a specific /items/[type] route
   const defaultType: CreateItemType = React.useMemo(() => {
@@ -104,10 +107,12 @@ export function TopBar() {
           <Button
             variant="outline"
             size="sm"
-            className="hidden sm:inline-flex h-9 gap-1.5 rounded-md border-border/80 bg-background text-sm font-normal text-foreground hover:bg-muted"
+            onClick={() => setIsCreateCollectionOpen(true)}
+            aria-label="New Collection"
+            className="inline-flex h-8 sm:h-9 gap-1.5 rounded-md border-border/80 bg-background px-2 sm:px-3 text-xs sm:text-sm font-normal text-foreground hover:bg-muted shrink-0 cursor-pointer"
           >
-            <FolderPlus className="h-4 w-4" />
-            <span>New Collection</span>
+            <FolderPlus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="hidden sm:inline">New Collection</span>
           </Button>
           <Button
             variant="default"
@@ -127,6 +132,12 @@ export function TopBar() {
         open={isCreateOpen}
         onOpenChange={setIsCreateOpen}
         defaultType={defaultType}
+      />
+
+      {/* Create Collection Dialog */}
+      <CreateCollectionDialog
+        open={isCreateCollectionOpen}
+        onOpenChange={setIsCreateCollectionOpen}
       />
     </>
   );

@@ -207,3 +207,51 @@ export async function getDashboardStats(
     favoriteCollections,
   };
 }
+
+export interface CreateCollectionData {
+  name: string;
+  description?: string | null;
+}
+
+/**
+ * Creates a new collection in the database scoped to the specified user.
+ * Returns the created collection formatted as a DashboardCollection.
+ */
+export async function createCollection(
+  userId: string,
+  data: CreateCollectionData,
+): Promise<DashboardCollection> {
+  if (!userId) {
+    throw new Error("User ID is required to create a collection.");
+  }
+
+  const trimmedName = data.name.trim();
+  if (!trimmedName) {
+    throw new Error("Collection name is required.");
+  }
+
+  const cleanDescription = data.description?.trim()
+    ? data.description.trim()
+    : null;
+
+  const created = await prisma.collection.create({
+    data: {
+      name: trimmedName,
+      description: cleanDescription,
+      userId,
+    },
+  });
+
+  return {
+    id: created.id,
+    name: created.name,
+    description: created.description,
+    isFavorite: created.isFavorite,
+    itemCount: 0,
+    accentColor: "neutral",
+    typeIcons: ["folder"],
+    createdAt: created.createdAt,
+    updatedAt: created.updatedAt,
+  };
+}
+

@@ -1,16 +1,28 @@
-# Current Feature
+# Current Feature: Collection Create
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Wire up the "New Collection" button in the top bar (`src/components/dashboard/top-bar.tsx`) to open a Create Collection modal dialog.
+- Build a responsive `CreateCollectionDialog` modal component (`src/components/collections/create-collection-dialog.tsx`) matching `CreateItemDialog` patterns with fields for `name` (required) and `description` (optional).
+- Add Zod validation schema (`createCollectionSchema`) for collection creation inputs.
+- Implement user-scoped database creation (`createCollection`) in `src/lib/db/collections.ts`, keeping server component fetching via `src/lib/db/collections.ts`.
+- Expose a user-scoped API route (`POST /api/collections`, and `GET /api/collections` if needed for client calls) with NextAuth session authentication, Zod validation, and structured error handling.
+- Display Sonner toast notifications (`toast.success` / `toast.error`) on save success or failure.
+- Ensure all UI surfaces displaying collections and counts (dashboard `CollectionsSection`, `StatsCards`, desktop `Sidebar`, and `MobileSidebar`) update immediately with the newly created collection on save.
+- Add Vitest unit tests covering collection validation and creation logic, and verify with `npm test`, `npm run lint`, and `npm run build`.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Database Model**: `Collection` in `prisma/schema.prisma` includes `id`, `name`, `description` (optional text), `isFavorite`, `userId`, `defaultTypeId`, `createdAt`, `updatedAt`.
+- **Architecture & Patterns**:
+  - Server components (`src/app/dashboard/page.tsx`, `src/app/dashboard/layout.tsx`) fetch collections via `src/lib/db/collections.ts` and `src/lib/db/items.ts`.
+  - Client-side creation calls use an authenticated API route (`src/app/api/collections/route.ts`) returning appropriate HTTP status codes (`201`, `400`, `401`, `500`), while refreshing Server Components via `router.refresh()` (and `revalidatePath` where applicable) so sidebar, stats, and collections grid update immediately.
+  - Reference `src/components/items/create-item-dialog.tsx`, `src/components/dashboard/top-bar.tsx`, `src/lib/validations/item.ts`, and `src/lib/db/collections.ts` for styling, accessibility, and code conventions.
+  - Check responsive visibility of the "New Collection" button in `TopBar` (currently `hidden sm:inline-flex`) so mobile users can also access or trigger it cleanly.
 
 ## History
 
