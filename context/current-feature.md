@@ -1,34 +1,16 @@
-# Current Feature: Item Collection Assignment
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Support assigning an item to a single or multiple collections when creating or editing an item
-- Add a multi-select collection input to the New Item form (`CreateItemDialog`) allowing users to select one or more available collections
-- Add a multi-select collection input to the Edit Item form (`ItemDrawer` edit mode) pre-populated with the item's existing collections and allowing adding/removing collection memberships
-- Update Zod validation schemas (`createItemSchema`, `updateItemSchema`) to accept `collectionIds`
-- Update `createItem` and `updateItem` server actions and database helpers (`src/lib/db/items.ts`) to persist `ItemCollection` relationships with user ownership validation for selected collections
-- Revalidate relevant routes (`/dashboard`, `/items`, `/items/[type]`, `/collections`) and ensure UI state (sidebar counts, collection cards, item drawer) refreshes after save
-- Write Vitest unit tests for validation schemas and server actions covering single/multiple collection assignment and ownership checks
-- Note: Do not implement collection detail pages yet (explicitly out of scope for this feature)
+<!-- Goals & requirements -->
 
 ## Notes
 
-- **Database Schema**: `ItemCollection` join table (`itemId`, `collectionId`, `addedAt`, composite PK `[itemId, collectionId]`) already exists in `prisma/schema.prisma`.
-- **Available Collections**: `GET /api/collections` (`src/app/api/collections/route.ts`) or a lightweight user-scoped query can supply available collections for the selector; sidebar/dashboard already use `Collection` records scoped by `userId`.
-- **Validation (`src/lib/validations/item.ts`)**: Add optional `collectionIds: z.array(z.string().trim().min(1)).optional()` to `createItemSchema` and `updateItemSchema`.
-- **Server Actions & DB (`src/actions/items.ts`, `src/lib/db/items.ts`)**:
-  - On `createItem`: connect/create `ItemCollection` records for valid `collectionIds` owned by the authenticated user.
-  - On `updateItem`: replace/sync `ItemCollection` memberships when `collectionIds` is provided (while leaving existing collections untouched when `collectionIds` is omitted, e.g., during favorite/pin toggles).
-  - Enforce ownership check so users can only link items to collections they own.
-- **UI Components**:
-  - `src/components/items/create-item-dialog.tsx`: Replace/add collection selector input in `CreateItemForm`.
-  - `src/components/items/item-drawer.tsx`: Replace the `"Collections (Read-only)"` block in edit mode (lines 736–754) with the interactive multi-collection selector, keeping read-only collection badges in view mode.
-  - Consider extracting a reusable collection multi-select component (e.g., `src/components/items/collection-selector.tsx`) shared between create and edit forms.
-- **Out of Scope**: Displaying or building `/collections` or `/collections/[id]` pages.
+<!-- Any extra notes -->
 
 ## History
 
@@ -349,3 +331,11 @@ In Progress
   - Added Zod validation schema `createCollectionSchema` (`src/lib/validations/collection.ts`) and user-scoped `createCollection` database helper (`src/lib/db/collections.ts`).
   - Created authenticated `GET` and `POST /api/collections` route handler (`src/app/api/collections/route.ts`) with NextAuth session resolution, Zod validation, and `revalidatePath` calls.
   - Added 11 Vitest unit tests (`src/lib/validations/collection.test.ts`, `src/lib/db/collections.test.ts`) and verified with `npm test` (139 passing tests), `npm run test:collections`, `npm run lint`, `npx tsc --noEmit`, and `npm run build`.
+
+- **Item Collection Assignment (2026-11-26)**
+  - Added optional `collectionIds` Zod validation to `createItemSchema` and `updateItemSchema` (`src/lib/validations/item.ts`).
+  - Updated `createItem` and `updateItem` database helpers (`src/lib/db/items.ts`) with `normalizeAndVerifyCollectionIds` to deduplicate collection IDs, enforce user ownership checks, create `ItemCollection` memberships on create, and diff additions/removals on update while preserving memberships when `collectionIds` is omitted.
+  - Wired `collectionIds` through `createItem` and `updateItem` server actions (`src/actions/items.ts`) with route revalidation for `/dashboard`, `/items`, `/items/[type]`, and `/collections`.
+  - Built reusable multi-select `CollectionSelector` component (`src/components/items/collection-selector.tsx`) fetching available collections from `GET /api/collections` with removable collection chips, inline searchable listbox, and loading/error/retry states.
+  - Integrated `CollectionSelector` into `CreateItemDialog` (`src/components/items/create-item-dialog.tsx`) and `ItemDrawer` edit mode (`src/components/items/item-drawer.tsx`).
+  - Added Vitest unit tests in `src/actions/items.test.ts` and `src/lib/db/items.test.ts` and verified with `npm test` (147 passing tests), `npx tsc --noEmit`, `npm run lint`, and `npm run build`.
