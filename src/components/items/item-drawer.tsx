@@ -47,6 +47,7 @@ import {
   toggleItemPin,
 } from "@/actions/items";
 import { DeleteItemDialog } from "@/components/items/delete-item-dialog";
+import { CollectionSelector } from "@/components/items/collection-selector";
 import { ItemDetail } from "@/lib/db/items";
 import {
   formatItemTypeTitle,
@@ -161,6 +162,9 @@ function ItemDrawerContent({
   const [editLanguage, setEditLanguage] = React.useState("");
   const [editUrl, setEditUrl] = React.useState("");
   const [editTags, setEditTags] = React.useState("");
+  const [editCollectionIds, setEditCollectionIds] = React.useState<string[]>(
+    [],
+  );
 
   React.useEffect(() => {
     let ignore = false;
@@ -295,6 +299,9 @@ function ItemDrawerContent({
     setEditLanguage(item.language || "");
     setEditUrl(item.url || "");
     setEditTags(item.tags ? item.tags.join(", ") : "");
+    setEditCollectionIds(
+      item.collections ? item.collections.map((c) => c.id) : [],
+    );
     setIsEditing(true);
   };
 
@@ -319,6 +326,7 @@ function ItemDrawerContent({
         language: editLanguage.trim() || null,
         url: editUrl.trim() || null,
         tags: parsedTags,
+        collectionIds: editCollectionIds,
       });
 
       if (result.success && result.data) {
@@ -712,6 +720,24 @@ function ItemDrawerContent({
             </p>
           </div>
 
+          {/* Collections Input */}
+          <div className="space-y-1.5">
+            <label
+              htmlFor="edit-item-collections"
+              className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+            >
+              <FolderIcon className="h-3.5 w-3.5" />
+              <span>Collections</span>
+            </label>
+            <CollectionSelector
+              id="edit-item-collections"
+              selectedIds={editCollectionIds}
+              onChange={setEditCollectionIds}
+              initialCollections={item.collections}
+              disabled={isSaving}
+            />
+          </div>
+
           {/* Non-Editable Details (Read-only during edit) */}
           <div className="pt-3 border-t border-border/60 space-y-4">
             {/* File info if present */}
@@ -729,26 +755,6 @@ function ItemDrawerContent({
                       </p>
                     )}
                   </div>
-                </div>
-              </div>
-            )}
-
-            {/* Collections Section */}
-            {item.collections && item.collections.length > 0 && (
-              <div>
-                <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-                  <FolderIcon className="h-3.5 w-3.5" />
-                  <span>Collections (Read-only)</span>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {item.collections.map((col) => (
-                    <span
-                      key={col.id}
-                      className="inline-flex items-center rounded-md bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground border border-border/60"
-                    >
-                      {col.name}
-                    </span>
-                  ))}
                 </div>
               </div>
             )}

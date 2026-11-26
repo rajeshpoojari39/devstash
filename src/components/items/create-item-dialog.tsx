@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CodeEditor } from "@/components/ui/code-editor";
 import { MarkdownEditor } from "@/components/ui/markdown-editor";
 import { FileUpload, UploadedFileData } from "@/components/ui/file-upload";
+import { CollectionSelector } from "@/components/items/collection-selector";
 import { createItem as createItemAction } from "@/actions/items";
 import { cn } from "@/lib/utils";
 
@@ -173,6 +174,9 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
   const [url, setUrl] = React.useState("");
   const [fileData, setFileData] = React.useState<UploadedFileData | null>(null);
   const [tagsInput, setTagsInput] = React.useState("");
+  const [selectedCollectionIds, setSelectedCollectionIds] = React.useState<
+    string[]
+  >([]);
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
 
@@ -262,6 +266,8 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
             ? fileData?.fileSize
             : undefined,
         tags: parsedTags.length > 0 ? parsedTags : undefined,
+        collectionIds:
+          selectedCollectionIds.length > 0 ? selectedCollectionIds : undefined,
       });
 
       if (!result.success) {
@@ -561,6 +567,24 @@ function CreateItemForm({ defaultType, onClose }: CreateItemFormProps) {
               placeholder="react, frontend, hooks"
               value={tagsInput}
               onChange={(e) => setTagsInput(e.target.value)}
+              disabled={isSubmitting}
+            />
+          </div>
+
+          {/* Collections (Optional for all types) */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="item-collections" className="text-xs sm:text-sm">
+                Collections
+              </Label>
+              <span className="text-[11px] text-muted-foreground">
+                Optional
+              </span>
+            </div>
+            <CollectionSelector
+              id="item-collections"
+              selectedIds={selectedCollectionIds}
+              onChange={setSelectedCollectionIds}
               disabled={isSubmitting}
             />
           </div>

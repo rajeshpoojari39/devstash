@@ -1,16 +1,34 @@
-# Current Feature
+# Current Feature: Item Collection Assignment
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Support assigning an item to a single or multiple collections when creating or editing an item
+- Add a multi-select collection input to the New Item form (`CreateItemDialog`) allowing users to select one or more available collections
+- Add a multi-select collection input to the Edit Item form (`ItemDrawer` edit mode) pre-populated with the item's existing collections and allowing adding/removing collection memberships
+- Update Zod validation schemas (`createItemSchema`, `updateItemSchema`) to accept `collectionIds`
+- Update `createItem` and `updateItem` server actions and database helpers (`src/lib/db/items.ts`) to persist `ItemCollection` relationships with user ownership validation for selected collections
+- Revalidate relevant routes (`/dashboard`, `/items`, `/items/[type]`, `/collections`) and ensure UI state (sidebar counts, collection cards, item drawer) refreshes after save
+- Write Vitest unit tests for validation schemas and server actions covering single/multiple collection assignment and ownership checks
+- Note: Do not implement collection detail pages yet (explicitly out of scope for this feature)
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Database Schema**: `ItemCollection` join table (`itemId`, `collectionId`, `addedAt`, composite PK `[itemId, collectionId]`) already exists in `prisma/schema.prisma`.
+- **Available Collections**: `GET /api/collections` (`src/app/api/collections/route.ts`) or a lightweight user-scoped query can supply available collections for the selector; sidebar/dashboard already use `Collection` records scoped by `userId`.
+- **Validation (`src/lib/validations/item.ts`)**: Add optional `collectionIds: z.array(z.string().trim().min(1)).optional()` to `createItemSchema` and `updateItemSchema`.
+- **Server Actions & DB (`src/actions/items.ts`, `src/lib/db/items.ts`)**:
+  - On `createItem`: connect/create `ItemCollection` records for valid `collectionIds` owned by the authenticated user.
+  - On `updateItem`: replace/sync `ItemCollection` memberships when `collectionIds` is provided (while leaving existing collections untouched when `collectionIds` is omitted, e.g., during favorite/pin toggles).
+  - Enforce ownership check so users can only link items to collections they own.
+- **UI Components**:
+  - `src/components/items/create-item-dialog.tsx`: Replace/add collection selector input in `CreateItemForm`.
+  - `src/components/items/item-drawer.tsx`: Replace the `"Collections (Read-only)"` block in edit mode (lines 736–754) with the interactive multi-collection selector, keeping read-only collection badges in view mode.
+  - Consider extracting a reusable collection multi-select component (e.g., `src/components/items/collection-selector.tsx`) shared between create and edit forms.
+- **Out of Scope**: Displaying or building `/collections` or `/collections/[id]` pages.
 
 ## History
 

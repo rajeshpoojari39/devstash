@@ -565,6 +565,7 @@ export interface UpdateItemData {
   url?: string | null;
   language?: string | null;
   tags?: string[];
+  collectionIds?: string[];
   fileUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
@@ -573,8 +574,41 @@ export interface UpdateItemData {
 }
 
 /**
- * Updates an item's details, tags, and timestamps, scoped to the specified user.
+ * Deduplicates collection IDs and verifies that every collection belongs to the user.
+ */
+async function normalizeAndVerifyCollectionIds(
+  userId: string,
+  collectionIds: string[],
+): Promise<string[]> {
+  const cleanIds = Array.from(
+    new Set(collectionIds.map((cid) => cid.trim()).filter((cid) => cid.length > 0)),
+  );
+
+  if (cleanIds.length === 0) {
+    return [];
+  }
+
+  const ownedCollections = await prisma.collection.findMany({
+    where: {
+      id: { in: cleanIds },
+      userId,
+    },
+    select: { id: true },
+  });
+
+  if (ownedCollections.length !== cleanIds.length) {
+    throw new Error(
+      "One or more selected collections were not found or do not belong to you.",
+    );
+  }
+
+  return cleanIds;
+}
+
+/**
+ * Updates an item's details, tags, collections, and timestamps, scoped to the specified user.
  * Disconnects existing tags and reconnects/creates new ones.
+ * Syncs collection memberships when collectionIds is provided.
  * Returns the updated ItemDetail.
  */
 export async function updateItem(
@@ -616,6 +650,45 @@ export async function updateItem(
     });
   }
 
+  let collectionUpdateData:
+    | {
+        deleteMany?: { collectionId: { in: string[] } };
+        create?: { collectionId: string }[];
+      }
+    | undefined;
+
+  if (data.collectionIds !== undefined) {
+    const cleanCollectionIds = await normalizeAndVerifyCollectionIds(
+      userId,
+      data.collectionIds,
+    );
+
+    const existingMemberships = await prisma.itemCollection.findMany({
+      where: { itemId: id },
+      select: { collectionId: true },
+    });
+    const existingIds = new Set(existingMemberships.map((m) => m.collectionId));
+    const targetIds = new Set(cleanCollectionIds);
+
+    const toAdd = cleanCollectionIds.filter((cid) => !existingIds.has(cid));
+    const toRemove = Array.from(existingIds).filter((cid) => !targetIds.has(cid));
+
+    if (toAdd.length > 0 || toRemove.length > 0) {
+      collectionUpdateData = {
+        ...(toRemove.length > 0
+          ? { deleteMany: { collectionId: { in: toRemove } } }
+          : {}),
+        ...(toAdd.length > 0
+          ? {
+              create: toAdd.map((collectionId) => ({
+                collectionId,
+              })),
+            }
+          : {}),
+      };
+    }
+  }
+
   const updatedItem = await prisma.item.update({
     where: {
       id,
@@ -652,6 +725,7 @@ export async function updateItem(
             },
           }
         : {}),
+      ...(collectionUpdateData ? { collections: collectionUpdateData } : {}),
     },
     include: {
       itemType: {
@@ -758,6 +832,7 @@ export interface CreateItemData {
   url?: string | null;
   language?: string | null;
   tags?: string[];
+  collectionIds?: string[];
   fileUrl?: string | null;
   fileName?: string | null;
   fileSize?: number | null;
@@ -766,7 +841,8 @@ export interface CreateItemData {
 }
 
 /**
- * Creates a new item in the database, connecting or creating tags and linking to the resolved item type.
+ * Creates a new item in the database, connecting or creating tags,
+ * linking selected collections, and linking to the resolved item type.
  * Returns the created ItemDetail.
  */
 export async function createItem(
@@ -822,6 +898,11 @@ export async function createItem(
     });
   }
 
+  const cleanCollectionIds =
+    data.collectionIds !== undefined && data.collectionIds.length > 0
+      ? await normalizeAndVerifyCollectionIds(userId, data.collectionIds)
+      : [];
+
   let contentType: "TEXT" | "FILE" | "URL" = "TEXT";
   if (normalizedType === "link") {
     contentType = "URL";
@@ -846,6 +927,15 @@ export async function createItem(
         ? {
             tags: {
               connect: cleanTagNames.map((name) => ({ name })),
+            },
+          }
+        : {}),
+      ...(cleanCollectionIds.length > 0
+        ? {
+            collections: {
+              create: cleanCollectionIds.map((collectionId) => ({
+                collectionId,
+              })),
             },
           }
         : {}),

@@ -165,6 +165,29 @@ describe("createItemSchema validation", () => {
     });
     expect(invalidTags.success).toBe(false);
   });
+
+  it("validates single and multiple collectionIds and rejects empty IDs", () => {
+    const validSingle = createItemSchema.safeParse({
+      type: "snippet",
+      title: "Valid Title",
+      collectionIds: ["col-1"],
+    });
+    expect(validSingle.success).toBe(true);
+
+    const validMultiple = createItemSchema.safeParse({
+      type: "snippet",
+      title: "Valid Title",
+      collectionIds: ["col-1", "col-2"],
+    });
+    expect(validMultiple.success).toBe(true);
+
+    const invalidCollectionId = createItemSchema.safeParse({
+      type: "snippet",
+      title: "Valid Title",
+      collectionIds: ["col-1", "   "],
+    });
+    expect(invalidCollectionId.success).toBe(false);
+  });
 });
 
 describe("createItem server action", () => {
@@ -315,6 +338,43 @@ describe("createItem server action", () => {
       fileSize: 512000,
     });
   });
+
+  it("passes collectionIds when creating an item assigned to collections", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+
+    const itemWithCollections = {
+      ...mockCreatedItem,
+      collections: [
+        { id: "col-1", name: "React Patterns" },
+        { id: "col-2", name: "UI Hooks" },
+      ],
+    };
+
+    vi.mocked(itemsDbModule.createItem).mockResolvedValueOnce(
+      itemWithCollections as unknown as itemsDbModule.ItemDetail,
+    );
+
+    const result = await createItem({
+      type: "snippet",
+      title: "New Snippet",
+      collectionIds: ["col-1", "col-2"],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.collections).toEqual([
+      { id: "col-1", name: "React Patterns" },
+      { id: "col-2", name: "UI Hooks" },
+    ]);
+    expect(itemsDbModule.createItem).toHaveBeenCalledWith(
+      "user-123",
+      expect.objectContaining({
+        collectionIds: ["col-1", "col-2"],
+      }),
+    );
+  });
 });
 
 describe("updateItemSchema validation", () => {
@@ -374,6 +434,18 @@ describe("updateItemSchema validation", () => {
     };
     const result = updateItemSchema.safeParse(invalidTags);
     expect(result.success).toBe(false);
+  });
+
+  it("validates collectionIds including empty array and rejects blank IDs", () => {
+    expect(
+      updateItemSchema.safeParse({ collectionIds: ["col-1", "col-2"] }).success,
+    ).toBe(true);
+    expect(updateItemSchema.safeParse({ collectionIds: [] }).success).toBe(
+      true,
+    );
+    expect(updateItemSchema.safeParse({ collectionIds: [""] }).success).toBe(
+      false,
+    );
   });
 });
 
@@ -471,6 +543,37 @@ describe("updateItem server action", () => {
         content: "Updated content",
         language: "typescript",
         tags: ["react", "hooks"],
+      }),
+    );
+  });
+
+  it("passes collectionIds to updateItemInDb when updating collections", async () => {
+    (authModule.auth as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      user: { id: "user-123", email: "user@example.com" },
+      expires: "1",
+    });
+    const updatedWithCols = {
+      ...mockItemDetail,
+      collections: [{ id: "col-2", name: "AI Workflows" }],
+    };
+    vi.mocked(itemsDbModule.updateItem).mockResolvedValueOnce(
+      updatedWithCols as unknown as itemsDbModule.ItemDetail,
+    );
+
+    const result = await updateItem("item-123", {
+      title: "Updated Item",
+      collectionIds: ["col-2"],
+    });
+
+    expect(result.success).toBe(true);
+    expect(result.data?.collections).toEqual([
+      { id: "col-2", name: "AI Workflows" },
+    ]);
+    expect(itemsDbModule.updateItem).toHaveBeenCalledWith(
+      "item-123",
+      "user-123",
+      expect.objectContaining({
+        collectionIds: ["col-2"],
       }),
     );
   });

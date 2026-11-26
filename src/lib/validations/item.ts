@@ -24,6 +24,9 @@ export const createItemSchema = z
       .or(z.literal("")),
     language: z.string().trim().nullable().optional(),
     tags: z.array(z.string().trim().min(1, "Tag cannot be empty")).optional(),
+    collectionIds: z
+      .array(z.string().trim().min(1, "Collection ID cannot be empty"))
+      .optional(),
     fileUrl: z.string().trim().nullable().optional(),
     fileName: z.string().trim().nullable().optional(),
     fileSize: z.number().int().nonnegative().nullable().optional(),
@@ -70,6 +73,9 @@ export const updateItemSchema = z.object({
     .or(z.literal("")),
   language: z.string().trim().nullable().optional(),
   tags: z.array(z.string().trim().min(1, "Tag cannot be empty")).optional(),
+  collectionIds: z
+    .array(z.string().trim().min(1, "Collection ID cannot be empty"))
+    .optional(),
   fileUrl: z.string().trim().nullable().optional(),
   fileName: z.string().trim().nullable().optional(),
   fileSize: z.number().int().nonnegative().nullable().optional(),

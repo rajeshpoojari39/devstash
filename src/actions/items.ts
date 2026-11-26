@@ -74,6 +74,9 @@ export async function createItem(
       url: validatedData.url,
       language: validatedData.language,
       tags: validatedData.tags,
+      ...(validatedData.collectionIds !== undefined
+        ? { collectionIds: validatedData.collectionIds }
+        : {}),
       fileUrl: validatedData.fileUrl,
       fileName: validatedData.fileName,
       fileSize: validatedData.fileSize,
@@ -84,14 +87,8 @@ export async function createItem(
     try {
       revalidatePath("/dashboard");
       revalidatePath("/items");
-    } catch {
-      // Ignore revalidation errors in non-request contexts
-    }
-
-    try {
-      revalidatePath("/dashboard");
-      revalidatePath("/items");
       revalidatePath(`/items/${validatedData.type}`);
+      revalidatePath("/collections");
     } catch {
       // Ignore revalidation errors in non-request contexts (e.g. tests)
     }
@@ -175,6 +172,9 @@ export async function updateItem(
       url: validatedData.url,
       language: validatedData.language,
       tags: validatedData.tags,
+      ...(validatedData.collectionIds !== undefined
+        ? { collectionIds: validatedData.collectionIds }
+        : {}),
       fileUrl: validatedData.fileUrl,
       fileName: validatedData.fileName,
       fileSize: validatedData.fileSize,
@@ -185,6 +185,14 @@ export async function updateItem(
         success: false,
         error: "Item not found or you do not have permission to edit it.",
       };
+    }
+
+    try {
+      revalidatePath("/dashboard");
+      revalidatePath("/items");
+      revalidatePath("/collections");
+    } catch {
+      // Ignore revalidation errors in non-request contexts
     }
 
     return {
