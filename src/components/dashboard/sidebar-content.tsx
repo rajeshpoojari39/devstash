@@ -138,7 +138,7 @@ export function SidebarContent({
       )}
 
       {/* Main Navigation Scrollable Area */}
-      <ScrollArea className="flex-1 px-2 py-3">
+      <ScrollArea className="flex-1 min-h-0 overflow-hidden px-2 py-3">
         {collapsed ? (
           /* Collapsed (Icon-Only) Mode */
           <div className="flex flex-col items-center gap-4">

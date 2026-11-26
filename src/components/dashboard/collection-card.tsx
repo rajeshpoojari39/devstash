@@ -97,16 +97,16 @@ export function CollectionCard({
 
   return (
     <div
-      className={`group relative flex flex-col justify-between rounded-xl border ${selectedBorder} bg-card/60 p-4.5 backdrop-blur transition-all duration-200 hover:shadow-md`}
+      className={`group relative flex flex-col justify-between rounded-xl border ${selectedBorder} bg-card/60 p-4.5 backdrop-blur transition-all duration-200 hover:bg-card/90 hover:shadow-md cursor-pointer`}
     >
       <div>
         {/* Header: Title, Favorite Star, and 3-dots Menu */}
         <div className="flex items-start justify-between gap-2">
           <Link
             href={`/collections/${collection.id}`}
-            className="flex items-center gap-1.5 group/title"
+            className="flex items-center gap-1.5 group/title after:absolute after:inset-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:rounded-sm"
           >
-            <h3 className="font-semibold text-base text-foreground group-hover/title:text-primary transition-colors line-clamp-1">
+            <h3 className="font-semibold text-base text-foreground group-hover:text-primary group-hover/title:text-primary transition-colors line-clamp-1">
               {collection.name}
             </h3>
             {collection.isFavorite && (
@@ -114,44 +114,54 @@ export function CollectionCard({
             )}
           </Link>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 text-muted-foreground hover:text-foreground -mr-1 shrink-0 cursor-pointer"
-                  aria-label="Collection actions"
-                />
-              }
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem>
-                <Link
-                  href={`/collections/${collection.id}`}
-                  className="flex w-full items-center gap-2"
-                >
-                  <Eye className="h-4 w-4" />
-                  <span>View</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled className="flex items-center gap-2 opacity-50 cursor-not-allowed">
-                <Edit2 className="h-4 w-4" />
-                <span>Edit</span>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                disabled
-                variant="destructive"
-                className="flex items-center gap-2 text-destructive"
+          <div
+            className="relative z-10 shrink-0"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7 text-muted-foreground hover:text-foreground -mr-1 shrink-0 cursor-pointer"
+                    aria-label="Collection actions"
+                  />
+                }
               >
-                <Trash2 className="h-4 w-4" />
-                <span>Delete</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <MoreHorizontal className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  render={
+                    <Link
+                      href={`/collections/${collection.id}`}
+                      className="flex w-full items-center gap-2"
+                    >
+                      <Eye className="h-4 w-4" />
+                      <span>View</span>
+                    </Link>
+                  }
+                />
+                <DropdownMenuItem
+                  disabled
+                  className="flex items-center gap-2 opacity-50 cursor-not-allowed"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  <span>Edit</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  disabled
+                  variant="destructive"
+                  className="flex items-center gap-2 text-destructive"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Item count */}

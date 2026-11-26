@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { prisma } from "@/lib/prisma";
+import type { DashboardItem } from "@/lib/db/items";
 
 export type CollectionAccentColor =
   | "blue"
@@ -22,6 +23,10 @@ export interface DashboardCollection {
   updatedAt: Date;
 }
 
+export interface CollectionDetail extends DashboardCollection {
+  items: DashboardItem[];
+}
+
 export interface DashboardStats {
   totalItems: number;
   totalCollections: number;
@@ -38,6 +43,111 @@ const TYPE_NAME_TO_COLOR_MAP: Record<string, CollectionAccentColor> = {
   image: "pink",
   link: "emerald",
 };
+
+const COLLECTION_SUMMARY_INCLUDE = {
+  defaultType: {
+    select: {
+      name: true,
+      color: true,
+      icon: true,
+    },
+  },
+  items: {
+    take: 20,
+    select: {
+      item: {
+        select: {
+          itemType: {
+            select: {
+              name: true,
+              color: true,
+              icon: true,
+            },
+          },
+        },
+      },
+    },
+  },
+  _count: {
+    select: {
+      items: true,
+    },
+  },
+} as const;
+
+interface CollectionPresentationSource {
+  defaultType: { name: string } | null;
+  items: { item: { itemType: { name: string } } }[];
+}
+
+function computeCollectionPresentation(source: CollectionPresentationSource): {
+  accentColor: CollectionAccentColor;
+  typeIcons: string[];
+} {
+  const typeCountMap = new Map<string, number>();
+  const distinctTypes = new Set<string>();
+
+  for (const itemRel of source.items) {
+    const typeName = itemRel.item.itemType.name.toLowerCase();
+    distinctTypes.add(typeName);
+    typeCountMap.set(typeName, (typeCountMap.get(typeName) || 0) + 1);
+  }
+
+  let dominantTypeName: string | null = null;
+  let maxCount = 0;
+
+  for (const [typeName, count] of typeCountMap.entries()) {
+    if (count > maxCount) {
+      maxCount = count;
+      dominantTypeName = typeName;
+    }
+  }
+
+  if (!dominantTypeName && source.defaultType) {
+    dominantTypeName = source.defaultType.name.toLowerCase();
+  }
+
+  const accentColor: CollectionAccentColor = dominantTypeName
+    ? TYPE_NAME_TO_COLOR_MAP[dominantTypeName] || "neutral"
+    : "neutral";
+
+  let typeIcons: string[] = Array.from(distinctTypes);
+  if (typeIcons.length === 0) {
+    if (source.defaultType?.name) {
+      typeIcons = [source.defaultType.name.toLowerCase()];
+    } else {
+      typeIcons = ["folder"];
+    }
+  }
+
+  return { accentColor, typeIcons };
+}
+
+interface CollectionSummaryRecord extends CollectionPresentationSource {
+  id: string;
+  name: string;
+  description: string | null;
+  isFavorite: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: { items: number };
+}
+
+function mapCollectionSummary(col: CollectionSummaryRecord): DashboardCollection {
+  const { accentColor, typeIcons } = computeCollectionPresentation(col);
+
+  return {
+    id: col.id,
+    name: col.name,
+    description: col.description,
+    isFavorite: col.isFavorite,
+    itemCount: col._count.items,
+    accentColor,
+    typeIcons,
+    createdAt: col.createdAt,
+    updatedAt: col.updatedAt,
+  };
+}
 
 /**
  * Resolves the active user ID for data fetching.
@@ -80,92 +190,135 @@ export async function getDashboardCollections(
     orderBy: {
       updatedAt: "desc",
     },
-    include: {
-      defaultType: {
-        select: {
-          name: true,
-          color: true,
-          icon: true,
-        },
+    include: COLLECTION_SUMMARY_INCLUDE,
+  });
+
+  return collections.map(mapCollectionSummary);
+}
+
+/**
+ * Fetches all collections belonging to the specified user with computed dominant item type
+ * colors and unique type icons, ordered with favorites first and most recently updated.
+ */
+export async function getAllCollections(
+  userId: string,
+): Promise<DashboardCollection[]> {
+  if (!userId) {
+    return [];
+  }
+
+  const collections = await prisma.collection.findMany({
+    where: {
+      userId,
+    },
+    orderBy: [{ isFavorite: "desc" }, { updatedAt: "desc" }],
+    include: COLLECTION_SUMMARY_INCLUDE,
+  });
+
+  return collections.map(mapCollectionSummary);
+}
+
+/**
+ * Fetches a single collection and all its items scoped to the specified user.
+ * Memoized per request via `React.cache` to deduplicate metadata and page queries.
+ * Returns null if the collection does not exist or belongs to another user.
+ */
+export const getCollectionById = cache(
+  async (
+    collectionId: string,
+    userId: string,
+  ): Promise<CollectionDetail | null> => {
+    if (!collectionId || !userId) {
+      return null;
+    }
+
+    const collection = await prisma.collection.findFirst({
+      where: {
+        id: collectionId,
+        userId,
       },
-      items: {
-        take: 20,
-        select: {
-          item: {
-            select: {
-              itemType: {
-                select: {
-                  name: true,
-                  color: true,
-                  icon: true,
+      include: {
+        defaultType: {
+          select: {
+            name: true,
+            color: true,
+            icon: true,
+          },
+        },
+        items: {
+          orderBy: [
+            { item: { isPinned: "desc" } },
+            { item: { createdAt: "desc" } },
+          ],
+          include: {
+            item: {
+              include: {
+                itemType: {
+                  select: {
+                    id: true,
+                    name: true,
+                    icon: true,
+                    color: true,
+                  },
+                },
+                tags: {
+                  select: {
+                    name: true,
+                  },
                 },
               },
             },
           },
         },
-      },
-      _count: {
-        select: {
-          items: true,
+        _count: {
+          select: {
+            items: true,
+          },
         },
       },
-    },
-  });
+    });
 
-  return collections.map((col) => {
-    // 1. Calculate item type counts and distinct types
-    const typeCountMap = new Map<string, number>();
-    const distinctTypes = new Set<string>();
-
-    for (const itemRel of col.items) {
-      const typeName = itemRel.item.itemType.name.toLowerCase();
-      distinctTypes.add(typeName);
-      typeCountMap.set(typeName, (typeCountMap.get(typeName) || 0) + 1);
+    if (!collection) {
+      return null;
     }
 
-    // 2. Determine dominant content type
-    let dominantTypeName: string | null = null;
-    let maxCount = 0;
+    const { accentColor, typeIcons } =
+      computeCollectionPresentation(collection);
 
-    for (const [typeName, count] of typeCountMap.entries()) {
-      if (count > maxCount) {
-        maxCount = count;
-        dominantTypeName = typeName;
-      }
-    }
-
-    // Fall back to defaultType or neutral
-    if (!dominantTypeName && col.defaultType) {
-      dominantTypeName = col.defaultType.name.toLowerCase();
-    }
-
-    const accentColor: CollectionAccentColor = dominantTypeName
-      ? TYPE_NAME_TO_COLOR_MAP[dominantTypeName] || "neutral"
-      : "neutral";
-
-    // 3. Compile type icons for bottom display
-    let typeIcons: string[] = Array.from(distinctTypes);
-    if (typeIcons.length === 0) {
-      if (col.defaultType?.name) {
-        typeIcons = [col.defaultType.name.toLowerCase()];
-      } else {
-        typeIcons = ["folder"];
-      }
-    }
+    const items: DashboardItem[] = collection.items.map(({ item }) => ({
+      id: item.id,
+      title: item.title,
+      contentType: item.contentType,
+      content: item.content,
+      description: item.description,
+      isFavorite: item.isFavorite,
+      isPinned: item.isPinned,
+      language: item.language,
+      url: item.url,
+      fileUrl: item.fileUrl,
+      fileName: item.fileName,
+      fileSize: item.fileSize,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+      itemTypeId: item.itemTypeId,
+      itemType: item.itemType,
+      tags: item.tags.map((tag) => tag.name),
+    }));
 
     return {
-      id: col.id,
-      name: col.name,
-      description: col.description,
-      isFavorite: col.isFavorite,
-      itemCount: col._count.items,
+      id: collection.id,
+      name: collection.name,
+      description: collection.description,
+      isFavorite: collection.isFavorite,
+      itemCount: collection._count.items,
       accentColor,
       typeIcons,
-      createdAt: col.createdAt,
-      updatedAt: col.updatedAt,
+      createdAt: collection.createdAt,
+      updatedAt: collection.updatedAt,
+      items,
     };
-  });
-}
+  },
+);
 
 /**
  * Fetches dashboard summary counts for items and collections.

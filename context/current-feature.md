@@ -1,16 +1,31 @@
-# Current Feature
+# Current Feature: Collections Pages (/collections & /collections/[id])
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Goals & requirements -->
+- Create `/collections` route (`src/app/collections/page.tsx`) with shared dashboard shell layout (`src/app/collections/layout.tsx`) to display all user collections in a responsive grid using the existing `CollectionCard` component (`src/components/dashboard/collection-card.tsx`).
+- Create `/collections/[id]` route (`src/app/collections/[id]/page.tsx`) to display a single collection's metadata (name, description, favorite indicator, item count, breadcrumbs) and all items belonging to that collection using the existing `ItemCard` component (`src/components/dashboard/item-card.tsx`), opening `ItemDrawer` on click.
+- Handle empty states, loading skeletons (`loading.tsx`), and 404/unauthorized handling (`notFound()`) for invalid or non-owned collection IDs on `/collections/[id]`.
+- Ensure the "View all collections" link in `SidebarContent` (`src/components/dashboard/sidebar-content.tsx`) navigates to `/collections` (in expanded, collapsed, and mobile views) and make all `CollectionCard` components link/navigate cleanly to `/collections/[id]` without breaking the 3-dots action dropdown menu.
 
 ## Notes
 
-<!-- Any extra notes -->
+- **Existing Layout & Auth Patterns**:
+  - `src/proxy.ts` already guards `/collections` and `/collections/*` for unauthenticated users.
+  - Follow `src/app/items/layout.tsx` and `src/app/items/[type]/page.tsx` for shared dashboard layout (`SidebarProvider`, `ItemDrawerProvider`, `TopBar`, `Sidebar`, `MobileSidebar`) and server-side `auth()` session checks.
+- **Database Queries (`src/lib/db/collections.ts` & `src/lib/db/items.ts`)**:
+  - Reuse/extend `getDashboardCollections` (or add `getAllCollections(userId)`) in `src/lib/db/collections.ts` to fetch all collections for the authenticated user without the dashboard limit of 6, computing `accentColor` and `typeIcons`.
+  - Add user-scoped `getCollectionById(collectionId, userId)` and `getItemsByCollectionId(collectionId, userId)` (or fetch collection with items ordered by `isPinned` / `updatedAt`) returning `DashboardItem[]`-compatible records (including `itemType`, `tags`, `collections`) so existing `ItemCard` and `ItemDrawer` work seamlessly.
+- **UI & Cards**:
+  - Reuse `CollectionCard` (`src/components/dashboard/collection-card.tsx`) on `/collections` and `/dashboard`. Make the entire card clickable/linked to `/collections/[id]` while isolating the 3-dots `DropdownMenu` trigger/content so dropdown actions do not trigger card navigation.
+  - Reuse `ItemCard` (`src/components/dashboard/item-card.tsx`) on `/collections/[id]` in a responsive 3-column grid (`grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4`) consistent with `/items/[type]`.
+  - Verify `SidebarContent` (`src/components/dashboard/sidebar-content.tsx`) "View all collections" link (`href="/collections"`) and active state highlighting for `/collections` and `/collections/[id]`.
+- **Testing**:
+  - Add Vitest unit tests for any new/updated `src/lib/db/collections.ts` or `src/lib/db/items.ts` query helpers.
+  - Verify with `npm test`, `npm run lint`, `npx tsc --noEmit`, and `npm run build`.
 
 ## History
 
